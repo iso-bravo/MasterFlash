@@ -79,10 +79,10 @@ WSGI_APPLICATION = 'masterflash.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'master_flash',
-        'USER': 'basic_user',
-        'PASSWORD': 'user1234',
-        'HOST': 'localhost',
+        'NAME': 'master_flash2',
+        'USER': 'serversmi',
+        'PASSWORD': 'adminserver123!',
+        'HOST': '192.168.10.4',
         'PORT': '3306',
     }
 }

@@ -75,9 +75,9 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose }) => {
   return (
     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-40">
       <Toaster />
-      <div className="bg-[#E4E3E3] px-7 py-5 rounded-md w-7/8 max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl h-3/4 flex flex-col">
+      <div className="bg-[#E4E3E3] px-7 py-5 rounded-md w-auto max-w-md md:max-w-2xl lg:max-w-2xl xl:max-w-3xl h-auto sm:h-auto flex flex-col">
         <div className="flex justify-end">
-          <IoClose size={50} className="cursor-pointer" onClick={onClose} />
+          <IoClose size={40} className="cursor-pointer" onClick={onClose} />
         </div>
         <div className="flex flex-col items-center justify-center gap-y-3">
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">

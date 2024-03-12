@@ -69,10 +69,12 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className=' lg:p-9'>
-      <div className='flex flex-wrap items-center'>
-        <IoIosArrowRoundBack size={65} className=' cursor-pointer' />
-        <h1 className='text-3xl md:text-4xl lg:text-5xl'>Prensas</h1>
+    <div className=' lg:p-2'>
+      <div className='flex flex-wrap items-center justify-center'>
+        <IoIosArrowRoundBack size={65} className='cursor-pointer absolute left-0' />
+        <div className='text-center'>
+          <h1 className='text-2xl md:text-3xl lg:text-4xl xl:text-5xl'>PRENSAS</h1>
+        </div>
       </div>
       <div className='flex flex-wrap justify-center'>
         {datos.map((dato, index) => (
