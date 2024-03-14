@@ -57,7 +57,7 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose }) => {
       };
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/client_data/",
+        "http://192.168.10.6:8000/client_data/",
         data,
         {
           headers: {
