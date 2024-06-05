@@ -1,8 +1,17 @@
 from django.urls import path
 from . import views
+from django.core.asgi import get_asgi_application
+from django.urls import re_path
 
 urlpatterns = [
-    path('arduino_data/<str:path>/<str:value>/', views.arduino_data, name='arduino_data'),
     path('client_data/', views.client_data, name='client_data'),
+    path('load_machine_data/', views.load_machine_data, name='load_machine_data'),
+    path('arduino_data/<str:path>/<str:value>/', views.arduino_data, name='arduino_data'),
     
+    path('load_machine_data_production/', views.load_machine_data_production, name='load_machine_data_production'),
+    path('register_data_production/', views.register_data_production, name='register_data_production'),
+
+    path('presses_general_pause/', views.presses_general_pause, name='presses_general_pause'),
+    path('presses_general_failure/', views.presses_general_failure, name='presses_general_failure'),
+
 ]
