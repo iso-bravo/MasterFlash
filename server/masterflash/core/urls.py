@@ -14,4 +14,10 @@ urlpatterns = [
     path('presses_general_pause/', views.presses_general_pause, name='presses_general_pause'),
     path('presses_general_failure/', views.presses_general_failure, name='presses_general_failure'),
 
+    path('load_scrap_data/', views.load_scrap_data, name='load_scrap_data'),
+    path('search_in_part_number/', views.search_in_part_number, name='search_in_part_number'),
+    path('search_weight/', views.search_weight, name='search_weight'),
+    path('register_scrap/', views.register_scrap, name='register_scrap'),
+    path('register/', views.register, name='register'),
+
 ]

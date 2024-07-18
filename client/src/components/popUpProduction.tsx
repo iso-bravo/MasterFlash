@@ -9,9 +9,10 @@ interface PopupProps {
     employee_number: string;
     pieces_ok: string;
     pieces_rework: string;
-    pieces_scrap: string;
     part_number: string;
     work_order: string;
+    total_ok: string;
+    molder_number: string;
 
   };
   onClose: () => void;
@@ -19,9 +20,9 @@ interface PopupProps {
     newEmployeeNumber: string,
     newPiecesOK: string,
     newPiecesRework: string,
-    newPiecesScrap: string,
     newPartNumber: string,
-    newWork_order: string
+    newWork_order: string,
+    newMolderNumber: string
   ) => Promise<void>;
   onUpdate: (updatedMachine: {
     name: string;
@@ -29,9 +30,10 @@ interface PopupProps {
     employee_number: string;
     pieces_ok: string;
     pieces_rework: string;
-    pieces_scrap: string;
     part_number: string;
     work_order: string;
+    total_ok: string;
+    molder_number: string;
 
   }) => void;
 }
@@ -46,16 +48,16 @@ const Popup: React.FC<PopupProps> = ({
   const [partNumber, setPartNumber] = useState("");
   const [piecesOK, setPiecesOK] = useState("");
   const [piecesRework, setPiecesRework] = useState("");
-  const [piecesScrap, setPiecesScrap] = useState("");
   const [workOrder, setWorkOrder] = useState("");
+  const [molderNumber, setMolderNumber] = useState("");
 
   // Refs for input elements
   const workOrderRef = useRef<HTMLInputElement>(null);
   const partNumberRef = useRef<HTMLInputElement>(null);
   const employeeNumberRef = useRef<HTMLInputElement>(null);
+  const molderNumberRef = useRef<HTMLInputElement>(null);
   const piecesOKRef = useRef<HTMLInputElement>(null);
   const piecesReworkRef = useRef<HTMLInputElement>(null);
-  const piecesScrapRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (workOrderRef.current) {
@@ -79,13 +81,14 @@ const Popup: React.FC<PopupProps> = ({
     setPiecesRework(event.target.value);
   };
 
-  const handlePiecesScrap = (event: ChangeEvent<HTMLInputElement>) => {
-    setPiecesScrap(event.target.value);
-  };
-
   const handleworkOrder = (event: ChangeEvent<HTMLInputElement>) => {
     setWorkOrder(event.target.value);
   };
+
+  const handMolderNumber = (event: ChangeEvent<HTMLInputElement>) => {
+    setMolderNumber(event.target.value);
+  };
+
 
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>,
@@ -103,9 +106,9 @@ const Popup: React.FC<PopupProps> = ({
         employeeNumber,
         piecesOK,
         piecesRework,
-        piecesScrap,
         partNumber,
-        workOrder
+        workOrder,
+        molderNumber
       );
       onUpdate({
         name: machineData.name,
@@ -113,9 +116,10 @@ const Popup: React.FC<PopupProps> = ({
         employee_number: employeeNumber,
         pieces_ok: piecesOK,
         pieces_rework: piecesRework,
-        pieces_scrap: piecesScrap,
         part_number: partNumber,
         work_order: workOrder,
+        total_ok: machineData.total_ok,
+        molder_number: molderNumber
       });
       onClose();
     } catch (error) {
@@ -171,7 +175,7 @@ const Popup: React.FC<PopupProps> = ({
                 htmlFor="employeeNumberInput"
                 className="text-xl w-11/12 md:w-1/2"
               >
-                Número de empleado
+                Empacador
               </label>
               <input
                 type="number"
@@ -179,9 +183,27 @@ const Popup: React.FC<PopupProps> = ({
                 value={employeeNumber}
                 onChange={handleEmployeeNumber}
                 ref={employeeNumberRef}
-                onKeyDown={(e) => handleKeyDown(e, piecesOKRef)}
+                onKeyDown={(e) => handleKeyDown(e, molderNumberRef)}
                 className="bg-white rounded-md w-full md:w-64 px-2"
                 placeholder={`${machineData.employee_number}`}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5">
+              <label
+                htmlFor="molderNumberInput"
+                className="text-xl w-11/12 md:w-1/2"
+              >
+                Moldeador
+              </label>
+              <input
+                type="number"
+                id="molderNumberInput"
+                value={molderNumber}
+                onChange={handMolderNumber}
+                ref={molderNumberRef}
+                onKeyDown={(e) => handleKeyDown(e, piecesOKRef)}
+                className="bg-white rounded-md w-full md:w-64 px-2"
+                placeholder={`${machineData.molder_number}`}
               />
             </div>
             <div className="flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5">
@@ -210,24 +232,8 @@ const Popup: React.FC<PopupProps> = ({
                 value={piecesRework}
                 onChange={handlePiecesRework}
                 ref={piecesReworkRef}
-                onKeyDown={(e) => handleKeyDown(e, piecesScrapRef)}
+                onKeyDown={(e) => handleKeyDown(e, null)}
                 placeholder={`${machineData.pieces_rework}`}
-                className="bg-white rounded-md w-full md:w-64 px-2"
-                min="0"
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5">
-              <label htmlFor="piecesScrapInput" className="text-xl w-11/12 md:w-1/2">
-                Piezas Scrap
-              </label>
-              <input
-                type="number"
-                id="piecesScrapInput"
-                value={piecesScrap}
-                onChange={handlePiecesScrap}
-                ref={piecesScrapRef}
-                onKeyDown={(e) => handleKeyDown(e, null)} // No next input
-                placeholder={`${machineData.pieces_scrap}`}
                 className="bg-white rounded-md w-full md:w-64 px-2"
                 min="0"
               />

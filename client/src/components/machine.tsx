@@ -40,7 +40,7 @@ const Machine: React.FC<MachineProps> = ({ machineData, onClick, selectedState }
 
     return (
         <div className={`flex flex-col items-center justify-center m-2 rounded p-4 ${backgroundColorClass} md:w-24 lg:w-28 cursor-pointer`} onClick={onClick}>
-            <h1 className='text-center text-white text-lg lg:text-2xl font-semibold'>{machineData.name}</h1>
+            <h1 className='text-center text-white text-lg lg:text-xl font-semibold'>{machineData.name}</h1>
             {icon && <div className='my-2'>{icon}</div>}
             <h2 className='text-center text-white text-md lg:text-xl font-semibold'>{machineData.employee_number}</h2>
         </div>
