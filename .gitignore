@@ -3,7 +3,7 @@
 Thumbs.db
 *.log
 .env
-__pycache__
+__pycache__/
 
 # React (client folder)
 client/node_modules/
