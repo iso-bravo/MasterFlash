@@ -3,6 +3,7 @@
 Thumbs.db
 *.log
 .env
+__pycache__
 
 # React (client folder)
 client/node_modules/
@@ -37,7 +38,6 @@ client/.yarn-integrity
 client/lerna-debug.log
 
 # Django (server folder)
-server/__pycache__/
 server/*.py[cod]
 server/*$py.class
 server/*.so
@@ -115,3 +115,4 @@ server/.pytype/
 server/cython_debug/
 server/.venv/
 server/masterflash/core/migrations/
+server/venv/
