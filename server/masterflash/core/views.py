@@ -610,7 +610,7 @@ def register_scrap(request):
             shift = empty_to_none(data.get('shift'))
             line = empty_to_none(data.get('line'))
             auditor = empty_to_none(data.get('auditor'))
-            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(9)]
+            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(10)]
             codes = {code: empty_to_none(value) for code, value in data.items() if code.startswith('codes[')}
 
             if inputs[0] == None:
@@ -640,6 +640,7 @@ def register_scrap(request):
                 compound=inputs[2] if len(inputs) > 2 else None,
                 mold=part_number_data('mold', inputs[0]),
                 insert=inputs[3] if len(inputs) > 3 else None,
+                inserts_total = inputs[9] if len(inputs) > 9 else None,
             )
 
             for code, value in codes.items():
