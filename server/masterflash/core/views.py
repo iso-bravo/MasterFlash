@@ -357,7 +357,7 @@ def register_data_production(request):
     data = request.POST.dict()
     logger.error(f'Data received: {data}')
     
-    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order')]):
+    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order'),data.get('inserts_total')]):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
@@ -418,6 +418,13 @@ def register_data_production(request):
         else:
             molderNumber = data.get('molder_number')
 
+        if data.get('inserts_total') == '' or data.get('inserts_total') == None:
+            inserts_total = None
+        else:
+            inserts_total = data.get('inserts_total')
+            #TODO check if the inserts_total is in the models/DB and check front in case the name is the issue
+            #! Important
+
     current_time = datetime.now().time()
     if time(7, 0) <= current_time <= time(16, 35):
         shift = 'First'
@@ -438,7 +445,8 @@ def register_data_production(request):
                 work_order = workOrder,
                 molder_number = molderNumber,
                 press = data.get('name'),
-                shift = shift
+                shift = shift,
+                inserts_total = inserts_total
             )
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
 
