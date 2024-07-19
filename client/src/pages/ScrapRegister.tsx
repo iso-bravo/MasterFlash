@@ -162,8 +162,6 @@ const ScrapRegister: React.FC = () => {
                 formBody.append(`codes[${code}]`, formData.codes[code]);
             });
 
-            console.log(formBody.toString());
-
             await api.post(`/register_scrap/`, formBody.toString(), {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -175,7 +173,7 @@ const ScrapRegister: React.FC = () => {
                 shift: '',
                 line: '',
                 auditor: '',
-                inputs: Array(9).fill(''),
+                inputs: Array(10).fill(''),
                 codes: {},
             });
 
@@ -255,14 +253,14 @@ const ScrapRegister: React.FC = () => {
     };
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
             <div className='flex items-start gap-3'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
                 <h1 className='text-xl'>Registro Scrap</h1>
             </div>
 
-            <div className='flex justify-end gap-4 items-center'>
+            <div className='lg:flex justify-end gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2'>
                 <div className='flex flex-row gap-2'>
                     <h2>Fecha</h2>
                     <input
@@ -316,12 +314,15 @@ const ScrapRegister: React.FC = () => {
                         className='rounded-sm w-20 h-6'
                     />
                 </div>
-                <button onClick={handleRegister} className='px-3 py-2 bg-[#9ADD57] rounded-md md:ml-4'>
+                <button
+                    onClick={handleRegister}
+                    className='px-3 py-2 bg-[#9ADD57] rounded-md md:ml-4 text-lg lg:text-sm hover:bg-[#8ddd3e]'
+                >
                     <h2>Registrar</h2>
                 </button>
             </div>
 
-            <div className='flex flex-row gap-5 mt-7 md:mt-10'>
+            <div className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
                 <div>
                     <div className='grid gap-y-5'>
                         {inputs.map((input, index) => (
@@ -336,7 +337,7 @@ const ScrapRegister: React.FC = () => {
                                         />
                                         <button
                                             onClick={handleSearchPartNumber}
-                                            className=' text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm'
+                                            className=' lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
                                         >
                                             Buscar
                                         </button>
@@ -350,7 +351,7 @@ const ScrapRegister: React.FC = () => {
                                         />
                                         <button
                                             onClick={handleSearchMetal}
-                                            className=' text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm'
+                                            className=' lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
                                         >
                                             Buscar
                                         </button>
@@ -368,7 +369,7 @@ const ScrapRegister: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-5 justify-items-center'>
+                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-x-6 gap-y-5 justify-items-center'>
                         {codes.map((code, index) => (
                             <div key={index} className='flex flex-row items-center'>
                                 <label className='w-14'>{code}</label>
