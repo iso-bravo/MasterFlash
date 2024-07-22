@@ -6,16 +6,18 @@ import MachineProduction from "../components/machineProduction";
 import Popup from "../components/popUpProduction";
 import "../index.css";
 import "../output.css";
+import { useNavigate } from "react-router-dom";
 
 interface MachineData {
   name: string;
   state: string;
   employee_number: string;
   pieces_ok: string;
-  pieces_scrap: string;
   pieces_rework: string;
   part_number: string;
   work_order: string;
+  total_ok: string;
+  molder_number: string;
 }
 
 const PressesProduction: React.FC = () => {
@@ -25,6 +27,7 @@ const PressesProduction: React.FC = () => {
   const [selectedMachine, setSelectedMachine] = useState<MachineData | null>(
     null
   );
+  const navigate = useNavigate();
 
   const fetchMachineData = () => {
     axios
@@ -65,51 +68,58 @@ const PressesProduction: React.FC = () => {
   const handleUpdateMachine = (updatedMachine: MachineData) => {
     let pieces_okAdd: number;
     let pieces_reworkAdd: number;
-    let pieces_scrapAdd: number;
     let produced: number;
+    let total_okAdd: number;
     setMachines(
       machines.map((machine) => {
         if (machine.name === updatedMachine.name) {
           if (
             updatedMachine.part_number == null ||
-            updatedMachine.part_number == ""
+            updatedMachine.part_number == "" ||
+            updatedMachine.part_number == machine.part_number
           ) {
             updatedMachine.part_number = machine.part_number;
+          } else {
+            updatedMachine.total_ok = '0';
           }
+
+          if (
+            updatedMachine.work_order == null ||
+            updatedMachine.work_order == ""
+          ) {
+            updatedMachine.work_order = machine.work_order;
+            if (updatedMachine.total_ok != '0') {
+              total_okAdd =
+              parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
+              updatedMachine.total_ok = total_okAdd.toString();
+            }
+          } else {
+            updatedMachine.total_ok = '0';
+          }
+
           if (
             updatedMachine.employee_number == null ||
             updatedMachine.employee_number == ""
           ) {
             updatedMachine.employee_number = machine.employee_number;
           }
-          if (
-            updatedMachine.work_order == null ||
-            updatedMachine.work_order == ""
-          ) {
-            updatedMachine.work_order = machine.work_order;
-          }
+
           if (
             updatedMachine.pieces_ok == null ||
             updatedMachine.pieces_ok == ""
           ) {
             updatedMachine.pieces_ok = machine.pieces_ok;
           } else {
+            if (updatedMachine.total_ok != '0') {
+              total_okAdd =
+              parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
+              updatedMachine.total_ok = total_okAdd.toString();
+            }
             pieces_okAdd =
               parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok);
             updatedMachine.pieces_ok = pieces_okAdd.toString();
             produced = parseInt(updatedMachine.pieces_ok)
             updateTotalProduced(produced);
-          }
-          if (
-            updatedMachine.pieces_scrap == null ||
-            updatedMachine.pieces_scrap == ""
-          ) {
-            updatedMachine.pieces_scrap = machine.pieces_scrap;
-          } else {
-            pieces_scrapAdd =
-              parseInt(machine.pieces_scrap) +
-              parseInt(updatedMachine.pieces_scrap);
-            updatedMachine.pieces_scrap = pieces_scrapAdd.toString();
           }
           if (
             updatedMachine.pieces_rework == null ||
@@ -122,6 +132,11 @@ const PressesProduction: React.FC = () => {
               parseInt(updatedMachine.pieces_rework);
             updatedMachine.pieces_rework = pieces_reworkAdd.toString();
           }
+
+          if (updatedMachine.molder_number == null ||
+            updatedMachine.molder_number == ""){
+              updatedMachine.molder_number = machine.molder_number;
+            }
           return updatedMachine;
         } else {
           return machine;
@@ -134,9 +149,9 @@ const PressesProduction: React.FC = () => {
     newEmployeeNumber: string,
     newPiecesOK: string,
     newPiecesRework: string,
-    newPiecesScrap: string,
     newPartNumber: string,
-    newWork_order: string
+    newWork_order: string,
+    newMolderNumber: string
   ) => {
     if (!selectedMachine) return;
     // Optimistic update
@@ -146,9 +161,9 @@ const PressesProduction: React.FC = () => {
       employee_number: newEmployeeNumber,
       pieces_ok: newPiecesOK,
       pieces_rework: newPiecesRework,
-      pieces_scrap: newPiecesScrap,
       part_number: newPartNumber,
       work_order: newWork_order,
+      molder_number: newMolderNumber
     };
     setSelectedMachine(updatedMachine);
 
@@ -161,9 +176,9 @@ const PressesProduction: React.FC = () => {
           employee_number: newEmployeeNumber,
           pieces_ok: newPiecesOK,
           pieces_rework: newPiecesRework,
-          pieces_scrap: newPiecesScrap,
           part_number: newPartNumber,
           work_order: newWork_order,
+          molder_number: newMolderNumber
         },
         {
           headers: {
@@ -190,6 +205,7 @@ const PressesProduction: React.FC = () => {
         <IoIosArrowRoundBack
           size={65}
           className="cursor-pointer absolute left-0"
+          onClick={() => navigate('/')}
         />
         <div className="flex flex-col md:flex-row text-center gap-3 items-center">
           <h1 className="font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl">

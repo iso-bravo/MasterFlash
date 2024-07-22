@@ -1,0 +1,4 @@
+server/venv/
+venv/
+server/masterflash/core/migrations/
+server/masterflash/core/__pycache__/

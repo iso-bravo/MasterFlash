@@ -9,9 +9,10 @@ interface MachineProps {
         state: string;
         employee_number: string;
         pieces_ok: string;
-        pieces_scrap: string;
         pieces_rework: string;
         part_number: string;
+        total_ok: string;
+
     };
     onClick: () => void;
     selectedState: string;
@@ -47,16 +48,16 @@ const MachineProduction: React.FC<MachineProps> = ({ machineData, onClick, selec
             <div className=' w-2/3'>
                 <h1 className=' text-start text-xl md:text-xl lg:text-2xl '>{machineData.part_number}</h1>
                 <div className='flex gap-2 text-md items-center'>
-                    <p className='mt-3 text-lg sm:text-lg md:text-lg lg:text-xl xl:text-xl'>Producido:</p>
+                    <p className='mt-3 text-lg sm:text-lg md:text-lg lg:text-xl xl:text-xl'>Actual:</p>
                     <p className='mt-3 text-xl sm:text-xl md:text-2xl lg:text-2xl font-semibold'>{machineData.pieces_ok}</p>
-                </div>
+                </div>  
                 <div className='flex gap-2 items-center'>
-                    <p className='mt-3 text-lg sm:text-lg md:text-lg lg:text-xl'>Scrap:</p>
-                    <p className='mt-3 text-xl sm:text-xl md:text-2xl lg:text-2xl font-semibold'>{machineData.pieces_scrap}</p>
-                </div>
+                    <p className='mt-3 text-lg sm:text-lg md:text-lg lg:text-xl'>Total Producido:</p>
+                    <p className='mt-3 text-xl sm:text-xl md:text-2xl lg:text-2xl font-semibold'>{machineData.total_ok}</p>
+                </div> 
             </div>
             <div className=' flex flex-col '>
-            <h1 className='text-center text-lg md:text-xl lg:text-2xl font-semibold'>{machineData.name}</h1>
+            <h1 className='text-center text-md 685:text-lg lg:text-xl font-semibold'>{machineData.name}</h1>
             {icon && <div className='flex my-3 justify-center'>{icon}</div>}
             <h2 className='flex justify-center text-lg md:text-xl lg:text-xl'>{machineData.employee_number}</h2>
             </div>

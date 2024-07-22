@@ -6,6 +6,7 @@ import Popup from '../components/popUpStates';
 import '../App.css';
 import '../index.css';
 import '../output.css';
+import { useNavigate } from "react-router-dom";
 
 interface MachineData {
   name: string;
@@ -17,6 +18,7 @@ const PressesStates: React.FC = () => {
   const [machines, setMachines] = useState<MachineData[]>([]);
   const [isPopupOpen, setPopupOpen] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState<MachineData | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get('http://192.168.10.7:8001/load_machine_data/',
@@ -176,7 +178,8 @@ const PressesStates: React.FC = () => {
   return (
     <div className=' lg:p-2'>
       <div className='flex flex-wrap items-center justify-center'>
-        <IoIosArrowRoundBack size={65} className='cursor-pointer absolute left-0' />
+        <IoIosArrowRoundBack size={65} className='cursor-pointer absolute left-0' 
+          onClick={() => navigate('/')}/>
         <div className='text-center'>
           <h1 className='text-2xl md:text-3xl lg:text-4xl xl:text-5xl'>PRENSAS</h1>
         </div>

@@ -1,20 +1,22 @@
 import logging
 from datetime import date, datetime, time
+from urllib import response
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
-from .models import LinePress, StateBarwell, StatePress, StateTroquelado, ProductionPress
+from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert
 from django.utils import timezone
 from django.db.models import Q, Sum
+from django.shortcuts import get_object_or_404
 
 @csrf_exempt
 def arduino_data(request, path, value):
     if not path or not value:
         return HttpResponse("Path and value are required", status=400)
 
-    if value.startswith("LIN-"):
+    if value.startswith("LIN-") or value.startswith("MVFP-"):
         return register_data(StatePress, path, value)
     elif value.startswith("MT-"):
         return register_data(StateTroquelado, path, value)
@@ -107,12 +109,12 @@ def client_data(request):
 
         if last_record:
             if data.get('employeeNumber') == '':
-                employeeNumber = last_record.employee_number;
+                employeeNumber = last_record.employee_number
             else:
                 employeeNumber = data.get('employeeNumber')
         else:
             if data.get('employeeNumber') == '':
-                employeeNumber = None;
+                employeeNumber = None
             else:
                 employeeNumber = data.get('employeeNumber')
         
@@ -238,10 +240,16 @@ def load_machine_data_production(request):
                 workOrder = ''
             else:
                 workOrder = production.work_order
+
+            if production.molder_number == None or production.molder_number == '':
+                molderNumber = '----'
+            else:
+                molderNumber = production.molder_number
         else:
             partNumber = '--------'
             employeeNumber = '----'
             workOrder = ''
+            molderNumber = '----'
 
         if shift == 'First':
             production = ProductionPress.objects.filter(
@@ -251,8 +259,7 @@ def load_machine_data_production(request):
                 date_time__time__range=(time(7, 0), time(16, 35))
             ).aggregate(
                 total_ok=Sum('pieces_ok'),
-                total_rework=Sum('pieces_rework'),
-                total_scrap=Sum('pieces_scrap')
+                total_rework=Sum('pieces_rework')
             )
         elif shift == 'Second':
             production = ProductionPress.objects.filter(
@@ -260,18 +267,17 @@ def load_machine_data_production(request):
                 Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time.min, time(1, 20)))
             ).aggregate(
                 total_ok=Sum('pieces_ok'),
-                total_rework=Sum('pieces_rework'),
-                total_scrap=Sum('pieces_scrap')
+                total_rework=Sum('pieces_rework')
             )
        
-        if production:
+        if (production and (shift == 'First')) or (production and (shift == 'Second')):
             total_ok = production['total_ok'] if production['total_ok'] else 0
             total_rework = production['total_rework'] if production['total_rework'] else 0
-            total_scrap = production['total_scrap'] if production['total_scrap'] else 0
+            actual_ok = sum_pieces(machine, shift, current_date)
         else:
             total_ok = 0
             total_rework = 0
-            total_scrap = 0
+            actual_ok = 0
         
         if len(states) > 0:
             last_state = states.latest("date", "start_time")
@@ -283,28 +289,30 @@ def load_machine_data_production(request):
             'name': machine.name,
             'state': machine_state,
             'employee_number': employeeNumber,
-            'pieces_ok': total_ok,
+            'pieces_ok': actual_ok,
             'pieces_rework': total_rework,
-            'pieces_scrap': total_scrap,
             'part_number': partNumber,
             'work_order' : workOrder,
+            'total_ok': total_ok,
+            'molder_number': molderNumber
         }
         total_piecesProduced += total_ok
         machines_data.append(machine_data)
-        
+
+    #logger.error(f'total_piecesProduced: {total_piecesProduced}')    
     response_data = {
         'machines_data': machines_data,
         'total_piecesProduced': total_piecesProduced,
     }
-
+    #logger.error(f'total_piecesProduced: {response_data}') 
     return JsonResponse(response_data, safe=False)
 
-def sum_pieces(machine, pieces):
+def sum_pieces(machine, shift, current_date):
         logger = logging.getLogger(__name__)    
         last_record = ProductionPress.objects.filter(press=machine.name).order_by('-date_time').first()
 
-        logger.error(f'machine: {machine.name}')
-        logger.error(f'last_record: {last_record}')
+        #logger.error(f'machine: {machine.name}')
+        #logger.error(f'last_record: {last_record}')
 
         if not last_record:
             return 0
@@ -312,21 +320,32 @@ def sum_pieces(machine, pieces):
         part_number = last_record.part_number
         work_order = last_record.work_order
         pieces_sum = 0
-
-        records = ProductionPress.objects.order_by('-date_time')
+        
+        #logger.error(f'last_record: {machine.name}')
+        #logger.error(f'shift: {shift}')
+        if shift == 'First':
+            records = ProductionPress.objects.filter(
+                press=machine.name,
+                shift=shift,
+                date_time__date=current_date,
+                date_time__time__range=(time(7, 0), time(16, 35))
+            ).order_by('-date_time')
+        elif shift == 'Second':
+            records = ProductionPress.objects.filter(
+                Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time(16, 36), time.max)) |
+                Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time.min, time(1, 20)))
+            ).order_by('-date_time')
+        else:
+            return 0
+        
         record_iterator = records.iterator()
 
         current_record = next(record_iterator, None)
         while current_record and current_record.part_number == part_number and current_record.work_order == work_order:
-            if pieces == 'pieces_ok':
-                pieces_sum += current_record.pieces_ok or 0
-            elif pieces == 'pieces_rework':
-                pieces_sum += current_record.pieces_rework or 0
-            else:
-                pieces_sum += current_record.pieces_scrap or 0
+            pieces_sum += current_record.pieces_ok or 0
             current_record = next(record_iterator, None)
-        logger.error(f'pieces_sum: {pieces_sum}')
-        logger.error('------------------------------------------------------')
+        #logger.error(f'pieces_sum: {pieces_sum}')
+        #logger.error('------------------------------------------------------')
 
         return pieces_sum
 
@@ -338,21 +357,21 @@ def register_data_production(request):
     data = request.POST.dict()
     logger.error(f'Data received: {data}')
     
-    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_scrap'), data.get('pieces_rework'), data.get('work_order')]):
+    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order')]):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
+    if Part_Number.objects.filter(part_number=data.get('part_number')).exists():
+        pass
+    else:
+        return JsonResponse({'message': 'Registro invalido.'}, status=404)
+
     last_record = ProductionPress.objects.filter(press=data.get('name')).order_by('-date_time').first()
     
     if data.get('pieces_ok') == '':
         piecesOk = 0
     else:
         piecesOk = data.get('pieces_ok')
-            
-    if data.get('pieces_scrap') == '':
-        piecesScrap = 0
-    else:
-        piecesScrap = data.get('pieces_scrap')
             
     if data.get('pieces_rework') == '':
         piecesRework = 0
@@ -372,6 +391,11 @@ def register_data_production(request):
         else:
             partNumber = data.get('part_number')
             
+        if data.get('molder_number') == '' or data.get('molder_number') == None:
+            molderNumber = last_record.molder_number
+        else:
+            molderNumber = data.get('molder_number')
+
         if data.get('work_order') == '' or data.get('work_order') == None:
             workOrder = last_record.work_order
         else:
@@ -383,10 +407,16 @@ def register_data_production(request):
             employeeNumber = int(data.get('employee_number'))
             
         partNumber = data.get('part_number')
+
         if data.get('work_order') == '' or data.get('work_order') == None:
             workOrder = ''
         else:
-            workOrder = int(data.get('work_order'))
+            workOrder = data.get('work_order')
+
+        if data.get('molder_number') == '' or data.get('molder_number') == None:
+            molderNumber = None
+        else:
+            molderNumber = data.get('molder_number')
 
     current_time = datetime.now().time()
     if time(7, 0) <= current_time <= time(16, 35):
@@ -402,10 +432,11 @@ def register_data_production(request):
                 date_time = datetime.now(),
                 employee_number = employeeNumber,
                 pieces_ok = piecesOk,
-                pieces_scrap = piecesScrap,
+                pieces_scrap = 0,
                 pieces_rework = piecesRework,
                 part_number = partNumber,
                 work_order = workOrder,
+                molder_number = molderNumber,
                 press = data.get('name'),
                 shift = shift
             )
@@ -489,3 +520,201 @@ def presses_general_failure(request):
                 last_record.save()
 
     return JsonResponse({'message': 'General Failure Success.'}, status=201)
+
+# Register Scrap
+def load_scrap_data(request):
+    machines_query = LinePress.objects.filter(status="Available").values_list('name', flat=True)
+    machines = list(machines_query)
+    
+    return JsonResponse(machines, safe=False)
+
+def search_in_part_number(request):
+    data = request.GET.dict()
+    part_number = data.get('part_number')
+
+    if not part_number:
+        return JsonResponse({"error": "part_number is required"}, status=400)
+
+    part_record = get_object_or_404(Part_Number, part_number=part_number)
+
+    rubber_compound = getattr(part_record, 'rubber_compound', None)
+    insert = getattr(part_record, 'insert', None)
+    caliber = getattr(part_record, 'caliber', None)
+
+    if insert is not None and caliber is not None:
+        insert_record = get_object_or_404(Insert, insert=insert, caliber=caliber)
+        weight = getattr(insert_record, 'weight', None)
+    else:
+        weight = None
+
+    data = {
+        'Compuesto': rubber_compound,
+        'Inserto': insert,
+        'Metal': caliber,
+        'Ito. s/hule': weight,
+    }
+
+    return JsonResponse(data, safe=False)
+
+def search_weight(request):
+    data = request.GET.dict()
+    metal = data.get('metal')
+    insert = data.get('inserto')
+
+    print(metal, insert)
+
+    if not metal or not insert:
+        return JsonResponse({"error": "metal and insert are required"}, status=400)     
+
+    insert_record = get_object_or_404(Insert, insert=insert, caliber=metal  )   
+    weight = getattr(insert_record, 'weight', None)
+
+    response_data = {
+        'Ito. s/hule': weight,
+    }
+
+    return JsonResponse(response_data, safe=False)                                                                     
+
+@csrf_exempt
+@require_POST
+def register_scrap(request):
+            print('entro')
+            data = request.POST.dict()
+            print(data)
+            total_pieces = 0
+
+            def empty_to_none(value):
+                return None if value == '' else value
+        
+            def part_number_data(field, part_number):
+                try:
+                    part = Part_Number.objects.get(part_number=part_number)
+                    print(part)
+                    return getattr(part, field, None)
+                except Exception as e:
+                    print(f'Error in client_data view: {str(e)}')
+                    return JsonResponse({'error': str(e)}, status=500)
+        
+            def gr_to_lbs(gr):
+                return gr * 0.00220462
+
+            date = empty_to_none(data.get('date'))
+            shift = empty_to_none(data.get('shift'))
+            line = empty_to_none(data.get('line'))
+            auditor = empty_to_none(data.get('auditor'))
+            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(9)]
+            codes = {code: empty_to_none(value) for code, value in data.items() if code.startswith('codes[')}
+
+            if inputs[0] == None:
+                return JsonResponse({'message': 'Part Number Required'}, status=400)
+
+            current_time = datetime.now().time()
+            current_time_str = current_time.strftime('%H:%M:%S.%f')
+
+            if date == '' or date == None:
+                date = datetime.now(),
+            else:
+                date = data.get('date') + ' ' + current_time_str
+    
+
+            scrap_entry = Qc_Scrap(
+                date_time=date,
+                shift=shift,
+                line=line,
+                auditor_qc=auditor,
+                part_number=inputs[0] if len(inputs) > 0 else None,
+                molder_number=inputs[1] if len(inputs) > 1 else None,
+                caliber=inputs[4] if len(inputs) > 4 else None,
+                rubber_weight=inputs[5] if len(inputs) > 5 else None,
+                insert_weight_w_rubber=inputs[6] if len(inputs) > 6 else None,
+                insert_weight_wout_rubber=inputs[7] if len(inputs) > 7 else None,
+                recycled_inserts=inputs[8] if len(inputs) > 8 else None,
+                compound=inputs[2] if len(inputs) > 2 else None,
+                mold=part_number_data('mold', inputs[0]),
+                insert=inputs[3] if len(inputs) > 3 else None,
+            )
+
+            for code, value in codes.items():
+                if value is None:
+                    setattr(scrap_entry, code[6:-1], None)
+                else:
+                    setattr(scrap_entry, code[6:-1], int(value))
+                    total_pieces += int(value)
+
+            print(total_pieces)        
+
+            if len(inputs) > 5:
+                total_bodies_weight = int(inputs[5])
+            else:
+                total_bodies_weight = 0
+
+            print(total_bodies_weight)
+
+            if len(inputs) > 9:
+                total_inserts_weight = int(inputs[7]) * int(inputs[9])
+            else:
+                total_inserts_weight = 0
+
+            print(total_inserts_weight)
+
+            if len(inputs) > 6:
+                total_rubber_weight_in_insert = (int(inputs[6])) - total_inserts_weight
+            else:
+                total_rubber_weight_in_insert = 0
+            
+            print(total_rubber_weight_in_insert)
+
+            total_rubber_weight = (total_bodies_weight + total_rubber_weight_in_insert)
+
+            scrap_entry.total_pieces = total_pieces
+            scrap_entry.total_bodies_weight = total_bodies_weight
+            scrap_entry.total_inserts_weight = total_inserts_weight
+            scrap_entry.total_rubber_weight_in_insert = total_rubber_weight_in_insert
+            scrap_entry.total_rubber_weight = total_rubber_weight
+            scrap_entry.total_bodies_weight_lbs = gr_to_lbs(total_bodies_weight)
+            scrap_entry.total_inserts_weight_lbs = gr_to_lbs(total_inserts_weight)
+            scrap_entry.total_rubber_weight_in_insert_lbs = gr_to_lbs(total_rubber_weight_in_insert)
+            scrap_entry.total_rubber_weight_lbs = gr_to_lbs(total_rubber_weight)
+
+            scrap_entry.save()
+        
+            return JsonResponse({'message': 'Registro exitoso'}, status=200)
+        
+def register(request):
+    print('Aqui')
+    return JsonResponse({'message': 'Registro exitoso'}, status=200)
+    
+
+#Report Quality
+#""""
+def export_report(request):
+    try:
+        data = request.POST.dict()
+
+        caliber = data.get('aluminio')
+        date = data.get('fecha')
+
+        records = Qc_Scrap.objects.filter(date_time=date)
+
+        def gr_to_lbs(gr):
+                return gr * 0.00220462
+        
+        
+
+    except Exception as e:
+            return JsonResponse({'message': "Error: {}".format(str(e))}, status=400)
+#"""
+
+def register_production(request):
+    try:
+        data = request.POST.dict()
+        date = data.get('fecha')
+
+        records = ProductionPress.objects.filter(date_time=date)
+
+        
+        
+        
+
+    except Exception as e:
+            return JsonResponse({'message': "Error: {}".format(str(e))}, status=400)

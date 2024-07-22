@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cjfx1n-2__i%2@4op@qcjgf(+1@c&+%4&idux@y)sfc(kgdwck
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', '192.168.10.7', 'smimx.net', '192.168.0.236', 'http://192.168.10.7:5174', '192.168.10.7:5174']
 
 
 # Application definition
@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'masterflash.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'master_flash2',
+        'NAME': 'master_flash_test',
         'USER': 'serversmi',
         'PASSWORD': 'adminserver123!',
         'HOST': '192.168.10.4',
