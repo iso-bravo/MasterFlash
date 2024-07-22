@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../config/axiosConfig";
 import React, { useEffect, useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import "../App.css";
@@ -30,8 +30,8 @@ const PressesProduction: React.FC = () => {
   const navigate = useNavigate();
 
   const fetchMachineData = () => {
-    axios
-      .get("http://192.168.10.7:8001/load_machine_data_production/", {
+    api
+      .get("/load_machine_data_production/", {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
@@ -61,6 +61,7 @@ const PressesProduction: React.FC = () => {
 
   const updateTotalProduced = (pieces_ok: number) => {
     let total;
+    // eslint-disable-next-line prefer-const
     total = totalPiecesProduced + pieces_ok;
     setTotalPiecesProduced(total);
   };
@@ -168,23 +169,23 @@ const PressesProduction: React.FC = () => {
     setSelectedMachine(updatedMachine);
 
     try {
-      await axios.post(
-        "http://192.168.10.7:8001/register_data_production/",
-        {
-          name: selectedMachine.name,
-          state: selectedMachine.state,
-          employee_number: newEmployeeNumber,
-          pieces_ok: newPiecesOK,
-          pieces_rework: newPiecesRework,
-          part_number: newPartNumber,
-          work_order: newWork_order,
-          molder_number: newMolderNumber
-        },
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+      await api.post(
+          'register_data_production/',
+          {
+              name: selectedMachine.name,
+              state: selectedMachine.state,
+              employee_number: newEmployeeNumber,
+              pieces_ok: newPiecesOK,
+              pieces_rework: newPiecesRework,
+              part_number: newPartNumber,
+              work_order: newWork_order,
+              molder_number: newMolderNumber,
           },
-        }
+          {
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+          },
       );
       console.log("Machine state updated successfully!");
     } catch (error) {

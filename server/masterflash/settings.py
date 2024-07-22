@@ -76,14 +76,16 @@ WSGI_APPLICATION = 'masterflash.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+from decouple import config 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'master_flash_test',
-        'USER': 'serversmi',
-        'PASSWORD': 'adminserver123!',
-        'HOST': '192.168.10.4',
-        'PORT': '3306',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),  
+        'PASSWORD': config('DB_PASSWORD'),  
+        'HOST': config('DB_HOST'),  
+        'PORT': config('DB_PORT'),  
     }
 }
 

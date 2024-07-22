@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../config/axiosConfig';
 import React, { useEffect, useState } from 'react';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import Machine from '../components/machine';
@@ -14,6 +14,7 @@ interface MachineData {
   employee_number: string;
 }
 
+
 const PressesStates: React.FC = () => {
   const [machines, setMachines] = useState<MachineData[]>([]);
   const [isPopupOpen, setPopupOpen] = useState(false);
@@ -21,7 +22,7 @@ const PressesStates: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://192.168.10.7:8001/load_machine_data/',
+    api.get('/load_machine_data/',
     {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -106,8 +107,8 @@ const PressesStates: React.FC = () => {
     setSelectedMachine(updatedMachine);
 
     try {
-      await axios.post(
-        "http://192.168.10.7:8001/client_data/",
+      await api.post(
+        "/client_data/",
         {
           name: selectedMachine.name,
           state: newState,
@@ -135,8 +136,8 @@ const PressesStates: React.FC = () => {
 
   const generalPause = () => {
     handleGeneralPause();
-    axios
-      .post("http://192.168.10.7:8001/presses_general_pause/")
+    api
+      .post("/presses_general_pause/")
       .catch((error) => {
         console.error("Error pausing machines:", error);
       });
@@ -144,8 +145,8 @@ const PressesStates: React.FC = () => {
 
   const generalFailure = () => {
     handleGeneralFailure();
-    axios
-      .post("http://192.168.10.7:8001/presses_general_failure/")
+    api
+      .post("/presses_general_failure/")
       .catch((error) => {
         console.error("Error failure machines:", error);
       });

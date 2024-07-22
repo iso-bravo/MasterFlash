@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../config/axiosConfig";
 import React, { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -37,7 +37,7 @@ const PressesRegisterProduction: React.FC = () => {
   useEffect(() => {
     const fetchMachines = async () => {
       try {
-        const response = await axios.get("http://192.168.10.7:8001/load_scrap_data/");
+        const response = await api.get("/load_scrap_data/");
         console.log(response.data);
         setMachines(response.data);
       } catch (error) {
@@ -112,8 +112,8 @@ const PressesRegisterProduction: React.FC = () => {
         formBody.append(`codes[${code}]`, formData.codes[code]);
       });
 
-      await axios.post(
-        `http://192.168.10.7:8001/register_scrap/`,
+      await api.post(
+        `register_scrap/`,
         formBody.toString(),
         {
           headers: {
@@ -147,7 +147,7 @@ const PressesRegisterProduction: React.FC = () => {
         toast.error("Favor de introducir No. Parte");
       }
 
-      const response = await axios.get(`http://192.168.10.7:8001/search_in_part_number/`, {
+      const response = await api.get(`search_in_part_number/`, {
         params: { part_number: partNumber }
       });
       
@@ -187,7 +187,7 @@ const PressesRegisterProduction: React.FC = () => {
         return;
       }
 
-      const response = await axios.get(`http://192.168.10.7:8001/search_weight`, {
+      const response = await api.get(`http://192.168.10.7:8001/search_weight`, {
         params: { metal: metal, inserto: inserto }
       });
 

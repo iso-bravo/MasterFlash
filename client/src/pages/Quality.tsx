@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Scrap from "../assets/scrap.png"
 import { BsFillFileEarmarkCheckFill } from "react-icons/bs";
