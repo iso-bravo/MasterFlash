@@ -26,10 +26,21 @@ def generate_report(request):
     if insert:
         filters['insert'] = insert
     
-    data = Qc_Scrap.objects.filter(**filters).values('date_time','compound','total_rubber_weight_in_insert','total_rubber_weight_lbs','total_inserts_weight_lbs')
+    data = Qc_Scrap.objects.filter(**filters).values('compound','total_rubber_weight_in_insert_lbs','total_rubber_weight_in_insert','total_rubber_weight_lbs','total_inserts_weight_lbs','inserts_total')
     print(data)
 
-    total_rubber_weight_lbs_sum = sum(item['total_rubber_weight_lbs'] for item in data)
+
+    #total de hule
+    total_rubber_weight_in_inserts_sum = sum(item['total_rubber_weight_in_insert'] for item in data)
+
+    # Hule/Sil Lbs
+    total_rubber_weight_in_insert_lbs_sum = sum(item['total_rubber_weight_in_insert_lbs'] for item in data)
+
+    inserts_total_sum = sum(item['inserts_total'] for item in data)
+
+    # suma total
+    total_sum = total_rubber_weight_in_insert_lbs_sum + inserts_total_sum
+
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer,pagesize=letter)
@@ -39,14 +50,14 @@ def generate_report(request):
     y = height - 150
 
     for item in data:
-        p.drawString(100,y,f"Fecha: {item['date_time'].strftime('%Y-%m-%d %H:%M:%S')}, compound: {item['compound']} ")
-        p.drawString(100,y - 15, f"Total: {item['total_rubber_weight_in_insert']}, Lbs: {item['total_rubber_weight_lbs']}, Aluminio: {item['total_inserts_weight_lbs']}")
+        p.drawString(100,y,f", Compound: {item['compound']}, Total: {item['total_rubber_weight_in_insert']}, Lbs: {item['total_rubber_weight_in_insert_lbs']}, Aluminio lbs: {item['total_inserts_weight_lbs']}")
         y -= 45
         if y < 50:
             p.showPage()
             y = height - 50
 
-    p.drawString(100,y - 45,f"Suma Total: {total_rubber_weight_lbs_sum}")
+    p.drawString(100,y - 20,f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum}, Total de insertos: {inserts_total_sum}, Total de hule: {total_rubber_weight_in_inserts_sum}")
+    p.drawString(100,y - 45,f"Suma Total: {total_sum}")
 
     p.save()
 

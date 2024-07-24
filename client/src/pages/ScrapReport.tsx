@@ -1,8 +1,25 @@
+import { useState } from "react";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 
+interface InputFields {
+    date: string,
+    caliber: string
+    insert: string | null
+}
+
 const ScrapReport: React.FC = () => {
+
+    const [formData,setFormData] = useState<InputFields>({
+        date: '',
+        caliber: '',
+        insert:null
+    })
+
+    const [showInsert,setShowInsert] = useState(false)
+
+
     const navigate = useNavigate();
 
     return (
