@@ -93,14 +93,14 @@ const ScrapReport: React.FC = () => {
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
-            <header className='flex items-start gap-3'>
+            <header className='flex items-start gap- 3'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/reports_menu')} />
                 <h1 className='text-xl'>Reportes</h1>
             </header>
 
             <form
                 onSubmit={handleSubmit}
-                className='lg:flex justify-end gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2'
+                className='lg:flex justify-end gap-4 items-center grid md:flex  sm:grid-flow-col sm:grid sm:grid-rows-2'
             >
                 <div className='flex flex-row gap-2'>
                     <h2>Fecha</h2>
@@ -148,7 +148,7 @@ const ScrapReport: React.FC = () => {
             </form>
             {pdfUrl && (
                 <div>
-                    <iframe src={pdfUrl} width='100%' height='780px' className='mt-10'></iframe>
+                    <iframe src={pdfUrl} width='100%' height='100%' className='mt-10 h-screen rounded-md'></iframe>
                 </div>
             )}
         </div>

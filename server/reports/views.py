@@ -5,6 +5,9 @@ from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from masterflash.core.models import Qc_Scrap
 import io
 
@@ -42,27 +45,57 @@ def generate_report(request):
     total_sum = total_rubber_weight_in_insert_lbs_sum + inserts_total_sum
 
 
+    # Crear el PDF
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer,pagesize=letter)
-    width,height = letter
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
 
-    p.drawString(100, height - 100, f"Reporte para la fecha: {date} y calibre: {caliber}")
-    y = height - 150
+    styles = getSampleStyleSheet()
+    title_style = styles['Heading1']
+    normal_style = styles['Normal']
 
+    # Título del reporte
+    title = Paragraph(f"Reporte para la fecha: {date} y calibre: {caliber}", title_style)
+    elements.append(title)
+    elements.append(Paragraph(" ", normal_style))  
+
+    # Crear la tabla de datos
+    data_table = [["Compound", "Total", "Lbs", "Aluminio lbs"]]
     for item in data:
-        p.drawString(100,y,f", Compound: {item['compound']}, Total: {item['total_rubber_weight_in_insert']}, Lbs: {item['total_rubber_weight_in_insert_lbs']}, Aluminio lbs: {item['total_inserts_weight_lbs']}")
-        y -= 45
-        if y < 50:
-            p.showPage()
-            y = height - 50
+        data_table.append([
+            item['compound'],
+            f"{item['total_rubber_weight_in_insert']:.2f}",
+            f"{item['total_rubber_weight_in_insert_lbs']:.2f}",
+            f"{item['total_inserts_weight_lbs']:.2f}"
+        ])
 
-    p.drawString(100,y - 20,f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum}, Total de insertos: {inserts_total_sum}, Total de hule: {total_rubber_weight_in_inserts_sum}")
-    p.drawString(100,y - 45,f"Suma Total: {total_sum}")
+    table = Table(data_table)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(table)
+    elements.append(Paragraph(" ", normal_style))  
 
-    p.save()
+    # Añadir los totales
+    totals = [
+        f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
+        f"Total de insertos: {inserts_total_sum:.2f}",
+        f"Total de hule: {total_rubber_weight_in_inserts_sum:.2f}",
+        f"Suma Total: {total_sum:.2f}"
+    ]
+    for total in totals:
+        elements.append(Paragraph(total, normal_style))
+
+    doc.build(elements)
 
     buffer.seek(0)
-    response = HttpResponse(buffer,content_type = 'application/pdf')
-    response['Content-Disposition'] = f"inline; filename= reporte scrap - {date}"
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f"inline; filename=reporte_scrap_{date}.pdf"
     return response
 
