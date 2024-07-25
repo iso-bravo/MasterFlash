@@ -2,7 +2,7 @@
 .DS_Store
 Thumbs.db
 *.log
-.env
+*.env
 **/__pycache__/
 
 # React (client folder)
