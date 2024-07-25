@@ -2,7 +2,7 @@
 .DS_Store
 Thumbs.db
 *.log
-.env
+*.env
 **/__pycache__/
 
 # React (client folder)
@@ -36,6 +36,7 @@ client/.node_repl_history
 client/*.tgz
 client/.yarn-integrity
 client/lerna-debug.log
+client/.env
 
 # Django (server folder)
 server/*.py[cod]

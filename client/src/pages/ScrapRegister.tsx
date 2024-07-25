@@ -7,7 +7,6 @@ import '../index.css';
 import '../output.css';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
-import { log } from 'console';
 //import Cookies from 'js-cookie';
 
 interface InputFields {
