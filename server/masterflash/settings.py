@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cjfx1n-2__i%2@4op@qcjgf(+1@c&+%4&idux@y)sfc(kgdwck
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '192.168.10.7', 'smimx.net', '192.168.0.236', 'http://192.168.10.7:5174', '192.168.10.7:5174','192.168.1.82:8000']
+ALLOWED_HOSTS = ['*', '192.168.10.7', 'smimx.net', '192.168.0.236', 'http://192.168.10.7:5174', '192.168.10.7:5174']
 
 
 # Application definition
@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'masterflash.core'
+    'masterflash.core',
+    'reports'
 ]
 
 MIDDLEWARE = [
