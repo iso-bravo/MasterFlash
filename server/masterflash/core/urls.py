@@ -19,5 +19,6 @@ urlpatterns = [
     path('search_weight/', views.search_weight, name='search_weight'),
     path('register_scrap/', views.register_scrap, name='register_scrap'),
     path('register/', views.register, name='register'),
+    path('get_production_press_by_date/',views.get_production_press_by_date, name='get_all_production_press'),
 
 ]
