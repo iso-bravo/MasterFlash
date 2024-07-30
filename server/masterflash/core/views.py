@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
-from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert
+from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert, Presses_monthly_goals
 from django.utils import timezone
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404
@@ -727,3 +727,57 @@ def register_production(request):
 
     except Exception as e:
             return JsonResponse({'message': "Error: {}".format(str(e))}, status=400)
+
+@csrf_exempt
+@require_POST
+def post_monthly_goal(request):
+    data = request.POST.dict()
+    print(data)
+    try:
+        month = int(data['month'])
+        year = int(data['year'])
+        target_amount = float(data['target_amount'])
+        goal = Presses_monthly_goals(month=month,year=year,target_amount=target_amount)
+        goal.save()
+        return JsonResponse({'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=201)
+
+    except KeyError:
+
+        return JsonResponse({'error': 'Missing fields'}, status=400)
+
+    except ValueError:
+
+            return JsonResponse({'error': 'Invalid data types'}, status=400)
+    
+
+def get_presses_monthly_goal(request,year,month):
+    try:
+        goal = Presses_monthly_goals.objectsj.get(year=year,month=month)
+        return JsonResponse({'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount})
+
+    except Presses_monthly_goals.DoesNotExist:
+        return HttpResponse(status=404)
+
+def get_presses_production_percentage(request,year,month):
+    try:
+        goal = Presses_monthly_goals.objects.get(year=year,month=month)
+        
+        start_date = datetime.date(year,month,1)
+
+        if month == 12:
+            end_date = datetime.date(year + 1,1,1)
+        
+        else:
+            end_date = datetime.date(year,month + 1,1)
+        
+
+        total_pieces = ProductionPress.objects.filter(
+            date_time__gte = start_date,
+            date_time__lt = end_date
+        ).aggregate(Sum('pieces_ok'))['pieces_ok__sum'] or 0
+
+        percentage  = (total_pieces / goal.target_amount) * 100
+
+        return JsonResponse({'percentage': percentage, 'total_pieces': total_pieces})
+    except Presses_monthly_goals.DoesNotExist:
+        return HttpResponse(status=404)
