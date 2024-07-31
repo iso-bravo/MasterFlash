@@ -752,31 +752,29 @@ def post_monthly_goal(request):
 
 def get_presses_monthly_goal(request,year,month):
     try:
-        goal = Presses_monthly_goals.objectsj.get(year=year,month=month)
+        goal = Presses_monthly_goals.objects.get(year=year,month=month)
         return JsonResponse({'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount})
 
     except Presses_monthly_goals.DoesNotExist:
         return HttpResponse(status=404)
 
-def get_presses_production_percentage(request,year,month):
+def get_presses_production_percentage(request, year, month):
     try:
-        goal = Presses_monthly_goals.objects.get(year=year,month=month)
+        goal = Presses_monthly_goals.objects.get(year=year, month=month)
         
-        start_date = datetime.date(year,month,1)
+        start_date = date(year, month, 1)
 
         if month == 12:
-            end_date = datetime.date(year + 1,1,1)
-        
+            end_date = date(year + 1, 1, 1)
         else:
-            end_date = datetime.date(year,month + 1,1)
-        
+            end_date = date(year, month + 1, 1)
 
         total_pieces = ProductionPress.objects.filter(
-            date_time__gte = start_date,
-            date_time__lt = end_date
+            date_time__gte=start_date,
+            date_time__lt=end_date
         ).aggregate(Sum('pieces_ok'))['pieces_ok__sum'] or 0
 
-        percentage  = (total_pieces / goal.target_amount) * 100
+        percentage = (total_pieces / goal.target_amount) * 100
 
         return JsonResponse({'percentage': percentage, 'total_pieces': total_pieces})
     except Presses_monthly_goals.DoesNotExist:
