@@ -737,6 +737,8 @@ def post_monthly_goal(request):
         month = int(data['month'])
         year = int(data['year'])
         target_amount = float(data['target_amount'])
+        if month < 1 or month >12:
+            return JsonResponse({'error': 'month out of range'}, status=400)
         goal = Presses_monthly_goals(month=month,year=year,target_amount=target_amount)
         goal.save()
         return JsonResponse({'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=201)
