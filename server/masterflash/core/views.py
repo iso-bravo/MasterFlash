@@ -7,9 +7,11 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
 from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert, Presses_monthly_goals
+from .utils import set_shift
 from django.utils import timezone
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404
+
 
 @csrf_exempt
 def arduino_data(request, path, value):
@@ -210,13 +212,7 @@ def load_machine_data_production(request):
     
     current_date = datetime.now().date()
     current_time = datetime.now().time()
-    shift = ''
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
 
     for machine in machines:
         if machine.status != 'Available':
@@ -357,7 +353,7 @@ def register_data_production(request):
     data = request.POST.dict()
     logger.error(f'Data received: {data}')
     
-    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order'),data.get('inserts_total')]):
+    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order')]):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
@@ -418,20 +414,9 @@ def register_data_production(request):
         else:
             molderNumber = data.get('molder_number')
 
-        if data.get('inserts_total') == '' or data.get('inserts_total') == None:
-            inserts_total = None
-        else:
-            inserts_total = data.get('inserts_total')
-            #TODO check if the inserts_total is in the models/DB and check front in case the name is the issue
-            #! Important
 
     current_time = datetime.now().time()
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
     
     logger.error(f'shift: {shift}')
     
@@ -446,7 +431,6 @@ def register_data_production(request):
                 molder_number = molderNumber,
                 press = data.get('name'),
                 shift = shift,
-                inserts_total = inserts_total
             )
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
 
@@ -456,12 +440,7 @@ def presses_general_pause(request):
     machines = LinePress.objects.all()
     
     current_time = datetime.now().time()
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
     
     for machine in machines:
         
@@ -494,12 +473,7 @@ def presses_general_failure(request):
     machines = LinePress.objects.all()
     
     current_time = datetime.now().time()
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
     
     for machine in machines:
         

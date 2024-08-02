@@ -43,8 +43,32 @@ const PressesProduction: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchMachineData();
-    });
+        const socket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_BASE_URL}/ws/load_machine_data_production/`);
+
+        socket.onopen = () => {
+            console.log('WebSocket Connection opened');
+        };
+
+        socket.onmessage = event => {
+            const data = JSON.parse(event.data);
+            console.log('Data received:', data); // Verifica el contenido recibido
+            setMachines(data.machines_data);
+            setTotalPiecesProduced(data.total_piecesProduced);
+        };
+
+        socket.onerror = error => {
+            console.error('WebSocket error: ', error);
+        };
+
+        socket.onclose = event => {
+            if (event.wasClean) {
+                console.log('WebSocket connection closed cleanly');
+            } else {
+                console.error('WebSocket connection closed with error');
+            }
+            console.log('WebSocket clsoed: ', event);
+        };
+    }, []);
 
     const handleMachineClick = (machineData: MachineData) => {
         setPopUpOpen(true);
@@ -149,7 +173,7 @@ const PressesProduction: React.FC = () => {
 
         try {
             await api.post(
-                'register_data_production/',
+                '/register_data_production/',
                 {
                     name: selectedMachine.name,
                     state: selectedMachine.state,
@@ -169,6 +193,7 @@ const PressesProduction: React.FC = () => {
             console.log('Machine state updated successfully!');
         } catch (error) {
             console.error('Error updating machine state:', error);
+            console.log(selectedMachine);
 
             setSelectedMachine(machineData => {
                 if (machineData) return machineData;
@@ -181,44 +206,38 @@ const PressesProduction: React.FC = () => {
 
     return (
         <div className='lg:p-2'>
-            <header className='flex flex-wrap items-center justify-between mt-3 mb-10 bg-orange-500 text-white p-4 w-full'>
-                <section className='flex items-center justify-between w-full'>
+            <header className='flex flex-wrap items-center justify-between mt-3 mb-10 bg-orange-500 text-white p-4 w-full '>
+                <section>
                     <IoIosArrowRoundBack
                         size={65}
                         className='cursor-pointer text-black'
                         onClick={() => navigate('/')}
                     />
-                    <div className='flex flex-col text-left gap-3'>
-                        <div className='flex flex-col md:flex-row md:items-center gap-3'>
-                            <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>
-                                Producido hoy:
-                            </h1>
-                            <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>
-                                {totalPiecesProduced}
-                            </h1>
-                        </div>
-                    </div>
                     <div className='flex flex-col md:flex-row md:items-center gap-3'>
-                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Meta mensual:</h1>
-                        <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>{'80000'}</h1>
-                    </div>
-                </section>
-                <section className='flex flex-col items-end mt-5 md:mt-0'>
-                    <div className='flex flex-row items-end mt-3'>
-                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl '>
-                            Producción actual:
-                        </h1>
+                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Producido hoy:</h1>
                         <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>
                             {totalPiecesProduced}
                         </h1>
                     </div>
                 </section>
-                <button
-                    type='button'
-                    className='text-yellow-400 hover:text-white border border-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-300 dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400 dark:focus:ring-yellow-900'
-                >
-                    Agregar meta mensual
-                </button>
+                <section className='flex flex-col items-start'>
+                    <div className='flex flex-row mt-3 ml-2'>
+                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl '>Actual:</h1>
+                        <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>
+                            {totalPiecesProduced}
+                        </h1>
+                    </div>
+                    <div className='flex flex-col md:flex-row md:items-center gap-3 p-2'>
+                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Meta mensual:</h1>
+                        <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>{'80000'}</h1>
+                        <button
+                            type='button'
+                            className='text-yellow-400 hover:text-white border border-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-300 dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400 dark:focus:ring-yellow-900'
+                        >
+                            Agregar meta
+                        </button>
+                    </div>
+                </section>
             </header>
 
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-x-2 gap-y-4 justify-items-center'>
