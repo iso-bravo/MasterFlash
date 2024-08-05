@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
 from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert, Presses_monthly_goals
-from .utils import set_shift
+from .utils import set_shift, sum_pieces
 from django.utils import timezone
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404
@@ -266,7 +266,7 @@ def load_machine_data_production(request):
                 total_ok=Sum('pieces_ok'),
                 total_rework=Sum('pieces_rework')
             )
-       
+    
         if (production and (shift == 'First')) or (production and (shift == 'Second')):
             total_ok = production['total_ok'] if production['total_ok'] else 0
             total_rework = production['total_rework'] if production['total_rework'] else 0
@@ -304,47 +304,7 @@ def load_machine_data_production(request):
     #logger.error(f'total_piecesProduced: {response_data}') 
     return JsonResponse(response_data, safe=False)
 
-def sum_pieces(machine, shift, current_date):
-        logger = logging.getLogger(__name__)    
-        last_record = ProductionPress.objects.filter(press=machine.name).order_by('-date_time').first()
 
-        #logger.error(f'machine: {machine.name}')
-        #logger.error(f'last_record: {last_record}')
-
-        if not last_record:
-            return 0
-
-        part_number = last_record.part_number
-        work_order = last_record.work_order
-        pieces_sum = 0
-        
-        #logger.error(f'last_record: {machine.name}')
-        #logger.error(f'shift: {shift}')
-        if shift == 'First':
-            records = ProductionPress.objects.filter(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time(7, 0), time(16, 35))
-            ).order_by('-date_time')
-        elif shift == 'Second':
-            records = ProductionPress.objects.filter(
-                Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time(16, 36), time.max)) |
-                Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time.min, time(1, 20)))
-            ).order_by('-date_time')
-        else:
-            return 0
-        
-        record_iterator = records.iterator()
-
-        current_record = next(record_iterator, None)
-        while current_record and current_record.part_number == part_number and current_record.work_order == work_order:
-            pieces_sum += current_record.pieces_ok or 0
-            current_record = next(record_iterator, None)
-        #logger.error(f'pieces_sum: {pieces_sum}')
-        #logger.error('------------------------------------------------------')
-
-        return pieces_sum
 
 @csrf_exempt
 @require_POST

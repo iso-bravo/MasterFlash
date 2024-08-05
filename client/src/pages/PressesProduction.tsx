@@ -88,23 +88,65 @@ const PressesProduction: React.FC = () => {
     };
 
     const handleUpdateMachine = (updatedMachine: MachineData) => {
-        setMachines(prevMachines =>
-            prevMachines.map(machine => {
+        let pieces_okAdd: number;
+        let pieces_reworkAdd: number;
+        let produced: number;
+        let total_okAdd: number;
+        setMachines(
+            machines.map(machine => {
                 if (machine.name === updatedMachine.name) {
-                    const total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
-                    const pieces_okAdd = parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok);
-                    const pieces_reworkAdd = parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework);
-                    return {
-                        ...updatedMachine,
-                        total_ok: updatedMachine.part_number === machine.part_number ? total_okAdd.toString() : '0',
-                        pieces_ok: pieces_okAdd.toString(),
-                        pieces_rework: pieces_reworkAdd.toString(),
-                    };
+                    if (
+                        updatedMachine.part_number == null ||
+                        updatedMachine.part_number == '' ||
+                        updatedMachine.part_number == machine.part_number
+                    ) {
+                        updatedMachine.part_number = machine.part_number;
+                    } else {
+                        updatedMachine.total_ok = '0';
+                    }
+
+                    if (updatedMachine.work_order == null || updatedMachine.work_order == '') {
+                        updatedMachine.work_order = machine.work_order;
+                        if (updatedMachine.total_ok != '0') {
+                            total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
+                            updatedMachine.total_ok = total_okAdd.toString();
+                        }
+                    } else {
+                        updatedMachine.total_ok = '0';
+                    }
+
+                    if (updatedMachine.employee_number == null || updatedMachine.employee_number == '') {
+                        updatedMachine.employee_number = machine.employee_number;
+                    }
+
+                    if (updatedMachine.pieces_ok == null || updatedMachine.pieces_ok == '') {
+                        updatedMachine.pieces_ok = machine.pieces_ok;
+                    } else {
+                        if (updatedMachine.total_ok != '0') {
+                            total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
+                            updatedMachine.total_ok = total_okAdd.toString();
+                        }
+                        pieces_okAdd = parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok);
+                        updatedMachine.pieces_ok = pieces_okAdd.toString();
+                        produced = parseInt(updatedMachine.pieces_ok);
+                        updateTotalProduced(produced);
+                    }
+                    if (updatedMachine.pieces_rework == null || updatedMachine.pieces_rework == '') {
+                        updatedMachine.pieces_rework = machine.pieces_rework;
+                    } else {
+                        pieces_reworkAdd = parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework);
+                        updatedMachine.pieces_rework = pieces_reworkAdd.toString();
+                    }
+
+                    if (updatedMachine.molder_number == null || updatedMachine.molder_number == '') {
+                        updatedMachine.molder_number = machine.molder_number;
+                    }
+                    return updatedMachine;
+                } else {
+                    return machine;
                 }
-                return machine;
             }),
         );
-        updateTotalProduced(parseInt(updatedMachine.pieces_ok));
     };
 
     const handleSave = async (
