@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import date, datetime, time
 from urllib import response
@@ -350,70 +351,31 @@ def sum_pieces(machine, shift, current_date):
 def register_data_production(request):
     logger = logging.getLogger(__name__)
     
-    data = request.POST.dict()
+    data = json.loads(request.body.decode('utf-8'))
     logger.error(f'Data received: {data}')
     
     if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order')]):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
-    if Part_Number.objects.filter(part_number=data.get('part_number')).exists():
-        pass
-    else:
+    if not Part_Number.objects.filter(part_number=data.get('part_number')).exists():
         return JsonResponse({'message': 'Registro invalido.'}, status=404)
 
     last_record = ProductionPress.objects.filter(press=data.get('name')).order_by('-date_time').first()
     
-    if data.get('pieces_ok') == '':
-        piecesOk = 0
-    else:
-        piecesOk = data.get('pieces_ok')
-            
-    if data.get('pieces_rework') == '':
-        piecesRework = 0
-    else:
-        piecesRework = data.get('pieces_rework')
-    
+    piecesOk = data.get('pieces_ok') or 0
+    piecesRework = data.get('pieces_rework') or 0
+
     if last_record:
-        if data.get('employee_number') == '' and last_record.employee_number:
-            employeeNumber = last_record.employee_number
-        elif data.get('employee_number') != '':
-            employeeNumber = int(data.get('employee_number'))
-        else:
-            employeeNumber = None
-            
-        if data.get('part_number') == '' or data.get('part_number') == None:
-            partNumber = last_record.part_number
-        else:
-            partNumber = data.get('part_number')
-            
-        if data.get('molder_number') == '' or data.get('molder_number') == None:
-            molderNumber = last_record.molder_number
-        else:
-            molderNumber = data.get('molder_number')
-
-        if data.get('work_order') == '' or data.get('work_order') == None:
-            workOrder = last_record.work_order
-        else:
-            workOrder = data.get('work_order')
+        employeeNumber = data.get('employee_number') or last_record.employee_number or None
+        partNumber = data.get('part_number') or last_record.part_number or None
+        molderNumber = data.get('molder_number') or last_record.molder_number or None
+        workOrder = data.get('work_order') or last_record.work_order or ''
     else:
-        if data.get('employee_number') == '' or data.get('employee_number') == None:
-            employeeNumber = None
-        else:
-            employeeNumber = int(data.get('employee_number'))
-            
+        employeeNumber = data.get('employee_number') or None
         partNumber = data.get('part_number')
-
-        if data.get('work_order') == '' or data.get('work_order') == None:
-            workOrder = ''
-        else:
-            workOrder = data.get('work_order')
-
-        if data.get('molder_number') == '' or data.get('molder_number') == None:
-            molderNumber = None
-        else:
-            molderNumber = data.get('molder_number')
-
+        molderNumber = data.get('molder_number') or None
+        workOrder = data.get('work_order') or ''
 
     current_time = datetime.now().time()
     shift = set_shift(current_time)
@@ -421,18 +383,20 @@ def register_data_production(request):
     logger.error(f'shift: {shift}')
     
     ProductionPress.objects.create(
-                date_time = datetime.now(),
-                employee_number = employeeNumber,
-                pieces_ok = piecesOk,
-                pieces_scrap = 0,
-                pieces_rework = piecesRework,
-                part_number = partNumber,
-                work_order = workOrder,
-                molder_number = molderNumber,
-                press = data.get('name'),
-                shift = shift,
-            )
+        date_time = datetime.now(),
+        employee_number = employeeNumber,
+        pieces_ok = piecesOk,
+        pieces_scrap = 0,
+        pieces_rework = piecesRework,
+        part_number = partNumber,
+        work_order = workOrder,
+        molder_number = molderNumber,
+        press = data.get('name'),
+        shift = shift,
+    )
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
+
+
 
 @csrf_exempt
 @require_POST

@@ -27,21 +27,6 @@ const PressesProduction: React.FC = () => {
     const [selectedMachine, setSelectedMachine] = useState<MachineData | null>(null);
     const navigate = useNavigate();
 
-    const fetchMachineData = () => {
-        api.get('/load_machine_data_production/', {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        })
-            .then(response => {
-                setMachines(response.data.machines_data);
-                setTotalPiecesProduced(response.data.total_piecesProduced);
-            })
-            .catch(error => {
-                console.error('Error fetching machines:', error);
-            });
-    };
-
     useEffect(() => {
         const socket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_BASE_URL}/ws/load_machine_data_production/`);
 
@@ -50,10 +35,20 @@ const PressesProduction: React.FC = () => {
         };
 
         socket.onmessage = event => {
-            const data = JSON.parse(event.data);
-            console.log('Data received:', data); // Verifica el contenido recibido
-            setMachines(data.machines_data);
-            setTotalPiecesProduced(data.total_piecesProduced);
+            try {
+                const data = JSON.parse(event.data);
+                console.log('Data received:', data);
+                if (data['type']) {
+                    console.log(data['type']);
+                } else if (Array.isArray(data.machines_data)) {
+                    setMachines(data.machines_data);
+                    setTotalPiecesProduced(data.total_piecesProduced);
+                } else {
+                    console.error('machines_data is not an array:', data.machines_data);
+                }
+            } catch (error) {
+                console.error('Error parsing JSON:', error, 'Data received:', event.data);
+            }
         };
 
         socket.onerror = error => {
@@ -67,6 +62,11 @@ const PressesProduction: React.FC = () => {
                 console.error('WebSocket connection closed with error');
             }
             console.log('WebSocket clsoed: ', event);
+        };
+
+        return () => {
+            console.log('Closing WebSocket');
+            socket.close();
         };
     }, []);
 
@@ -88,65 +88,23 @@ const PressesProduction: React.FC = () => {
     };
 
     const handleUpdateMachine = (updatedMachine: MachineData) => {
-        let pieces_okAdd: number;
-        let pieces_reworkAdd: number;
-        let produced: number;
-        let total_okAdd: number;
-        setMachines(
-            machines.map(machine => {
+        setMachines(prevMachines =>
+            prevMachines.map(machine => {
                 if (machine.name === updatedMachine.name) {
-                    if (
-                        updatedMachine.part_number == null ||
-                        updatedMachine.part_number == '' ||
-                        updatedMachine.part_number == machine.part_number
-                    ) {
-                        updatedMachine.part_number = machine.part_number;
-                    } else {
-                        updatedMachine.total_ok = '0';
-                    }
-
-                    if (updatedMachine.work_order == null || updatedMachine.work_order == '') {
-                        updatedMachine.work_order = machine.work_order;
-                        if (updatedMachine.total_ok != '0') {
-                            total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
-                            updatedMachine.total_ok = total_okAdd.toString();
-                        }
-                    } else {
-                        updatedMachine.total_ok = '0';
-                    }
-
-                    if (updatedMachine.employee_number == null || updatedMachine.employee_number == '') {
-                        updatedMachine.employee_number = machine.employee_number;
-                    }
-
-                    if (updatedMachine.pieces_ok == null || updatedMachine.pieces_ok == '') {
-                        updatedMachine.pieces_ok = machine.pieces_ok;
-                    } else {
-                        if (updatedMachine.total_ok != '0') {
-                            total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
-                            updatedMachine.total_ok = total_okAdd.toString();
-                        }
-                        pieces_okAdd = parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok);
-                        updatedMachine.pieces_ok = pieces_okAdd.toString();
-                        produced = parseInt(updatedMachine.pieces_ok);
-                        updateTotalProduced(produced);
-                    }
-                    if (updatedMachine.pieces_rework == null || updatedMachine.pieces_rework == '') {
-                        updatedMachine.pieces_rework = machine.pieces_rework;
-                    } else {
-                        pieces_reworkAdd = parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework);
-                        updatedMachine.pieces_rework = pieces_reworkAdd.toString();
-                    }
-
-                    if (updatedMachine.molder_number == null || updatedMachine.molder_number == '') {
-                        updatedMachine.molder_number = machine.molder_number;
-                    }
-                    return updatedMachine;
-                } else {
-                    return machine;
+                    const total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
+                    const pieces_okAdd = parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok);
+                    const pieces_reworkAdd = parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework);
+                    return {
+                        ...updatedMachine,
+                        total_ok: updatedMachine.part_number === machine.part_number ? total_okAdd.toString() : '0',
+                        pieces_ok: pieces_okAdd.toString(),
+                        pieces_rework: pieces_reworkAdd.toString(),
+                    };
                 }
+                return machine;
             }),
         );
+        updateTotalProduced(parseInt(updatedMachine.pieces_ok));
     };
 
     const handleSave = async (
@@ -158,47 +116,30 @@ const PressesProduction: React.FC = () => {
         newMolderNumber: string,
     ) => {
         if (!selectedMachine) return;
-        // Optimistic update
+
+        // Actualiza los campos si están vacíos con los valores anteriores
         const updatedMachine: MachineData = {
             ...selectedMachine,
             state: selectedMachine.state,
-            employee_number: newEmployeeNumber,
-            pieces_ok: newPiecesOK,
-            pieces_rework: newPiecesRework,
-            part_number: newPartNumber,
-            work_order: newWork_order,
-            molder_number: newMolderNumber,
+            employee_number: newEmployeeNumber || selectedMachine.employee_number,
+            pieces_ok: newPiecesOK || selectedMachine.pieces_ok,
+            pieces_rework: newPiecesRework || selectedMachine.pieces_rework,
+            part_number: newPartNumber || selectedMachine.part_number,
+            work_order: newWork_order || selectedMachine.work_order,
+            molder_number: newMolderNumber || selectedMachine.molder_number,
         };
+
         setSelectedMachine(updatedMachine);
 
         try {
-            await api.post(
-                '/register_data_production/',
-                {
-                    name: selectedMachine.name,
-                    state: selectedMachine.state,
-                    employee_number: newEmployeeNumber,
-                    pieces_ok: newPiecesOK,
-                    pieces_rework: newPiecesRework,
-                    part_number: newPartNumber,
-                    work_order: newWork_order,
-                    molder_number: newMolderNumber,
+            await api.post('/register_data_production/', updatedMachine, {
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                },
-            );
+            });
             console.log('Machine state updated successfully!');
         } catch (error) {
             console.error('Error updating machine state:', error);
-            console.log(selectedMachine);
-
-            setSelectedMachine(machineData => {
-                if (machineData) return machineData;
-                return null;
-            });
         }
 
         setPopUpOpen(false);
@@ -241,14 +182,15 @@ const PressesProduction: React.FC = () => {
             </header>
 
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-x-2 gap-y-4 justify-items-center'>
-                {machines.map((machine, index) => (
-                    <MachineProduction
-                        key={index}
-                        machineData={machine}
-                        onClick={() => handleMachineClick(machine)}
-                        selectedState={selectedMachine ? selectedMachine.state : ''}
-                    />
-                ))}
+                {machines &&
+                    machines.map((machine, index) => (
+                        <MachineProduction
+                            key={index}
+                            machineData={machine}
+                            onClick={() => handleMachineClick(machine)}
+                            selectedState={selectedMachine ? selectedMachine.state : ''}
+                        />
+                    ))}
             </div>
 
             {popUpOpen && selectedMachine && (
