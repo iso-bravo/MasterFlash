@@ -7,6 +7,7 @@ import Popup from '../components/popUpProduction';
 import '../index.css';
 import '../output.css';
 import { useNavigate } from 'react-router-dom';
+import MonthlyGoalModal from '../components/MonthlyGoalModal';
 
 interface MachineData {
     name: string;
@@ -25,6 +26,9 @@ const PressesProduction: React.FC = () => {
     const [totalPiecesProduced, setTotalPiecesProduced] = useState<number>(0);
     const [popUpOpen, setPopUpOpen] = useState(false);
     const [selectedMachine, setSelectedMachine] = useState<MachineData | null>(null);
+    const [goalModalOpen, setGoalModalOpen] = useState(false);
+    const [monthlyGoal, setMonthlyGoal] = useState<number | null>(null);
+    const [productionTotal, setProductionTotal] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -70,6 +74,26 @@ const PressesProduction: React.FC = () => {
         };
     }, []);
 
+    useEffect(() => {
+        const fetchMonthlyGoalAndPercentage = async () => {
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+
+            try {
+                const goalResponse = await api.get(`/monthly-goal/${year}/${month}/`);
+                setMonthlyGoal(goalResponse.data.target_amount);
+
+                const percentageResponse = await api.get(`/production-percentage/${year}/${month}/`);
+                setProductionTotal(percentageResponse.data.total_pieces);
+            } catch (error) {
+                console.error('Error fetching monthly goal or production percentage:', error);
+            }
+        };
+
+        fetchMonthlyGoalAndPercentage();
+    }, []);
+
     const handleMachineClick = (machineData: MachineData) => {
         setPopUpOpen(true);
         setSelectedMachine(machineData);
@@ -78,6 +102,24 @@ const PressesProduction: React.FC = () => {
     const handleClosePopup = () => {
         setPopUpOpen(false);
         setSelectedMachine(null);
+    };
+
+    const handleSaveGoal = async (target_amount: number, month: number, year: number) => {
+        try {
+            await api.post(
+                '/monthly-goal/',
+                { year, month, target_amount },
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                },
+            );
+            setMonthlyGoal(target_amount);
+            console.log('Monthly goal saved successfully!');
+        } catch (error) {
+            console.error('Error saving monthly goal: ', error);
+        }
     };
 
     const updateTotalProduced = (pieces_ok: number) => {
@@ -207,15 +249,16 @@ const PressesProduction: React.FC = () => {
                     <div className='flex flex-row mt-3 ml-2'>
                         <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl '>Actual:</h1>
                         <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>
-                            {totalPiecesProduced}
+                            {productionTotal}
                         </h1>
                     </div>
                     <div className='flex flex-col md:flex-row md:items-center gap-3 p-2'>
                         <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Meta mensual:</h1>
-                        <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>{'80000'}</h1>
+                        <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>{monthlyGoal}</h1>
                         <button
                             type='button'
-                            className='text-yellow-400 hover:text-white border border-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-300 dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400 dark:focus:ring-yellow-900'
+                            className='text-yellow-400 hover:text-white border border-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-yellow-300 dark:text-yellow-300 dark:hover:text-white dark:hover:bg-yellow-400 dark:focus:ring-yellow-900 cursor-pointer'
+                            onClick={() => setGoalModalOpen(true)}
                         >
                             Agregar meta
                         </button>
@@ -243,6 +286,7 @@ const PressesProduction: React.FC = () => {
                     onUpdate={handleUpdateMachine}
                 />
             )}
+            <MonthlyGoalModal isOpen={goalModalOpen} onClose={() => setGoalModalOpen(false)} onSave={handleSaveGoal} />
         </div>
     );
 };

@@ -627,27 +627,39 @@ def register_production(request):
             return JsonResponse({'message': "Error: {}".format(str(e))}, status=400)
 
 @csrf_exempt
-@require_POST
-def post_monthly_goal(request):
+@require_http_methods(["POST", "PUT"])
+def post_or_put_monthly_goal(request):
+    #TODO agregar seguridad para que si se agrega el mismo mes 2 veces, se haga PUT y no POST
     data = request.POST.dict()
     print(data)
+    
     try:
         month = int(data['month'])
         year = int(data['year'])
         target_amount = float(data['target_amount'])
-        if month < 1 or month >12:
+        
+        if month < 1 or month > 12:
             return JsonResponse({'error': 'month out of range'}, status=400)
-        goal = Presses_monthly_goals(month=month,year=year,target_amount=target_amount)
-        goal.save()
-        return JsonResponse({'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=201)
+        
+        # Verificar si ya existe una meta para el mes y año dados
+        goal, created = Presses_monthly_goals.objects.get_or_create(
+            month=month, year=year,
+            defaults={'target_amount': target_amount}
+        )
+
+        if not created:
+            # Si ya existe, actualizamos el target_amount
+            goal.target_amount = target_amount
+            goal.save()
+            return JsonResponse({'message': 'Goal updated successfully', 'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=200)
+        else:
+            return JsonResponse({'message': 'Goal created successfully', 'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=201)
 
     except KeyError:
-
         return JsonResponse({'error': 'Missing fields'}, status=400)
 
     except ValueError:
-
-            return JsonResponse({'error': 'Invalid data types'}, status=400)
+        return JsonResponse({'error': 'Invalid data types'}, status=400)
     
 
 def get_presses_monthly_goal(request,year,month):
