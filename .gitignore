@@ -4,6 +4,7 @@ Thumbs.db
 *.log
 *.env
 **/__pycache__/
+*ipynb
 
 # React (client folder)
 client/node_modules/
