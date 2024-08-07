@@ -32,70 +32,74 @@ def generate_report(request):
     data = Qc_Scrap.objects.filter(**filters).values('compound','total_rubber_weight_in_insert_lbs','total_rubber_weight_in_insert','total_rubber_weight_lbs','total_inserts_weight_lbs','inserts_total')
     print(data)
 
+    try:
 
-    #total de hule
-    total_rubber_weight_in_inserts_sum = sum(item['total_rubber_weight_in_insert'] for item in data)
+        #total de hule
+        total_rubber_weight_in_inserts_sum = sum(item['total_rubber_weight_in_insert'] for item in data)
 
-    # Hule/Sil Lbs
-    total_rubber_weight_in_insert_lbs_sum = sum(item['total_rubber_weight_in_insert_lbs'] for item in data)
+        # Hule/Sil Lbs
+        total_rubber_weight_in_insert_lbs_sum = sum(item['total_rubber_weight_in_insert_lbs'] for item in data)
 
-    inserts_total_sum = sum(item['inserts_total'] for item in data)
+        inserts_total_sum = sum(item['inserts_total'] for item in data)
 
-    # suma total
-    total_sum = total_rubber_weight_in_insert_lbs_sum + inserts_total_sum
+        # suma total
+        total_sum = total_rubber_weight_in_insert_lbs_sum + inserts_total_sum
+    
 
 
-    # Crear el PDF
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    elements = []
+        # Crear el PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
 
-    styles = getSampleStyleSheet()
-    title_style = styles['Heading1']
-    normal_style = styles['Normal']
+        styles = getSampleStyleSheet()
+        title_style = styles['Heading1']
+        normal_style = styles['Normal']
 
-    # Título del reporte
-    title = Paragraph(f"Reporte para la fecha: {date} y calibre: {caliber}", title_style)
-    elements.append(title)
-    elements.append(Paragraph(" ", normal_style))  
+        # Título del reporte
+        title = Paragraph(f"Reporte para la fecha: {date} y calibre: {caliber}", title_style)
+        elements.append(title)
+        elements.append(Paragraph(" ", normal_style))  
 
-    # Crear la tabla de datos
-    data_table = [["Compound", "Total", "Lbs", "Aluminio lbs"]]
-    for item in data:
-        data_table.append([
-            item['compound'],
-            f"{item['total_rubber_weight_in_insert']:.2f}",
-            f"{item['total_rubber_weight_in_insert_lbs']:.2f}",
-            f"{item['total_inserts_weight_lbs']:.2f}"
-        ])
+        # Crear la tabla de datos
+        data_table = [["Compound", "Total", "Lbs", "Aluminio lbs"]]
+        for item in data:
+            data_table.append([
+                item['compound'],
+                f"{item['total_rubber_weight_in_insert']:.2f}",
+                f"{item['total_rubber_weight_in_insert_lbs']:.2f}",
+                f"{item['total_inserts_weight_lbs']:.2f}"
+            ])
 
-    table = Table(data_table)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
-    elements.append(table)
-    elements.append(Paragraph(" ", normal_style))  
+        table = Table(data_table)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+        elements.append(Paragraph(" ", normal_style))  
 
-    # Añadir los totales
-    totals = [
-        f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
-        f"Total de insertos: {inserts_total_sum:.2f}",
-        f"Total de hule: {total_rubber_weight_in_inserts_sum:.2f}",
-        f"Suma Total: {total_sum:.2f}"
-    ]
-    for total in totals:
-        elements.append(Paragraph(total, normal_style))
+        # Añadir los totales
+        totals = [
+            f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
+            f"Total de insertos: {inserts_total_sum:.2f}",
+            f"Total de hule: {total_rubber_weight_in_inserts_sum:.2f}",
+            f"Suma Total: {total_sum:.2f}"
+        ]
+        for total in totals:
+            elements.append(Paragraph(total, normal_style))
 
-    doc.build(elements)
+        doc.build(elements)
 
-    buffer.seek(0)
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f"inline; filename=reporte_scrap_{date}.pdf"
-    return response
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f"inline; filename=reporte_scrap_{date}.pdf"
+        return response
+    except Exception as e:
+        print(f"Error al generar el reporte de fecha  {date} con calibre {caliber}, Excepción: {e}")
 
