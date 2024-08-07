@@ -12,14 +12,18 @@
   "dependencies": {
     "autoprefixer": "^10.4.17",
     "axios": "^1.6.7",
+    "dotenv": "^16.4.5",
+    "js-cookie": "^3.0.5",
     "postcss-cli": "^11.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.0.1",
+    "react-router-dom": "^6.23.0",
     "react-toastify": "^10.0.4"
   },
   "devDependencies": {
+    "@types/node": "^20.11.27",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^7.0.2",

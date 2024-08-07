@@ -3,19 +3,21 @@ import { SlEnergy } from "react-icons/sl";
 import { IoIosFlashOff, IoIosWarning } from "react-icons/io";
 import { IoPause } from "react-icons/io5";
 
-interface RectanguloProps {
-    name: string;
-    state: string;
-    employee_number: number;
+interface MachineProps {
+    machineData: {
+        name: string;
+        state: string;
+        employee_number: string;
+    };
     onClick: () => void;
     selectedState: string;
 }
 
-const Machine: React.FC<RectanguloProps> = ({ name, state, employee_number, onClick, selectedState  }) => {
+const Machine: React.FC<MachineProps> = ({ machineData, onClick, selectedState }) => {
     let icon;
     let backgroundColorClass;
 
-    switch (state) {
+    switch (machineData.state) {
         case 'Running':
             icon = <SlEnergy size={48} color="white"/>;
             backgroundColorClass = 'bg-[#34C34B]';
@@ -36,15 +38,13 @@ const Machine: React.FC<RectanguloProps> = ({ name, state, employee_number, onCl
             icon = null;
     }
 
-return (
-    <div className={`flex flex-col items-center justify-center m-2 rounded-lg
-        p-4 ${backgroundColorClass} md:w-24 lg:w-28 cursor-pointer`} onClick={onClick}>
-        <h1 className='text-center text-white text-lg lg:text-2xl font-semibold'>{name}</h1>
-        {icon && <div className='my-2'>{icon}</div>}
-        <h2 className='text-center text-white text-md lg:text-xl font-semibold'>{employee_number}</h2>
-    </div>
-);
-
+    return (
+        <div className={`flex flex-col items-center justify-center m-2 rounded p-4 ${backgroundColorClass} md:w-24 lg:w-28 cursor-pointer`} onClick={onClick}>
+            <h1 className='text-center text-white text-lg lg:text-xl font-semibold'>{machineData.name}</h1>
+            {icon && <div className='my-2'>{icon}</div>}
+            <h2 className='text-center text-white text-md lg:text-xl font-semibold'>{machineData.employee_number}</h2>
+        </div>
+    );
 };
 
 export default Machine;

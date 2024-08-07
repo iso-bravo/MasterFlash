@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-cjfx1n-2__i%2@4op@qcjgf(+1@c&+%4&idux@y)sfc(kgdwck
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', '192.168.10.7', 'smimx.net', '192.168.0.236', 'http://192.168.10.7:5174', '192.168.10.7:5174']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'masterflash.core'
+    'masterflash.core',
+    'reports',
 ]
 
 MIDDLEWARE = [
@@ -73,17 +76,30 @@ TEMPLATES = [
 WSGI_APPLICATION = 'masterflash.wsgi.application'
 
 
+ASGI_APPLICATION  = 'masterflash.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+from decouple import config 
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'master_flash',
-        'USER': 'basic_user',
-        'PASSWORD': 'user1234',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),  
+        'PASSWORD': config('DB_PASSWORD'),  
+        'HOST': config('DB_HOST'),  
+        'PORT': config('DB_PORT'),  
     }
 }
 
