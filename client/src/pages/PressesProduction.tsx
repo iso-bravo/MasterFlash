@@ -253,7 +253,7 @@ const PressesProduction: React.FC = () => {
                         </h1>
                     </div>
                     <div className='flex flex-col md:flex-row md:items-center gap-3 p-2'>
-                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Meta mensual:</h1>
+                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Meta:</h1>
                         <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>{monthlyGoal}</h1>
                         <button
                             type='button'
