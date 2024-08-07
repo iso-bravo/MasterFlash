@@ -20,4 +20,5 @@ from django.urls import include, path
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('masterflash.core.urls')),
+    path('reports/',include('reports.urls'))
 ]

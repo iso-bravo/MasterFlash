@@ -167,3 +167,11 @@ class Qc_Scrap(models.Model):
 class Mold_presses(models.Model):
     press = models.CharField(max_length=50, blank=True, null=True)
     mold = models.CharField(max_length=50, blank=True, null=True)
+
+class Presses_monthly_goals(models.Model):
+    month = models.IntegerField()
+    year = models.IntegerField()
+    target_amount = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.month}/{self.year} - {self.target_amount}"
