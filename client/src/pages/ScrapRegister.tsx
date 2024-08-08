@@ -327,7 +327,7 @@ const ScrapRegister: React.FC = () => {
                         {inputs.map((input, index) => (
                             <div
                                 key={index}
-                                className='flex flex-row items-center lg:grid-cols-3 lg:grid lg:gap-24 xl:gap-10'
+                                className='flex flex-row items-center lg:grid-cols-3 lg:grid xl:gap-10'
                             >
                                 <label className='w-24'>{input}</label>
                                 {input === 'No. Parte' ? (
@@ -339,7 +339,7 @@ const ScrapRegister: React.FC = () => {
                                         />
                                         <button
                                             onClick={handleSearchPartNumber}
-                                            className=' lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
+                                            className='  lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
                                         >
                                             Buscar
                                         </button>
@@ -371,7 +371,7 @@ const ScrapRegister: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-5 gap-x-6 gap-y-5 justify-items-center lg:ml-12'>
+                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-4 gap-x-6 gap-y-5 justify-items-center lg:ml-12'>
                         {codes.map((code, index) => (
                             <div key={index} className='flex flex-row items-center'>
                                 <label className='w-14'>{code}</label>

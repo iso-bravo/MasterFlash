@@ -31,6 +31,8 @@ ALLOWED_HOSTS = ['*', '192.168.10.7', 'smimx.net', '192.168.0.236', 'http://192.
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -39,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'masterflash.core',
-    'reports'
+    'reports',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +75,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'masterflash.wsgi.application'
 
+
+ASGI_APPLICATION  = 'masterflash.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
