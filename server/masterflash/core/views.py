@@ -334,23 +334,8 @@ def register_data_production(request):
     else:
         employeeNumber = data.get('employee_number') or None
         partNumber = data.get('part_number')
-
-        if data.get('work_order') == '' or data.get('work_order') == None:
-            workOrder = ''
-        else:
-            workOrder = data.get('work_order')
-
-        if data.get('molder_number') == '' or data.get('molder_number') == None:
-            molderNumber = None
-        else:
-            molderNumber = data.get('molder_number')
-
-        if data.get('inserts_total') == '' or data.get('inserts_total') == None:
-            inserts_total = None
-        else:
-            inserts_total = data.get('inserts_total')
-            #TODO check if the inserts_total is in the models/DB and check front in case the name is the issue
-            #! Important
+        molderNumber = data.get('molder_number') or None
+        workOrder = data.get('work_order') or ''
 
     current_time = datetime.now().time()
     shift = set_shift(current_time)
@@ -371,6 +356,44 @@ def register_data_production(request):
     )
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
 
+
+@csrf_exempt
+@require_POST
+def get_production_press_by_date(request):
+    data = request.POST.dict()
+    print("Received data:", data)
+    date = data.get('date')
+    shift = data.get('shift')
+    if not date or not shift:
+        return JsonResponse({'error': 'Date parameter is missing'}, status=400)
+
+    #? preguntar de donde sale el produccion
+    production_press_records = ProductionPress.objects.filter(  date_time__date=date,
+                                                                shift=shift
+                    ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok')
+
+    print("ProductionPress records found:", production_press_records)
+
+    result = []
+
+    for record in production_press_records:
+        print("Processing record:", record)
+        part_number_record = Part_Number.objects.filter(part_number=record['part_number']).values('caliber', 'cavities', 'standard').first()
+        print("Part_Number record found:", part_number_record)
+        if part_number_record:
+            combined_record = {
+                'press': record['press'],
+                'employee_number': record['employee_number'],
+                'part_number': record['part_number'],
+                'work_order': record['work_order'],
+                'caliber': part_number_record['caliber'],
+                'cavities': part_number_record['cavities'],
+                'standard': part_number_record['standard'],
+                'pieces_ok':record['pieces_ok']
+            }
+            result.append(combined_record)
+    print("Final result:", result)
+    return JsonResponse(result, safe=False)
 
 
 @csrf_exempt
@@ -626,41 +649,6 @@ def export_report(request):
     except Exception as e:
             return JsonResponse({'message': "Error: {}".format(str(e))}, status=400)
 #"""
-
-@csrf_exempt
-@require_POST
-def get_production_press_by_date(request):
-    data = request.POST.dict()
-    print("Received data:", data)
-    date = data.get('date')
-    if not date:
-        return JsonResponse({'error': 'Date parameter is missing'}, status=400)
-
-    #? preguntar de donde sale el produccion
-    production_press_records = ProductionPress.objects.filter(date_time__date=date).values('press', 'employee_number', 'part_number', 'work_order')
-
-    print("ProductionPress records found:", production_press_records)
-
-    result = []
-
-    for record in production_press_records:
-        print("Processing record:", record)
-        part_number_record = Part_Number.objects.filter(part_number=record['part_number']).values('caliber', 'cavities', 'standard').first()
-        print("Part_Number record found:", part_number_record)
-        if part_number_record:
-            combined_record = {
-                'press': record['press'],
-                'employee_number': record['employee_number'],
-                'part_number': record['part_number'],
-                'work_order': record['work_order'],
-                'caliber': part_number_record['caliber'],
-                'cavities': part_number_record['cavities'],
-                'standard': part_number_record['standard'],
-            }
-            result.append(combined_record)
-    print("Final result:", result)
-    return JsonResponse(result, safe=False)
-
 
 def register_production(request):
     try:

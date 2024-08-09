@@ -42,7 +42,10 @@ const Quality: React.FC = () => {
                         </div>
                         <h2 className=' text-center'>Estados Prensas</h2>
                     </div>
-                    <div className='flex flex-col w-14 items-center cursor-pointer'>
+                    <div
+                        className='flex flex-col w-14 items-center cursor-pointer'
+                        onClick={() => navigate('/production_records')}
+                    >
                         <div className=' bg-[#B75182] p-3 rounded-sm'>
                             <FaFileAlt color='white' size={35} />
                         </div>

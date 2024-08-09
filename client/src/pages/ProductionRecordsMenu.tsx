@@ -5,7 +5,6 @@ import Troquelado from '../assets/worker.png';
 import { VscGitPullRequestCreate } from 'react-icons/vsc';
 
 const ProductionRecordsMenu = () => {
-
     const navigate = useNavigate();
 
     return (
@@ -14,10 +13,10 @@ const ProductionRecordsMenu = () => {
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
                 <h1 className='text-xl'>Registro Producción</h1>
             </header>
-            <div className='flex justify-center items-center'>
+            <section className='flex flex-row justify-evenly items-center h-full w-full'>
                 <div
                     className='flex flex-col w-14 items-center cursor-pointer'
-                    onClick={() => navigate('/presses_production')}
+                    onClick={() => navigate('/presses_register_production')}
                 >
                     <div className=' bg-[#C67C38] p-2 rounded-sm'>
                         <VscGitPullRequestCreate color='white' size={40} className='' />
@@ -36,7 +35,7 @@ const ProductionRecordsMenu = () => {
                     </div>
                     <h2 className=' text-center'>Troquelado</h2>
                 </div>
-            </div>
+            </section>
         </div>
     );
 };
