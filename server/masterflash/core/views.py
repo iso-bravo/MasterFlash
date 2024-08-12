@@ -437,6 +437,7 @@ def load_scrap_data(request):
 def search_in_part_number(request):
     data = request.GET.dict()
     part_number = data.get('part_number')
+    print(f"Searching for part number: {part_number}")
 
     if not part_number:
         return JsonResponse({"error": "part_number is required"}, status=400)
@@ -448,10 +449,15 @@ def search_in_part_number(request):
     caliber = getattr(part_record, 'caliber', None)
 
     if insert is not None and caliber is not None:
-        insert_record = get_object_or_404(Insert, insert=insert, caliber=caliber)
-        weight = getattr(insert_record, 'weight', None)
+        try:
+            insert_record = Insert.objects.get(insert=insert, caliber=caliber)
+            weight = getattr(insert_record, 'weight', None)
+        except Insert.DoesNotExist:
+            print("Insert record not found")
+            weight = None
     else:
         weight = None
+
 
     data = {
         'Compuesto': rubber_compound,
