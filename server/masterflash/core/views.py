@@ -442,13 +442,7 @@ def search_in_part_number(request):
     if not part_number:
         return JsonResponse({"error": "part_number is required"}, status=400)
 
-    part_records = Part_Number.objects.filter(part_number__startswith=part_number)
-
-    if not part_records.exists():
-        return JsonResponse({"error": "No matching records found"}, status=404)
-
-    # Tomar el primer registro que coincida
-    part_record = part_records.first()
+    part_record = get_object_or_404(Part_Number, part_number=part_number)
 
     rubber_compound = getattr(part_record, 'rubber_compound', None)
     insert = getattr(part_record, 'insert', None)
