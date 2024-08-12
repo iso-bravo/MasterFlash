@@ -5,7 +5,7 @@ from django.db.models import Q,Sum
 from masterflash.core.models import LinePress, ProductionPress, StatePress
 
 def set_shift(current_time:time)->str:
-    if time(7, 0) <= current_time <= time(16, 35):
+    if time(5, 0) <= current_time <= time(16, 35):
         return 'First'
     elif time(16, 36) <= current_time or current_time <= time(1, 20):
         return 'Second'
@@ -34,7 +34,7 @@ def sum_pieces(machine, shift, current_date):
                 press=machine.name,
                 shift=shift,
                 date_time__date=current_date,
-                date_time__time__range=(time(7, 0), time(16, 35))
+                date_time__time__range=(time(5, 0), time(16, 35))
             ).order_by('-date_time')
         elif shift == 'Second':
             records = ProductionPress.objects.filter(
@@ -82,7 +82,7 @@ def send_production_data():
                 press=machine.name,
                 shift=shift,
                 date_time__date=current_date,
-                date_time__time__range=(time(7, 0), time(16, 35))
+                date_time__time__range=(time(5, 0), time(16, 35))
             ).aggregate(
                 total_ok=Sum('pieces_ok'),
                 total_rework=Sum('pieces_rework')
