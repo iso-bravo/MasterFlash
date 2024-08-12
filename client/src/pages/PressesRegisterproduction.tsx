@@ -48,6 +48,7 @@ const PressesRegisterProduction: React.FC = () => {
                 },
             );
             const responseData: DataItem[] = response.data;
+            console.log(response);
             setEditableData(responseData);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -87,7 +88,7 @@ const PressesRegisterProduction: React.FC = () => {
     };
 
     const handleChange = (index: number, field: keyof DataItem, value: string | number) => {
-        const newData = [...editableData];
+        const newData = [...editableData]   ;
         newData[index] = {
             ...newData[index],
             [field]: value,
@@ -95,16 +96,23 @@ const PressesRegisterProduction: React.FC = () => {
         setEditableData(newData);
     };
 
-    const groupedData = editableData.reduce<Record<string, DataItem>>((acc, item) => {
-        const key = `${item.press}-${item.employee_number}-${item.part_number}-${item.work_order}-${item.caliber}`;
+    const editableSortedData = editableData.sort();
+
+    const groupedData = editableSortedData.reduce<Record<string, DataItem>>((acc, item) => {
+        // Normaliza los campos para crear la clave
+        const key = `${item.press?.trim().toLowerCase()}-${String(item.employee_number).trim()}-${item.part_number
+            ?.trim()
+            .toLowerCase()}-${item.work_order?.trim().toLowerCase()}-${String(item.caliber).trim()}`;
 
         if (!acc[key]) {
-            acc[key] = { ...item }; // Copia el objeto
+            acc[key] = { ...item }; // Copia el objeto si no existe la clave
         } else {
             // Suma las piezas si la clave ya existe
             acc[key].pieces_ok += item.pieces_ok;
             acc[key].worked_hrs += item.worked_hrs;
-            acc[key].efficiency = (acc[key].efficiency + item.efficiency) / 2; // Promedio de eficiencia
+            acc[key].efficiency =
+                (acc[key].efficiency * acc[key].pieces_ok + item.efficiency * item.pieces_ok) /
+                (acc[key].pieces_ok + item.pieces_ok); // Promedio ponderado de eficiencia
         }
 
         return acc;
