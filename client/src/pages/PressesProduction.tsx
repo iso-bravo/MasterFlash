@@ -130,63 +130,43 @@ const PressesProduction: React.FC = () => {
     };
 
     const handleUpdateMachine = (updatedMachine: MachineData) => {
-        let pieces_okAdd: number;
-        let pieces_reworkAdd: number;
-        let produced: number;
-        let total_okAdd: number;
-        setMachines(
-            machines.map(machine => {
-                if (machine.name === updatedMachine.name) {
-                    if (
-                        updatedMachine.part_number == null ||
-                        updatedMachine.part_number == '' ||
-                        updatedMachine.part_number == machine.part_number
-                    ) {
-                        updatedMachine.part_number = machine.part_number;
-                    } else {
-                        updatedMachine.total_ok = '0';
-                    }
+        setMachines(prevMachines =>
+            prevMachines.map(machine => {
+                if (machine.name !== updatedMachine.name) return machine;
 
-                    if (updatedMachine.work_order == null || updatedMachine.work_order == '') {
-                        updatedMachine.work_order = machine.work_order;
-                        if (updatedMachine.total_ok != '0') {
-                            total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
-                            updatedMachine.total_ok = total_okAdd.toString();
-                        }
-                    } else {
-                        updatedMachine.total_ok = '0';
-                    }
+                const newMachine = { ...machine };
 
-                    if (updatedMachine.employee_number == null || updatedMachine.employee_number == '') {
-                        updatedMachine.employee_number = machine.employee_number;
-                    }
+                newMachine.part_number = updatedMachine.part_number || machine.part_number;
+                newMachine.work_order = updatedMachine.work_order || machine.work_order;
+                newMachine.employee_number = updatedMachine.employee_number || machine.employee_number;
+                newMachine.molder_number = updatedMachine.molder_number || machine.molder_number;
 
-                    if (updatedMachine.pieces_ok == null || updatedMachine.pieces_ok == '') {
-                        updatedMachine.pieces_ok = machine.pieces_ok;
-                    } else {
-                        if (updatedMachine.total_ok != '0') {
-                            total_okAdd = parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok);
-                            updatedMachine.total_ok = total_okAdd.toString();
-                        }
-                        pieces_okAdd = parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok);
-                        updatedMachine.pieces_ok = pieces_okAdd.toString();
-                        produced = parseInt(updatedMachine.pieces_ok);
-                        updateTotalProduced(produced);
-                    }
-                    if (updatedMachine.pieces_rework == null || updatedMachine.pieces_rework == '') {
-                        updatedMachine.pieces_rework = machine.pieces_rework;
-                    } else {
-                        pieces_reworkAdd = parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework);
-                        updatedMachine.pieces_rework = pieces_reworkAdd.toString();
-                    }
-
-                    if (updatedMachine.molder_number == null || updatedMachine.molder_number == '') {
-                        updatedMachine.molder_number = machine.molder_number;
-                    }
-                    return updatedMachine;
-                } else {
-                    return machine;
+                if (updatedMachine.part_number && updatedMachine.part_number !== machine.part_number) {
+                    newMachine.total_ok = '0';
                 }
+
+                if (updatedMachine.work_order && updatedMachine.work_order !== machine.work_order) {
+                    newMachine.total_ok = '0';
+                } else if (updatedMachine.total_ok !== '0') {
+                    newMachine.total_ok = (
+                        parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok || '0')
+                    ).toString();
+                }
+
+                if (updatedMachine.pieces_ok) {
+                    newMachine.pieces_ok = (
+                        parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok)
+                    ).toString();
+                    updateTotalProduced(parseInt(updatedMachine.pieces_ok));
+                }
+
+                if (updatedMachine.pieces_rework) {
+                    newMachine.pieces_rework = (
+                        parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework)
+                    ).toString();
+                }
+
+                return newMachine;
             }),
         );
     };
@@ -270,7 +250,7 @@ const PressesProduction: React.FC = () => {
                 {machines &&
                     machines.map((machine, index) => (
                         <MachineProduction
-                            key={index}
+                            key={`${index}-${machine.name}`}
                             machineData={machine}
                             onClick={() => handleMachineClick(machine)}
                             selectedState={selectedMachine ? selectedMachine.state : ''}

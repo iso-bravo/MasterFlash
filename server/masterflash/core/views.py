@@ -314,7 +314,7 @@ def register_data_production(request):
     data = json.loads(request.body.decode('utf-8'))
     logger.error(f'Data received: {data}')
     
-    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order')]):
+    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('work_order')]):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     

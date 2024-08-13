@@ -65,6 +65,13 @@ const Popup: React.FC<PopupProps> = ({
     }
   }, []);
 
+  useEffect(()=>{
+    if (workOrder || partNumber){
+      setPiecesOK("0")
+      setPiecesRework("0")
+    }
+  },[workOrder,partNumber])
+
   const handleEmployeeNumber = (event: ChangeEvent<HTMLInputElement>) => {
     setEmployeeNumber(event.target.value);
   };
