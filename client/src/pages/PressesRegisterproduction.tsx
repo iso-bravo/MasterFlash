@@ -23,7 +23,7 @@ interface DataItem {
     dead_time_cause_2: string;
     pieces_ok: number;
     efficiency: number;
-    editableField?: keyof DataItem; // Solo para un campo específico
+    editableField?: keyof DataItem;
 }
 
 const PressesRegisterProduction: React.FC = () => {
@@ -31,6 +31,22 @@ const PressesRegisterProduction: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedShift, setSelectedShift] = useState<string>('');
     const navigate = useNavigate();
+
+    const groupDataItems = (data: DataItem[]): DataItem[] => {
+        const groupedData: { [key: string]: DataItem } = {};
+
+        data.forEach(item => {
+            const key = `${item.press}-${item.employee_number}-${item.part_number}`;
+
+            if (groupedData[key]) {
+                groupedData[key].pieces_ok += item.pieces_ok;
+            } else {
+                groupedData[key] = { ...item };
+            }
+        });
+
+        return Object.values(groupedData).sort((a,b) => a.press.localeCompare(b.press) );
+    };
 
     const fetchData = useCallback(async () => {
         if (!selectedDate || !selectedShift) {
@@ -48,8 +64,20 @@ const PressesRegisterProduction: React.FC = () => {
                 },
             );
             const responseData: DataItem[] = response.data;
-            console.log(response);
-            setEditableData(responseData);
+
+            const groupedData = groupDataItems(responseData);
+
+            groupedData.forEach(item => {
+                if (item.worked_hrs > 0) {
+                    item.efficiency = item.pieces_ok / (item.standard * item.worked_hrs);
+                } else {
+                    item.efficiency = 0;
+                }
+            });
+
+            console.log(groupedData);
+
+            setEditableData(groupedData);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -88,35 +116,13 @@ const PressesRegisterProduction: React.FC = () => {
     };
 
     const handleChange = (index: number, field: keyof DataItem, value: string | number) => {
-        const newData = [...editableData]   ;
+        const newData = [...editableData];
         newData[index] = {
             ...newData[index],
             [field]: value,
         };
         setEditableData(newData);
     };
-
-    const editableSortedData = editableData.sort();
-
-    const groupedData = editableSortedData.reduce<Record<string, DataItem>>((acc, item) => {
-        // Normaliza los campos para crear la clave
-        const key = `${item.press?.trim().toLowerCase()}-${String(item.employee_number).trim()}-${item.part_number
-            ?.trim()
-            .toLowerCase()}-${item.work_order?.trim().toLowerCase()}-${String(item.caliber).trim()}`;
-
-        if (!acc[key]) {
-            acc[key] = { ...item }; // Copia el objeto si no existe la clave
-        } else {
-            // Suma las piezas si la clave ya existe
-            acc[key].pieces_ok += item.pieces_ok;
-            acc[key].worked_hrs += item.worked_hrs;
-            acc[key].efficiency =
-                (acc[key].efficiency * acc[key].pieces_ok + item.efficiency * item.pieces_ok) /
-                (acc[key].pieces_ok + item.pieces_ok); // Promedio ponderado de eficiencia
-        }
-
-        return acc;
-    }, {});
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -190,7 +196,7 @@ const PressesRegisterProduction: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {Object.values(groupedData).map((item, index) => (
+                        {editableData.map((item, index) => (
                             <tr key={item.id} className='odd:bg-white even:bg-gray-50 border-b'>
                                 <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
                                     {item.press}
