@@ -318,8 +318,9 @@ def register_data_production(request):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
+
     if not Part_Number.objects.filter(part_number=data.get('part_number')).exists():
-        return JsonResponse({'message': 'Registro invalido.'}, status=404)
+        return JsonResponse({'message': 'Número de parte no existe'}, status=404)
 
     last_record = ProductionPress.objects.filter(press=data.get('name')).order_by('-date_time').first()
     
@@ -434,6 +435,7 @@ def load_scrap_data(request):
     
     return JsonResponse(machines, safe=False)
 
+#! Find fix here for the other enpoint
 def search_in_part_number(request):
     data = request.GET.dict()
     part_number = data.get('part_number')

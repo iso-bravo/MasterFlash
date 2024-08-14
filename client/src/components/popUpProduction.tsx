@@ -24,25 +24,12 @@ interface PopupProps {
     newWork_order: string,
     newMolderNumber: string
   ) => Promise<void>;
-  onUpdate: (updatedMachine: {
-    name: string;
-    state: string;
-    employee_number: string;
-    pieces_ok: string;
-    pieces_rework: string;
-    part_number: string;
-    work_order: string;
-    total_ok: string;
-    molder_number: string;
-
-  }) => void;
 }
 
 const Popup: React.FC<PopupProps> = ({
   machineData,
   onClose,
   onSave,
-  onUpdate,
 }) => {
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [partNumber, setPartNumber] = useState("");
@@ -117,17 +104,6 @@ const Popup: React.FC<PopupProps> = ({
         workOrder,
         molderNumber
       );
-      onUpdate({
-        name: machineData.name,
-        state: machineData.state,
-        employee_number: employeeNumber,
-        pieces_ok: piecesOK,
-        pieces_rework: piecesRework,
-        part_number: partNumber,
-        work_order: workOrder,
-        total_ok: machineData.total_ok,
-        molder_number: molderNumber
-      });
       onClose();
     } catch (error) {
       console.error("Error al guardar:", error);

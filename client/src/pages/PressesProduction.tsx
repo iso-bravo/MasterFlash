@@ -8,6 +8,8 @@ import '../index.css';
 import '../output.css';
 import { useNavigate } from 'react-router-dom';
 import MonthlyGoalModal from '../components/MonthlyGoalModal';
+import { toast, ToastContainer } from 'react-toastify';
+import { getErrorMessage } from '../utils/utils';
 
 interface MachineData {
     name: string;
@@ -122,55 +124,6 @@ const PressesProduction: React.FC = () => {
         }
     };
 
-    const updateTotalProduced = (pieces_ok: number) => {
-        let total;
-        // eslint-disable-next-line prefer-const
-        total = totalPiecesProduced + pieces_ok;
-        setTotalPiecesProduced(total);
-    };
-
-    const handleUpdateMachine = (updatedMachine: MachineData) => {
-        setMachines(prevMachines =>
-            prevMachines.map(machine => {
-                if (machine.name !== updatedMachine.name) return machine;
-
-                const newMachine = { ...machine };
-
-                newMachine.part_number = updatedMachine.part_number || machine.part_number;
-                newMachine.work_order = updatedMachine.work_order || machine.work_order;
-                newMachine.employee_number = updatedMachine.employee_number || machine.employee_number;
-                newMachine.molder_number = updatedMachine.molder_number || machine.molder_number;
-
-                if (updatedMachine.part_number && updatedMachine.part_number !== machine.part_number) {
-                    newMachine.total_ok = '0';
-                }
-
-                if (updatedMachine.work_order && updatedMachine.work_order !== machine.work_order) {
-                    newMachine.total_ok = '0';
-                } else if (updatedMachine.total_ok !== '0') {
-                    newMachine.total_ok = (
-                        parseInt(machine.total_ok) + parseInt(updatedMachine.pieces_ok || '0')
-                    ).toString();
-                }
-
-                if (updatedMachine.pieces_ok) {
-                    newMachine.pieces_ok = (
-                        parseInt(machine.pieces_ok) + parseInt(updatedMachine.pieces_ok)
-                    ).toString();
-                    updateTotalProduced(parseInt(updatedMachine.pieces_ok));
-                }
-
-                if (updatedMachine.pieces_rework) {
-                    newMachine.pieces_rework = (
-                        parseInt(machine.pieces_rework) + parseInt(updatedMachine.pieces_rework)
-                    ).toString();
-                }
-
-                return newMachine;
-            }),
-        );
-    };
-
     const handleSave = async (
         newEmployeeNumber: string,
         newPiecesOK: string,
@@ -202,8 +155,14 @@ const PressesProduction: React.FC = () => {
                 },
             });
             console.log('Machine state updated successfully!');
-        } catch (error) {
-            console.error('Error updating machine state:', error);
+        } catch (error: any) {
+            const errorMessage = getErrorMessage(error);
+            console.error(errorMessage);
+            if (error.response && error.response.status === 404) {
+                toast.error('Número de parte no existe');
+            } else {
+                toast.error(errorMessage);
+            }
         }
 
         setPopUpOpen(false);
@@ -211,6 +170,7 @@ const PressesProduction: React.FC = () => {
 
     return (
         <div className='lg:p-2'>
+            <ToastContainer />
             <header className='flex flex-wrap items-center justify-between mt-3 mb-10 bg-orange-500 text-white p-4 w-full '>
                 <section>
                     <IoIosArrowRoundBack
@@ -259,12 +219,7 @@ const PressesProduction: React.FC = () => {
             </div>
 
             {popUpOpen && selectedMachine && (
-                <Popup
-                    machineData={selectedMachine}
-                    onClose={handleClosePopup}
-                    onSave={handleSave}
-                    onUpdate={handleUpdateMachine}
-                />
+                <Popup machineData={selectedMachine} onClose={handleClosePopup} onSave={handleSave} />
             )}
             <MonthlyGoalModal isOpen={goalModalOpen} onClose={() => setGoalModalOpen(false)} onSave={handleSaveGoal} />
         </div>
