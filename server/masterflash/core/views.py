@@ -358,6 +358,44 @@ def register_data_production(request):
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
 
 
+@csrf_exempt
+@require_POST
+def get_production_press_by_date(request):
+    data = request.POST.dict()
+    print("Received data:", data)
+    date = data.get('date')
+    shift = data.get('shift')
+    if not date or not shift:
+        return JsonResponse({'error': 'Date parameter is missing'}, status=400)
+
+    #? preguntar de donde sale el produccion
+    production_press_records = ProductionPress.objects.filter(  date_time__date=date,
+                                                                shift=shift
+                    ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok')
+
+    print("ProductionPress records found:", production_press_records)
+
+    result = []
+
+    for record in production_press_records:
+        print("Processing record:", record)
+        part_number_record = Part_Number.objects.filter(part_number=record['part_number']).values('caliber', 'cavities', 'standard').first()
+        print("Part_Number record found:", part_number_record)
+        if part_number_record:
+            combined_record = {
+                'press': record['press'],
+                'employee_number': record['employee_number'],
+                'part_number': record['part_number'],
+                'work_order': record['work_order'],
+                'caliber': part_number_record['caliber'],
+                'cavities': part_number_record['cavities'],
+                'standard': part_number_record['standard'],
+                'pieces_ok':record['pieces_ok']
+            }
+            result.append(combined_record)
+    print("Final result:", result)
+    return JsonResponse(result, safe=False)
+
 
 @csrf_exempt
 @require_POST
