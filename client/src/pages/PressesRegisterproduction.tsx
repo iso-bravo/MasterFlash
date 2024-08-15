@@ -45,7 +45,7 @@ const PressesRegisterProduction: React.FC = () => {
             }
         });
 
-        return Object.values(groupedData).sort((a,b) => a.press.localeCompare(b.press) );
+        return Object.values(groupedData).sort((a, b) => a.press.localeCompare(b.press));
     };
 
     const fetchData = useCallback(async () => {
@@ -68,11 +68,7 @@ const PressesRegisterProduction: React.FC = () => {
             const groupedData = groupDataItems(responseData);
 
             groupedData.forEach(item => {
-                if (item.worked_hrs > 0) {
-                    item.efficiency = item.pieces_ok / (item.standard * item.worked_hrs);
-                } else {
-                    item.efficiency = 0;
-                }
+                item.efficiency = 0;
             });
 
             console.log(groupedData);
@@ -121,6 +117,17 @@ const PressesRegisterProduction: React.FC = () => {
             ...newData[index],
             [field]: value,
         };
+
+        if (field === 'worked_hrs') {
+            const workedHrs = Number(value);
+            if (workedHrs > 0) {
+                const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
+                newData[index].efficiency = Number(decimal.toFixed(2));
+            } else {
+                newData[index].efficiency = 0;
+            }
+        }
+
         setEditableData(newData);
     };
 
@@ -134,11 +141,11 @@ const PressesRegisterProduction: React.FC = () => {
 
             <form className='lg:flex justify-end gap-4 items-center grid md:flex sm:grid-flow-col sm:grid sm:grid-rows-2'>
                 <div className='flex flex-row gap-2'>
-                    <h2>Fecha</h2>
+                    <label htmlFor='date'>Fecha</label>
                     <input name='date' type='date' className='rounded-sm w-32 h-6' onChange={handleDateChange} />
                 </div>
                 <div>
-                    <label htmlFor='shifts'>Turno </label>
+                    <label htmlFor='shifts select'>Turno </label>
                     <select name='shifts select' defaultValue='' id='shifts' onChange={handleShiftChange}>
                         <option value='' disabled>
                             Selecciona un turno
@@ -161,6 +168,9 @@ const PressesRegisterProduction: React.FC = () => {
                                 No.Operador
                             </th>
                             <th scope='col' className='px-6 py-3'>
+                                Orden de trabajo
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
                                 No.Parte
                             </th>
                             <th scope='col' className='px-6 py-3'>
@@ -173,7 +183,7 @@ const PressesRegisterProduction: React.FC = () => {
                                 Hrs Trabajadas
                             </th>
                             <th scope='col' className='px-6 py-3 bg-yellow-300'>
-                                Causa de Tiempo muerto
+                                Causa de Tiempo muerto (Str.)
                             </th>
                             <th scope='col' className='px-6 py-3'>
                                 Estándar por hora
@@ -182,7 +192,7 @@ const PressesRegisterProduction: React.FC = () => {
                                 Estándar propuesto
                             </th>
                             <th scope='col' className='px-6 py-3 bg-yellow-300'>
-                                Causa de tiempo muerto
+                                Causa de tiempo muerto (Tiempo)
                             </th>
                             <th scope='col' className='px-6 py-3'>
                                 Producción
@@ -190,20 +200,18 @@ const PressesRegisterProduction: React.FC = () => {
                             <th scope='col' className='px-6 py-3'>
                                 Eficiencia
                             </th>
-                            <th scope='col' className='px-6 py-3'>
-                                Orden de trabajo
-                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         {editableData.map((item, index) => (
-                            <tr key={item.id} className='odd:bg-white even:bg-gray-50 border-b'>
+                            <tr key={`${index}-${item.id}`} className='odd:bg-white even:bg-gray-50 border-b'>
                                 <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
                                     {item.press}
                                 </th>
                                 <td className='px-6 py-4'>{item.employee_number}</td>
+                                <td className='px-6 py-4'>{item.work_order}</td>
                                 <td className='px-6 py-4'>{item.part_number}</td>
-                                <td className='px-6 py-4'>
+                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'cavities')}>
                                     {item.editableField === 'cavities' ? (
                                         <input
                                             type='text'
@@ -214,9 +222,7 @@ const PressesRegisterProduction: React.FC = () => {
                                             autoFocus
                                         />
                                     ) : (
-                                        <span onDoubleClick={() => handleDoubleClick(index, 'cavities')}>
-                                            {item.cavities}
-                                        </span>
+                                        <span>{item.cavities}</span>
                                     )}
                                 </td>
                                 <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'caliber')}>
@@ -230,19 +236,77 @@ const PressesRegisterProduction: React.FC = () => {
                                             autoFocus
                                         />
                                     ) : (
-                                        <span onDoubleClick={() => handleDoubleClick(index, 'caliber')}>
-                                            {item.caliber}
-                                        </span>
+                                        <span>{item.caliber}</span>
                                     )}
                                 </td>
-                                <td className='px-6 py-4'>{item.editableField === 'worked_hrs'}</td>
-                                <td className='px-6 py-4 bg-yellow-300'>{item.dead_time_cause_1}</td>
+                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'worked_hrs')}>
+                                    {item.editableField === 'worked_hrs' ? (
+                                        <input
+                                            type='text'
+                                            value={item.worked_hrs || ''}
+                                            onChange={e => handleChange(index, 'worked_hrs', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.worked_hrs}</span>
+                                    )}
+                                </td>
+                                <td
+                                    className='px-6 py-4 bg-yellow-300'
+                                    onDoubleClick={() => handleDoubleClick(index, 'dead_time_cause_1')}
+                                >
+                                    {item.editableField === 'dead_time_cause_1' ? (
+                                        <input
+                                            type='text'
+                                            value={item.dead_time_cause_1 || ''}
+                                            onChange={e => handleChange(index, 'dead_time_cause_1', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-yellow-300 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.dead_time_cause_1}</span>
+                                    )}
+                                </td>
                                 <td className='px-6 py-4'>{item.standard}</td>
-                                <td className='px-6 py-4'>{item.proposed_standard}</td>
-                                <td className='px-6 py-4 bg-yellow-300'>{item.dead_time_cause_2}</td>
+                                <td
+                                    className='px-6 py-4'
+                                    onDoubleClick={() => handleDoubleClick(index, 'proposed_standard')}
+                                >
+                                    {item.editableField === 'proposed_standard' ? (
+                                        <input
+                                            type='text'
+                                            value={item.proposed_standard}
+                                            onChange={e => handleChange(index, 'proposed_standard', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.proposed_standard}</span>
+                                    )}
+                                </td>
+                                <td
+                                    className='px-6 py-4 bg-yellow-300'
+                                    onDoubleClick={() => handleDoubleClick(index, 'dead_time_cause_2')}
+                                >
+                                    {item.editableField === 'dead_time_cause_2' ? (
+                                        <input
+                                            type='text'
+                                            value={item.dead_time_cause_2 || ''}
+                                            onChange={e => handleChange(index, 'dead_time_cause_2', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-yellow-300 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.dead_time_cause_2}</span>
+                                    )}
+                                </td>
                                 <td className='px-6 py-4'>{item.pieces_ok}</td>
-                                <td className='px-6 py-4'>{item.efficiency}</td>
-                                <td className='px-6 py-4'>{item.work_order}</td>
+                                <td className='px-6 py-4'>{`${item.efficiency}%`}</td>
                             </tr>
                         ))}
                     </tbody>
