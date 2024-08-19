@@ -25,3 +25,5 @@ urlpatterns = [
     path('monthly-goal/<int:year>/<int:month>/', views.get_presses_monthly_goal, name='get_monthly_goal'),
     path('production-percentage/<int:year>/<int:month>/', views.get_presses_production_percentage, name='get_production_percentage'),
 ]
+
+

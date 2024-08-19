@@ -473,7 +473,6 @@ def load_scrap_data(request):
     
     return JsonResponse(machines, safe=False)
 
-#! Find fix here for the other enpoint
 def search_in_part_number(request):
     data = request.GET.dict()
     part_number = data.get('part_number')
@@ -487,6 +486,7 @@ def search_in_part_number(request):
     rubber_compound = getattr(part_record, 'rubber_compound', None)
     insert = getattr(part_record, 'insert', None)
     caliber = getattr(part_record, 'caliber', None)
+    gripper = getattr(part_record, 'gripper',None)
 
     if insert is not None and caliber is not None:
         try:
@@ -502,6 +502,7 @@ def search_in_part_number(request):
     data = {
         'Compuesto': rubber_compound,
         'Inserto': insert,
+        'Gripper':gripper,
         'Metal': caliber,
         'Ito. s/hule': weight,
     }
@@ -554,7 +555,7 @@ def register_scrap(request):
             shift = empty_to_none(data.get('shift'))
             line = empty_to_none(data.get('line'))
             auditor = empty_to_none(data.get('auditor'))
-            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(10)]
+            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(12)]
             codes = {code: empty_to_none(value) for code, value in data.items() if code.startswith('codes[')}
 
             if inputs[0] == None:
@@ -576,15 +577,16 @@ def register_scrap(request):
                 auditor_qc=auditor,
                 part_number=inputs[0] if len(inputs) > 0 else None,
                 molder_number=inputs[1] if len(inputs) > 1 else None,
-                caliber=inputs[4] if len(inputs) > 4 else None,
-                rubber_weight=inputs[5] if len(inputs) > 5 else None,
-                insert_weight_w_rubber=inputs[6] if len(inputs) > 6 else None,
-                insert_weight_wout_rubber=inputs[7] if len(inputs) > 7 else None,
-                recycled_inserts=inputs[8] if len(inputs) > 8 else None,
+                gripper=inputs[4] if len(inputs) > 4 else None,
+                caliber=inputs[5] if len(inputs) > 5 else None,
+                rubber_weight=inputs[6] if len(inputs) > 5 else None,
+                insert_weight_w_rubber=inputs[7] if len(inputs) > 7 else None,
+                insert_weight_wout_rubber=inputs[8] if len(inputs) > 8 else None,
+                recycled_inserts=inputs[9] if len(inputs) > 9 else None,
                 compound=inputs[2] if len(inputs) > 2 else None,
                 mold=part_number_data('mold', inputs[0]),
                 insert=inputs[3] if len(inputs) > 3 else None,
-                inserts_total = inputs[9] if len(inputs) > 9 else None,
+                inserts_total = inputs[10] if len(inputs) > 10 else None,
             )
 
             for code, value in codes.items():
@@ -597,21 +599,21 @@ def register_scrap(request):
             print(total_pieces)        
 
             if len(inputs) > 5:
-                total_bodies_weight = int(inputs[5])
+                total_bodies_weight = int(inputs[6])
             else:
                 total_bodies_weight = 0
 
             print(total_bodies_weight)
 
             if len(inputs) > 9:
-                total_inserts_weight = int(inputs[7]) * int(inputs[9])
+                total_inserts_weight = int(inputs[8]) * int(inputs[10])
             else:
                 total_inserts_weight = 0
 
             print(total_inserts_weight)
 
             if len(inputs) > 6:
-                total_rubber_weight_in_insert = (int(inputs[6])) - total_inserts_weight
+                total_rubber_weight_in_insert = (int(inputs[7])) - total_inserts_weight
             else:
                 total_rubber_weight_in_insert = 0
             
