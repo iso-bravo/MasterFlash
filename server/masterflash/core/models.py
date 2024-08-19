@@ -75,6 +75,7 @@ class Part_Number(models.Model):
     mold = models.CharField(max_length=50, blank=True, null=True)
     instructive = models.CharField(max_length=50, blank=True, null=True)
     insert = models.CharField(max_length=50, blank=True, null=True)
+    gripper = models.CharField(max_length=50, blank=True, null=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
     paint = models.CharField(max_length=50, blank=True, null=True)
     std_paint = models.IntegerField(null=True, blank=True)
@@ -111,6 +112,7 @@ class Qc_Scrap(models.Model):
     compound = models.CharField(max_length=50, blank=True, null=True)
     mold = models.CharField(max_length=50, blank=True, null=True)
     insert = models.CharField(max_length=50, blank=True, null=True)
+    gripper = models.CharField(max_length=50,blank=True,null=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
     B = models.IntegerField(null=True, blank=True)
     CC = models.IntegerField(null=True, blank=True)
@@ -163,7 +165,16 @@ class Qc_Scrap(models.Model):
     total_rubber_weight_in_insert_lbs = models.FloatField(null=True, blank=True)
     total_rubber_weight_lbs = models.FloatField(null=True, blank=True)
     inserts_total = models.IntegerField(null=True, blank=True)
+    grippers_total = models.IntegerField(null=True,blank=True)
 
 class Mold_presses(models.Model):
     press = models.CharField(max_length=50, blank=True, null=True)
     mold = models.CharField(max_length=50, blank=True, null=True)
+
+class Presses_monthly_goals(models.Model):
+    month = models.IntegerField()
+    year = models.IntegerField()
+    target_amount = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.month}/{self.year} - {self.target_amount}"

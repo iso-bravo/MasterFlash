@@ -7,7 +7,7 @@ import ScrapRegister from './pages/ScrapRegister';
 import PressesRegisterProduction from './pages/PressesRegisterproduction';
 import ReportsMenu from './pages/ReportsMenu';
 import ScrapReport from './pages/ScrapReport';
-
+import ProductionRecordsMenu from './pages/ProductionRecordsMenu';
 
 function App() {
     return (
@@ -20,6 +20,7 @@ function App() {
             <Route path="/presses_register_production" element={<PressesRegisterProduction />} />
             <Route path="/reports_menu" element={<ReportsMenu/>} />
             <Route path="/scrap_report" element={<ScrapReport/>} />
+            <Route path='/production_records' element={<ProductionRecordsMenu/>} />
         </Routes>
         </Router>
     );

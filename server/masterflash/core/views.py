@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import date, datetime, time
 from urllib import response
@@ -6,10 +7,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
-from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert
+from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert, Presses_monthly_goals
+from .utils import set_shift, sum_pieces
 from django.utils import timezone
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404
+
 
 @csrf_exempt
 def arduino_data(request, path, value):
@@ -210,13 +213,7 @@ def load_machine_data_production(request):
     
     current_date = datetime.now().date()
     current_time = datetime.now().time()
-    shift = ''
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
 
     for machine in machines:
         if machine.status != 'Available':
@@ -269,7 +266,7 @@ def load_machine_data_production(request):
                 total_ok=Sum('pieces_ok'),
                 total_rework=Sum('pieces_rework')
             )
-       
+    
         if (production and (shift == 'First')) or (production and (shift == 'Second')):
             total_ok = production['total_ok'] if production['total_ok'] else 0
             total_rework = production['total_rework'] if production['total_rework'] else 0
@@ -307,148 +304,98 @@ def load_machine_data_production(request):
     #logger.error(f'total_piecesProduced: {response_data}') 
     return JsonResponse(response_data, safe=False)
 
-def sum_pieces(machine, shift, current_date):
-        logger = logging.getLogger(__name__)    
-        last_record = ProductionPress.objects.filter(press=machine.name).order_by('-date_time').first()
 
-        #logger.error(f'machine: {machine.name}')
-        #logger.error(f'last_record: {last_record}')
-
-        if not last_record:
-            return 0
-
-        part_number = last_record.part_number
-        work_order = last_record.work_order
-        pieces_sum = 0
-        
-        #logger.error(f'last_record: {machine.name}')
-        #logger.error(f'shift: {shift}')
-        if shift == 'First':
-            records = ProductionPress.objects.filter(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time(7, 0), time(16, 35))
-            ).order_by('-date_time')
-        elif shift == 'Second':
-            records = ProductionPress.objects.filter(
-                Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time(16, 36), time.max)) |
-                Q(press=machine.name, shift=shift, date_time__date=current_date, date_time__time__range=(time.min, time(1, 20)))
-            ).order_by('-date_time')
-        else:
-            return 0
-        
-        record_iterator = records.iterator()
-
-        current_record = next(record_iterator, None)
-        while current_record and current_record.part_number == part_number and current_record.work_order == work_order:
-            pieces_sum += current_record.pieces_ok or 0
-            current_record = next(record_iterator, None)
-        #logger.error(f'pieces_sum: {pieces_sum}')
-        #logger.error('------------------------------------------------------')
-
-        return pieces_sum
 
 @csrf_exempt
 @require_POST
 def register_data_production(request):
     logger = logging.getLogger(__name__)
     
-    data = request.POST.dict()
+    data = json.loads(request.body.decode('utf-8'))
     logger.error(f'Data received: {data}')
     
-    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('pieces_ok'), data.get('pieces_rework'), data.get('work_order'),data.get('inserts_total')]):
+    if all(value == '' for value in [data.get('part_number'), data.get('employee_number'), data.get('work_order')]):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
-    if Part_Number.objects.filter(part_number=data.get('part_number')).exists():
-        pass
-    else:
-        return JsonResponse({'message': 'Registro invalido.'}, status=404)
+
+    if not Part_Number.objects.filter(part_number=data.get('part_number')).exists():
+        return JsonResponse({'message': 'Número de parte no existe'}, status=404)
 
     last_record = ProductionPress.objects.filter(press=data.get('name')).order_by('-date_time').first()
     
-    if data.get('pieces_ok') == '':
-        piecesOk = 0
-    else:
-        piecesOk = data.get('pieces_ok')
-            
-    if data.get('pieces_rework') == '':
-        piecesRework = 0
-    else:
-        piecesRework = data.get('pieces_rework')
-    
+    piecesOk = data.get('pieces_ok') or 0
+    piecesRework = data.get('pieces_rework') or 0
+
     if last_record:
-        if data.get('employee_number') == '' and last_record.employee_number:
-            employeeNumber = last_record.employee_number
-        elif data.get('employee_number') != '':
-            employeeNumber = int(data.get('employee_number'))
-        else:
-            employeeNumber = None
-            
-        if data.get('part_number') == '' or data.get('part_number') == None:
-            partNumber = last_record.part_number
-        else:
-            partNumber = data.get('part_number')
-            
-        if data.get('molder_number') == '' or data.get('molder_number') == None:
-            molderNumber = last_record.molder_number
-        else:
-            molderNumber = data.get('molder_number')
-
-        if data.get('work_order') == '' or data.get('work_order') == None:
-            workOrder = last_record.work_order
-        else:
-            workOrder = data.get('work_order')
+        employeeNumber = data.get('employee_number') or last_record.employee_number or None
+        partNumber = data.get('part_number') or last_record.part_number or None
+        molderNumber = data.get('molder_number') or last_record.molder_number or None
+        workOrder = data.get('work_order') or last_record.work_order or ''
     else:
-        if data.get('employee_number') == '' or data.get('employee_number') == None:
-            employeeNumber = None
-        else:
-            employeeNumber = int(data.get('employee_number'))
-            
+        employeeNumber = data.get('employee_number') or None
         partNumber = data.get('part_number')
-
-        if data.get('work_order') == '' or data.get('work_order') == None:
-            workOrder = ''
-        else:
-            workOrder = data.get('work_order')
-
-        if data.get('molder_number') == '' or data.get('molder_number') == None:
-            molderNumber = None
-        else:
-            molderNumber = data.get('molder_number')
-
-        if data.get('inserts_total') == '' or data.get('inserts_total') == None:
-            inserts_total = None
-        else:
-            inserts_total = data.get('inserts_total')
-            #TODO check if the inserts_total is in the models/DB and check front in case the name is the issue
-            #! Important
+        molderNumber = data.get('molder_number') or None
+        workOrder = data.get('work_order') or ''
 
     current_time = datetime.now().time()
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
     
     logger.error(f'shift: {shift}')
     
     ProductionPress.objects.create(
-                date_time = datetime.now(),
-                employee_number = employeeNumber,
-                pieces_ok = piecesOk,
-                pieces_scrap = 0,
-                pieces_rework = piecesRework,
-                part_number = partNumber,
-                work_order = workOrder,
-                molder_number = molderNumber,
-                press = data.get('name'),
-                shift = shift,
-                inserts_total = inserts_total
-            )
+        date_time = datetime.now(),
+        employee_number = employeeNumber,
+        pieces_ok = piecesOk,
+        pieces_scrap = 0,
+        pieces_rework = piecesRework,
+        part_number = partNumber,
+        work_order = workOrder,
+        molder_number = molderNumber,
+        press = data.get('name'),
+        shift = shift,
+    )
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
+
+
+@csrf_exempt
+@require_POST
+def get_production_press_by_date(request):
+    data = request.POST.dict()
+    print("Received data:", data)
+    date = data.get('date')
+    shift = data.get('shift')
+    if not date or not shift:
+        return JsonResponse({'error': 'Date parameter is missing'}, status=400)
+
+    #? preguntar de donde sale el produccion
+    production_press_records = ProductionPress.objects.filter(  date_time__date=date,
+                                                                shift=shift
+                    ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok')
+
+    print("ProductionPress records found:", production_press_records)
+
+    result = []
+
+    for record in production_press_records:
+        print("Processing record:", record)
+        part_number_record = Part_Number.objects.filter(part_number=record['part_number']).values('caliber', 'cavities', 'standard').first()
+        print("Part_Number record found:", part_number_record)
+        if part_number_record:
+            combined_record = {
+                'press': record['press'],
+                'employee_number': record['employee_number'],
+                'part_number': record['part_number'],
+                'work_order': record['work_order'],
+                'caliber': part_number_record['caliber'],
+                'cavities': part_number_record['cavities'],
+                'standard': part_number_record['standard'],
+                'pieces_ok':record['pieces_ok']
+            }
+            result.append(combined_record)
+    print("Final result:", result)
+    return JsonResponse(result, safe=False)
+
 
 @csrf_exempt
 @require_POST
@@ -456,12 +403,7 @@ def presses_general_pause(request):
     machines = LinePress.objects.all()
     
     current_time = datetime.now().time()
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
     
     for machine in machines:
         
@@ -494,12 +436,7 @@ def presses_general_failure(request):
     machines = LinePress.objects.all()
     
     current_time = datetime.now().time()
-    if time(7, 0) <= current_time <= time(16, 35):
-        shift = 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        shift = 'Second'
-    else:
-        shift = 'Free'
+    shift = set_shift(current_time)
     
     for machine in machines:
         
@@ -539,6 +476,7 @@ def load_scrap_data(request):
 def search_in_part_number(request):
     data = request.GET.dict()
     part_number = data.get('part_number')
+    print(f"Searching for part number: {part_number}")
 
     if not part_number:
         return JsonResponse({"error": "part_number is required"}, status=400)
@@ -548,16 +486,23 @@ def search_in_part_number(request):
     rubber_compound = getattr(part_record, 'rubber_compound', None)
     insert = getattr(part_record, 'insert', None)
     caliber = getattr(part_record, 'caliber', None)
+    gripper = getattr(part_record, 'gripper',None)
 
     if insert is not None and caliber is not None:
-        insert_record = get_object_or_404(Insert, insert=insert, caliber=caliber)
-        weight = getattr(insert_record, 'weight', None)
+        try:
+            insert_record = Insert.objects.get(insert=insert, caliber=caliber)
+            weight = getattr(insert_record, 'weight', None)
+        except Insert.DoesNotExist:
+            print("Insert record not found")
+            weight = None
     else:
         weight = None
+
 
     data = {
         'Compuesto': rubber_compound,
         'Inserto': insert,
+        'Gripper':gripper,
         'Metal': caliber,
         'Ito. s/hule': weight,
     }
@@ -610,7 +555,7 @@ def register_scrap(request):
             shift = empty_to_none(data.get('shift'))
             line = empty_to_none(data.get('line'))
             auditor = empty_to_none(data.get('auditor'))
-            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(10)]
+            inputs = [empty_to_none(data.get(f'inputs[{i}]', '')) for i in range(12)]
             codes = {code: empty_to_none(value) for code, value in data.items() if code.startswith('codes[')}
 
             if inputs[0] == None:
@@ -632,15 +577,16 @@ def register_scrap(request):
                 auditor_qc=auditor,
                 part_number=inputs[0] if len(inputs) > 0 else None,
                 molder_number=inputs[1] if len(inputs) > 1 else None,
-                caliber=inputs[4] if len(inputs) > 4 else None,
-                rubber_weight=inputs[5] if len(inputs) > 5 else None,
-                insert_weight_w_rubber=inputs[6] if len(inputs) > 6 else None,
-                insert_weight_wout_rubber=inputs[7] if len(inputs) > 7 else None,
-                recycled_inserts=inputs[8] if len(inputs) > 8 else None,
+                gripper=inputs[4] if len(inputs) > 4 else None,
+                caliber=inputs[5] if len(inputs) > 5 else None,
+                rubber_weight=inputs[6] if len(inputs) > 5 else None,
+                insert_weight_w_rubber=inputs[7] if len(inputs) > 7 else None,
+                insert_weight_wout_rubber=inputs[8] if len(inputs) > 8 else None,
+                recycled_inserts=inputs[9] if len(inputs) > 9 else None,
                 compound=inputs[2] if len(inputs) > 2 else None,
                 mold=part_number_data('mold', inputs[0]),
                 insert=inputs[3] if len(inputs) > 3 else None,
-                inserts_total = inputs[9] if len(inputs) > 9 else None,
+                inserts_total = inputs[10] if len(inputs) > 10 else None,
             )
 
             for code, value in codes.items():
@@ -653,21 +599,21 @@ def register_scrap(request):
             print(total_pieces)        
 
             if len(inputs) > 5:
-                total_bodies_weight = int(inputs[5])
+                total_bodies_weight = int(inputs[6])
             else:
                 total_bodies_weight = 0
 
             print(total_bodies_weight)
 
             if len(inputs) > 9:
-                total_inserts_weight = int(inputs[7]) * int(inputs[9])
+                total_inserts_weight = int(inputs[8]) * int(inputs[10])
             else:
                 total_inserts_weight = 0
 
             print(total_inserts_weight)
 
             if len(inputs) > 6:
-                total_rubber_weight_in_insert = (int(inputs[6])) - total_inserts_weight
+                total_rubber_weight_in_insert = (int(inputs[7])) - total_inserts_weight
             else:
                 total_rubber_weight_in_insert = 0
             
@@ -727,3 +673,69 @@ def register_production(request):
 
     except Exception as e:
             return JsonResponse({'message': "Error: {}".format(str(e))}, status=400)
+
+@csrf_exempt
+@require_http_methods(["POST", "PUT"])
+def post_or_put_monthly_goal(request):
+    #TODO agregar seguridad para que si se agrega el mismo mes 2 veces, se haga PUT y no POST
+    data = request.POST.dict()
+    print(data)
+    
+    try:
+        month = int(data['month'])
+        year = int(data['year'])
+        target_amount = float(data['target_amount'])
+        
+        if month < 1 or month > 12:
+            return JsonResponse({'error': 'month out of range'}, status=400)
+        
+        # Verificar si ya existe una meta para el mes y año dados
+        goal, created = Presses_monthly_goals.objects.get_or_create(
+            month=month, year=year,
+            defaults={'target_amount': target_amount}
+        )
+
+        if not created:
+            # Si ya existe, actualizamos el target_amount
+            goal.target_amount = target_amount
+            goal.save()
+            return JsonResponse({'message': 'Goal updated successfully', 'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=200)
+        else:
+            return JsonResponse({'message': 'Goal created successfully', 'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount}, status=201)
+
+    except KeyError:
+        return JsonResponse({'error': 'Missing fields'}, status=400)
+
+    except ValueError:
+        return JsonResponse({'error': 'Invalid data types'}, status=400)
+    
+
+def get_presses_monthly_goal(request,year,month):
+    try:
+        goal = Presses_monthly_goals.objects.get(year=year,month=month)
+        return JsonResponse({'id': goal.id, 'month': goal.month, 'year': goal.year, 'target_amount': goal.target_amount})
+
+    except Presses_monthly_goals.DoesNotExist:
+        return HttpResponse(status=404)
+
+def get_presses_production_percentage(request, year, month):
+    try:
+        goal = Presses_monthly_goals.objects.get(year=year, month=month)
+        
+        start_date = date(year, month, 1)
+
+        if month == 12:
+            end_date = date(year + 1, 1, 1)
+        else:
+            end_date = date(year, month + 1, 1)
+
+        total_pieces = ProductionPress.objects.filter(
+            date_time__gte=start_date,
+            date_time__lt=end_date
+        ).aggregate(Sum('pieces_ok'))['pieces_ok__sum'] or 0
+
+        percentage = (total_pieces / goal.target_amount) * 100
+
+        return JsonResponse({'percentage': percentage, 'total_pieces': total_pieces})
+    except Presses_monthly_goals.DoesNotExist:
+        return HttpResponse(status=404)

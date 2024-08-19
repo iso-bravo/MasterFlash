@@ -24,7 +24,7 @@ const ScrapRegister: React.FC = () => {
         shift: '',
         line: '',
         auditor: '',
-        inputs: Array(8).fill(''),
+        inputs: Array(11).fill(''),
         codes: {},
     });
 
@@ -35,12 +35,14 @@ const ScrapRegister: React.FC = () => {
         'Moldeador',
         'Compuesto',
         'Inserto',
+        'Gripper',
         'Metal',
         'Peso Hule',
-        'Ito. c/hule',
-        'Ito. s/hule',
+        'Inserto c/hule',
+        'Inserto s/hule',
         'Incertos Reciclados',
         'Total Insertos',
+        'Total grippers',
     ];
     const codes = [
         'B',
@@ -81,6 +83,7 @@ const ScrapRegister: React.FC = () => {
         'SL',
         'SR',
     ];
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -124,19 +127,23 @@ const ScrapRegister: React.FC = () => {
 
     const handleRegister = async () => {
         try {
-            const requiredFields = {
+            const requiredFields: { [key: string]: string | undefined } = {
                 'No. Parte necesario': formData.inputs[0],
                 'Fecha necesaria': formData.date,
                 'Prensa necesaria': formData.line,
                 'Turno necesario': formData.shift,
                 'Auditor necesario': formData.auditor,
                 'Moldeador necesario': formData.inputs[1],
-                'Metal necesario': formData.inputs[4],
-                'Peso Hule necesario': formData.inputs[5],
-                'Ito. c/hule necesario': formData.inputs[6],
-                'Ito. s/hule necesario': formData.inputs[7],
-                'Total Insertos necesario': formData.inputs[9],
+                'Metal necesario': formData.inputs[5],
+                'Peso Hule necesario': formData.inputs[6],
+                'Inserto. c/hule necesario': formData.inputs[7],
+                'Inserto s/hule necesario': formData.inputs[8],
+                'Total Insertos necesario': formData.inputs[10],
             };
+
+            if(formData.inputs[4]){
+                requiredFields['Total Grippers necesario'] = formData.inputs[11]
+            }
 
             for (const [message, value] of Object.entries(requiredFields)) {
                 if (!value) {
@@ -172,7 +179,7 @@ const ScrapRegister: React.FC = () => {
                 shift: '',
                 line: '',
                 auditor: '',
-                inputs: Array(10).fill(''),
+                inputs: Array(12).fill(''),
                 codes: {},
             });
 
@@ -187,8 +194,9 @@ const ScrapRegister: React.FC = () => {
         try {
             const partNumber = formData.inputs[0];
 
-            if (partNumber == '' || partNumber == null) {
+            if (partNumber === '' || partNumber == null) {
                 toast.error('Favor de introducir No. Parte');
+                return;
             }
 
             const response = await api.get(`/search_in_part_number/`, {
@@ -196,13 +204,20 @@ const ScrapRegister: React.FC = () => {
             });
 
             console.log(response.data);
-            const { Compuesto, Inserto, Metal, 'Ito. s/hule': ItoSHule } = response.data;
-            const updatedInputs = [...formData.inputs];
+            const {
+                Compuesto = '',
+                Inserto = '',
+                Metal = '',
+                Gripper = '',
+                'Inserto s/hule': ItoSHule = '',
+            } = response.data || {};
 
-            updatedInputs[2] = Compuesto == null ? '' : Compuesto;
-            updatedInputs[3] = Inserto == null ? '' : Inserto;
-            updatedInputs[4] = Metal == null ? '' : Metal;
-            updatedInputs[7] = ItoSHule == null ? '' : ItoSHule;
+            const updatedInputs = [...formData.inputs];
+            updatedInputs[2] = Compuesto;
+            updatedInputs[3] = Inserto;
+            updatedInputs[4] = Gripper;
+            updatedInputs[5] = Metal;
+            updatedInputs[8] = ItoSHule;
 
             setFormData({ ...formData, inputs: updatedInputs });
         } catch (error: any) {
@@ -212,7 +227,8 @@ const ScrapRegister: React.FC = () => {
                 updatedInputs[2] = '';
                 updatedInputs[3] = '';
                 updatedInputs[4] = '';
-                updatedInputs[7] = '';
+                updatedInputs[5] = '';
+                updatedInputs[8] = '';
                 setFormData({ ...formData, inputs: updatedInputs });
             } else {
                 console.error('Error fetching part number data:', error);
@@ -222,7 +238,7 @@ const ScrapRegister: React.FC = () => {
 
     const handleSearchMetal = async () => {
         try {
-            const metal = formData.inputs[4];
+            const metal = formData.inputs[5];
             const inserto = formData.inputs[3];
 
             if (metal === '' || metal == null || inserto === '' || inserto == null) {
@@ -236,15 +252,15 @@ const ScrapRegister: React.FC = () => {
 
             const { 'Ito. s/hule': ItoSHule } = response.data;
             const updatedInputs = [...formData.inputs];
-            updatedInputs[7] = ItoSHule;
+            updatedInputs[8] = ItoSHule;
 
             setFormData({ ...formData, inputs: updatedInputs });
             console.log(response.data);
         } catch (error: any) {
             if (error.response && error.response.status === 404) {
-                toast.error('Ito s/hule no encontrado');
+                toast.error('Inserto s/hule no encontrado');
                 const updatedInputs = [...formData.inputs];
-                updatedInputs[7] = ' ';
+                updatedInputs[8] = ' ';
             } else {
                 console.error('Error fetching metal data:', error);
             }
@@ -325,10 +341,7 @@ const ScrapRegister: React.FC = () => {
                 <div>
                     <div className='grid gap-y-5 md:grid-cols-2 grid-cols-1 lg:grid-cols-1 '>
                         {inputs.map((input, index) => (
-                            <div
-                                key={index}
-                                className='flex flex-row items-center lg:grid-cols-3 lg:grid lg:gap-24 xl:gap-10'
-                            >
+                            <div key={index} className='flex flex-row items-center lg:grid-cols-3 lg:grid xl:gap-10'>
                                 <label className='w-24'>{input}</label>
                                 {input === 'No. Parte' ? (
                                     <>
@@ -339,7 +352,7 @@ const ScrapRegister: React.FC = () => {
                                         />
                                         <button
                                             onClick={handleSearchPartNumber}
-                                            className=' lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
+                                            className='  lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
                                         >
                                             Buscar
                                         </button>
@@ -371,7 +384,7 @@ const ScrapRegister: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-5 gap-x-6 gap-y-5 justify-items-center lg:ml-12'>
+                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-4 gap-x-6 gap-y-5 justify-items-center lg:ml-12'>
                         {codes.map((code, index) => (
                             <div key={index} className='flex flex-row items-center'>
                                 <label className='w-14'>{code}</label>
@@ -392,3 +405,4 @@ const ScrapRegister: React.FC = () => {
 };
 
 export default ScrapRegister;
+

@@ -19,5 +19,11 @@ urlpatterns = [
     path('search_weight/', views.search_weight, name='search_weight'),
     path('register_scrap/', views.register_scrap, name='register_scrap'),
     path('register/', views.register, name='register'),
+    path('get_production_press_by_date/',views.get_production_press_by_date, name='get_all_production_press'),
 
+    path('monthly-goal/',views.post_or_put_monthly_goal, name = 'post_montly_goal'),
+    path('monthly-goal/<int:year>/<int:month>/', views.get_presses_monthly_goal, name='get_monthly_goal'),
+    path('production-percentage/<int:year>/<int:month>/', views.get_presses_production_percentage, name='get_production_percentage'),
 ]
+
+

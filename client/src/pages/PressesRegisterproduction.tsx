@@ -1,257 +1,319 @@
-import api from "../config/axiosConfig";
-import React, { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import api from '../config/axiosConfig';
+import React, { useEffect, useState, useCallback } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import "../App.css";
-import "../index.css";
-import "../output.css";
-import { IoIosArrowBack } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
-//import Cookies from 'js-cookie';
+import '../App.css';
+import '../index.css';
+import '../output.css';
+import { IoIosArrowBack } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
 
-interface InputFields {
-  date: string;
-  shift: string;
-  line: string;
-  auditor: string;
-  inputs: string[];
-  codes: { [key: string]: string };
+interface DataItem {
+    id: number;
+    press: string;
+    employee_number: number;
+    part_number: string;
+    work_order: string;
+    caliber: number | null;
+    worked_hrs: number;
+    dead_time_cause_1: string;
+    cavities: number;
+    standard: number;
+    proposed_standard: string;
+    dead_time_cause_2: string;
+    pieces_ok: number;
+    efficiency: number;
+    editableField?: keyof DataItem;
 }
 
 const PressesRegisterProduction: React.FC = () => {
-  const [formData, setFormData] = useState<InputFields>({
-    date: "",
-    shift: "",
-    line: "",
-    auditor: "",
-    inputs: Array(8).fill(""),
-    codes: {},
-  });
+    const [editableData, setEditableData] = useState<DataItem[]>([]);
+    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [selectedShift, setSelectedShift] = useState<string>('');
+    const navigate = useNavigate();
 
-  const [machines, setMachines] = useState<string[]>([]);
+    const groupDataItems = (data: DataItem[]): DataItem[] => {
+        const groupedData: { [key: string]: DataItem } = {};
 
-  const inputs = ["No. Parte", "Moldeador", "Compuesto", "Inserto", "Metal", "Peso Hule", "Ito. c/hule", "Ito. s/hule", "Incertos Reciclados", "Total Insertos"];
-  const codes = ["B", "CC", "CD", "CH", "CM", "CMB", "CR", "CROP", "CS", "D", "DI", "DP", "F", "FC", "FPM", "FPO", "GA", "GM", "H", "_ID", "IM", "IMC", "IP", "IR", "M", "MR", "O", "PD", "PR", "Q", "R", "RC", "RPM", "SG", "SI", "SL", "SR"];
-  const navigate = useNavigate();
+        data.forEach(item => {
+            const key = `${item.press}-${item.employee_number}-${item.part_number}`;
 
-  useEffect(() => {
-    const fetchMachines = async () => {
-      try {
-        const response = await api.get("/load_scrap_data/");
-        console.log(response.data);
-        setMachines(response.data);
-      } catch (error) {
-        console.error("Error fetching machines:", error);
-      }
+            if (groupedData[key]) {
+                groupedData[key].pieces_ok += item.pieces_ok;
+            } else {
+                groupedData[key] = { ...item };
+            }
+        });
+
+        return Object.values(groupedData).sort((a, b) => a.press.localeCompare(b.press));
     };
 
-    fetchMachines();
-  }, []);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    type: string,
-    index: number | null = null
-  ) => {
-    const { name, value } = e.target;
-
-    if (type === "input") {
-      if (index !== null) {
-        const updatedInputs = [...formData.inputs];
-        updatedInputs[index] = value;
-        setFormData({ ...formData, inputs: updatedInputs });
-      }
-    } else if (type === "code") {
-      setFormData({ ...formData, codes: { ...formData.codes, [name]: value } });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const formatDate = (date: string) => {
-    const [year, month, day] = date.split("-");
-    return `${year}-${month}-${day}`;
-  };
-  
-  const handleRegister = async () => {
-    try {
-
-      const requiredFields = {
-        "No. Parte necesario": formData.inputs[0],
-        "Fecha necesaria": formData.date,
-        "Prensa necesaria": formData.line,
-        "Turno necesario": formData.shift,
-        "Auditor necesario": formData.auditor,
-        "Moldeador necesario": formData.inputs[1],
-        "Metal necesario": formData.inputs[4],
-        "Peso Hule necesario": formData.inputs[5],
-        "Ito. c/hule necesario": formData.inputs[6],
-        "Ito. s/hule necesario": formData.inputs[7],
-      };
-      
-      for (const [message, value] of Object.entries(requiredFields)) {
-        if (!value) {
-          toast.error(message);
-          return;
+    const fetchData = useCallback(async () => {
+        if (!selectedDate || !selectedShift) {
+            toast.error('Selecciona una fecha y un turno.');
+            return;
         }
-      }
+        try {
+            const response = await api.post(
+                '/get_production_press_by_date/',
+                { date: selectedDate, shift: selectedShift },
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                },
+            );
+            const responseData: DataItem[] = response.data;
 
-      const formattedDate = formatDate(formData.date);
+            const groupedData = groupDataItems(responseData);
 
-      const formBody = new URLSearchParams();
-      formBody.append('date', formattedDate);
-      formBody.append('shift', formData.shift);
-      formBody.append('line', formData.line);
-      formBody.append('auditor', formData.auditor);
-      
-      formData.inputs.forEach((input, index) => {
-        formBody.append(`inputs[${index}]`, input);
-      });
+            groupedData.forEach(item => {
+                item.efficiency = 0;
+            });
 
-      Object.keys(formData.codes).forEach(code => {
-        formBody.append(`codes[${code}]`, formData.codes[code]);
-      });
+            console.log(groupedData);
 
-      await api.post(
-        `register_scrap/`,
-        formBody.toString(),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+            setEditableData(groupedData);
+        } catch (error) {
+            console.error('Error fetching data:', error);
         }
-      );
+    }, [selectedDate, selectedShift]);
 
-      setFormData({
-        date: "",
-        shift: "",
-        line: "",
-        auditor: "",
-        inputs: Array(9).fill(""),
-        codes: {},
-      });
+    useEffect(() => {
+        if (selectedDate) {
+            fetchData();
+        }
+    }, [selectedDate, fetchData]);
 
-      toast.success("Registro exitoso");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Error registering data");
-    }
-  };
-  
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedDate(e.target.value);
+    };
 
-  const handleSearchPartNumber = async () => {
-    try {
-      const partNumber = formData.inputs[0];
+    const handleShiftChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedShift(e.target.value);
+    };
 
-      if (partNumber == "" || partNumber == null) {
-        toast.error("Favor de introducir No. Parte");
-      }
+    const handleDoubleClick = (index: number, field: keyof DataItem) => {
+        const newData = [...editableData];
+        newData[index] = {
+            ...newData[index],
+            editableField: field,
+        };
+        setEditableData(newData);
+    };
 
-      const response = await api.get(`search_in_part_number/`, {
-        params: { part_number: partNumber }
-      });
-      
-      console.log(response.data)
-      const { Compuesto, Inserto, Metal, "Ito. s/hule": ItoSHule } = response.data;
-      const updatedInputs = [...formData.inputs];
+    const handleBlur = (index: number) => {
+        const newData = [...editableData];
+        newData[index] = {
+            ...newData[index],
+            editableField: undefined,
+        };
+        setEditableData(newData);
+    };
 
-      updatedInputs[2] = Compuesto == null ? '' : Compuesto;
-      updatedInputs[3] = Inserto == null ? '' : Inserto;
-      updatedInputs[4] = Metal == null ? '' : Metal;
-      updatedInputs[7] = ItoSHule == null ? '' : ItoSHule;
+    const handleChange = (index: number, field: keyof DataItem, value: string | number) => {
+        const newData = [...editableData];
+        newData[index] = {
+            ...newData[index],
+            [field]: value,
+        };
 
+        if (field === 'worked_hrs') {
+            const workedHrs = Number(value);
+            if (workedHrs > 0) {
+                const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
+                newData[index].efficiency = Number(decimal.toFixed(2));
+            } else {
+                newData[index].efficiency = 0;
+            }
+        }
 
-      setFormData({ ...formData, inputs: updatedInputs });
-    } catch (error: any) {
-      if (error.response && error.response.status === 404) {
-        toast.error("No. Parte no existe");
-        const updatedInputs = [...formData.inputs];
-        updatedInputs[2] = "";
-        updatedInputs[3] = "";
-        updatedInputs[4] = "";
-        updatedInputs[7] = "";
-        setFormData({ ...formData, inputs: updatedInputs });
-      } else {
-        console.error("Error fetching part number data:", error);
-      }
-    }
-  };
+        setEditableData(newData);
+    };
 
-  const handleSearchMetal = async () => {
-    try {
-      const metal = formData.inputs[4];
-      const inserto = formData.inputs[3];
+    return (
+        <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
+            <ToastContainer />
+            <header className='flex items-start gap-3'>
+                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/production_records')} />
+                <h1 className='text-xl'>Registro Producción</h1>
+            </header>
 
-      if ((metal === "" || metal == null) || (inserto === "" || inserto == null)) {
-        toast.error("Metal y/o Inserto faltantes");
-        return;
-      }
+            <form className='lg:flex justify-end gap-4 items-center grid md:flex sm:grid-flow-col sm:grid sm:grid-rows-2'>
+                <div className='flex flex-row gap-2'>
+                    <label htmlFor='date'>Fecha</label>
+                    <input name='date' type='date' className='rounded-sm w-32 h-6' onChange={handleDateChange} />
+                </div>
+                <div>
+                    <label htmlFor='shifts select'>Turno </label>
+                    <select name='shifts select' defaultValue='' id='shifts' onChange={handleShiftChange}>
+                        <option value='' disabled>
+                            Selecciona un turno
+                        </option>
+                        <option value='First'>First</option>
+                        <option value='Second'>Second</option>
+                        <option value='Free'>Free</option>
+                    </select>
+                </div>
+            </form>
 
-      const response = await api.get(`http://192.168.10.7:8001/search_weight`, {
-        params: { metal: metal, inserto: inserto }
-      });
-
-      const { "Ito. s/hule": ItoSHule } = response.data;
-      const updatedInputs = [...formData.inputs];
-      updatedInputs[7] = ItoSHule;
-
-      setFormData({ ...formData, inputs: updatedInputs });
-      console.log(response.data);
-
-    } catch (error: any) {
-      if (error.response && error.response.status === 404) {
-        toast.error("Ito s/hule no encontrado");
-        const updatedInputs = [...formData.inputs];
-        updatedInputs[7] = ' ';
-      } else {
-        console.error("Error fetching metal data:", error);
-      }
-    }
-  };
-
-  return (
-    <div className="flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen">
-      <ToastContainer />
-      <div className="flex items-start gap-3">
-        <IoIosArrowBack size={30} className="cursor-pointer" onClick={() => navigate('/')} />
-        <h1 className="text-xl">Registro Producción</h1>
-      </div>
-
-      <div className="flex justify-end gap-4 items-center">
-        <div className="flex flex-row gap-2">
-          <h2>Fecha</h2>
-          <input
-            name="date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => handleChange(e, 'date')}
-            className="rounded-sm w-32 h-6"
-          />
+            <div className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
+                <table className='w-full text-sm text-left text-gray-500'>
+                    <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
+                        <tr>
+                            <th scope='col' className='px-6 py-3 '>
+                                # MP
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                No.Operador
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Orden de trabajo
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                No.Parte
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Cavidades
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Calibre
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Hrs Trabajadas
+                            </th>
+                            <th scope='col' className='px-6 py-3 bg-yellow-300'>
+                                Causa de Tiempo muerto (Str.)
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Estándar por hora
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Estándar propuesto
+                            </th>
+                            <th scope='col' className='px-6 py-3 bg-yellow-300'>
+                                Causa de tiempo muerto (Tiempo)
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Producción
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Eficiencia
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {editableData.map((item, index) => (
+                            <tr key={`${index}-${item.id}`} className='odd:bg-white even:bg-gray-50 border-b'>
+                                <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
+                                    {item.press}
+                                </th>
+                                <td className='px-6 py-4'>{item.employee_number}</td>
+                                <td className='px-6 py-4'>{item.work_order}</td>
+                                <td className='px-6 py-4'>{item.part_number}</td>
+                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'cavities')}>
+                                    {item.editableField === 'cavities' ? (
+                                        <input
+                                            type='text'
+                                            value={item.cavities}
+                                            onChange={e => handleChange(index, 'cavities', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.cavities}</span>
+                                    )}
+                                </td>
+                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'caliber')}>
+                                    {item.editableField === 'caliber' ? (
+                                        <input
+                                            type='text'
+                                            value={item.caliber || ''}
+                                            onChange={e => handleChange(index, 'caliber', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.caliber}</span>
+                                    )}
+                                </td>
+                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'worked_hrs')}>
+                                    {item.editableField === 'worked_hrs' ? (
+                                        <input
+                                            type='text'
+                                            value={item.worked_hrs || ''}
+                                            onChange={e => handleChange(index, 'worked_hrs', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.worked_hrs}</span>
+                                    )}
+                                </td>
+                                <td
+                                    className='px-6 py-4 bg-yellow-300'
+                                    onDoubleClick={() => handleDoubleClick(index, 'dead_time_cause_1')}
+                                >
+                                    {item.editableField === 'dead_time_cause_1' ? (
+                                        <input
+                                            type='text'
+                                            value={item.dead_time_cause_1 || ''}
+                                            onChange={e => handleChange(index, 'dead_time_cause_1', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-yellow-300 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.dead_time_cause_1}</span>
+                                    )}
+                                </td>
+                                <td className='px-6 py-4'>{item.standard}</td>
+                                <td
+                                    className='px-6 py-4'
+                                    onDoubleClick={() => handleDoubleClick(index, 'proposed_standard')}
+                                >
+                                    {item.editableField === 'proposed_standard' ? (
+                                        <input
+                                            type='text'
+                                            value={item.proposed_standard}
+                                            onChange={e => handleChange(index, 'proposed_standard', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.proposed_standard}</span>
+                                    )}
+                                </td>
+                                <td
+                                    className='px-6 py-4 bg-yellow-300'
+                                    onDoubleClick={() => handleDoubleClick(index, 'dead_time_cause_2')}
+                                >
+                                    {item.editableField === 'dead_time_cause_2' ? (
+                                        <input
+                                            type='text'
+                                            value={item.dead_time_cause_2 || ''}
+                                            onChange={e => handleChange(index, 'dead_time_cause_2', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-yellow-300 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.dead_time_cause_2}</span>
+                                    )}
+                                </td>
+                                <td className='px-6 py-4'>{item.pieces_ok}</td>
+                                <td className='px-6 py-4'>{`${item.efficiency}%`}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div className="flex flex-row gap-2">
-          <h2>Turno</h2>
-          <select
-            name="shift"
-            value={formData.shift}
-            onChange={(e) => handleChange(e, 'shift')}
-            className="bg-white rounded-sm w-16 h-6 px-2"
-          >
-            <option value="" disabled> </option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-          </select>
-        </div>
-        <button onClick={handleRegister} className="px-3 py-2 bg-[#6cc7f2] rounded-md md:ml-4">
-          <h2>Buscar</h2>
-        </button>
-      </div>
-
-      <div className="flex flex-row gap-5 mt-7 md:mt-10">
-        
-
-      </div>
-    </div>
-  );
+    );
 };
 
 export default PressesRegisterProduction;
