@@ -19,7 +19,7 @@ def arduino_data(request, path, value):
     if not path or not value:
         return HttpResponse("Path and value are required", status=400)
 
-    if value.startswith("LIN-") or value.startswith("MVFP-"):
+    if value.startswith("MP-") or value.startswith("MVFP-"):
         return register_data(StatePress, path, value)
     elif value.startswith("MT-"):
         return register_data(StateTroquelado, path, value)
@@ -103,7 +103,7 @@ def client_data(request):
             return JsonResponse({'message': 'Registro invalido.'}, status=201)
         
         current_time = datetime.now().time()
-        if time(7, 0) <= current_time <= time(16, 35):
+        if time(5, 0) <= current_time <= time(16, 35):
             shift = 'First'
         elif time(16, 36) <= current_time or current_time <= time(1, 20):
             shift = 'Second'
@@ -253,7 +253,7 @@ def load_machine_data_production(request):
                 press=machine.name,
                 shift=shift,
                 date_time__date=current_date,
-                date_time__time__range=(time(7, 0), time(16, 35))
+                date_time__time__range=(time(5, 0), time(16, 35))
             ).aggregate(
                 total_ok=Sum('pieces_ok'),
                 total_rework=Sum('pieces_rework')
