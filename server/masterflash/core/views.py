@@ -19,7 +19,7 @@ def arduino_data(request, path, value):
     if not path or not value:
         return HttpResponse("Path and value are required", status=400)
 
-    if value.startswith("LIN-") or value.startswith("MVFP-"):
+    if value.startswith("MP-") or value.startswith("MVFP-"):
         return register_data(StatePress, path, value)
     elif value.startswith("MT-"):
         return register_data(StateTroquelado, path, value)

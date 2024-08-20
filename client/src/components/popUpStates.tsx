@@ -165,9 +165,23 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave, onUpdate  }
             <option value="" disabled>
               Seleccionar
             </option>
-            <option value="option1">Opción 1</option>
-            <option value="option2">Opción 2</option>
-            <option value="option3">Opción 3</option>
+            <option value="1- Permiso">1- Permiso</option>
+            <option value="2- Mantenimiento">2- Mantenimiento</option>
+            <option value="3- MP Caliente">3- MP Caliente</option>
+            <option value="4- MP Fria">4- MP Fria</option>
+            <option value="5- MP Fria no se prendio">5- MP Fria no se prendio</option>
+            <option value="6- Falta de hule">6- Falta de hule</option>
+            <option value="7- Falta de incertos pintados">7- Falta de incertos pintados</option>
+            <option value="8- Pesador/Contador lento">8- Pesador/Contador lento</option>
+            <option value="9- Cambio de maquina/Actividad">9- Cambio de maquina/Actividad</option>
+            <option value="10- Falta de incertos troquelados">10- Falta de incertos troquelados</option>
+            <option value="11- SETUP">11- SET UP</option>
+            <option value="12- Apagon">12- Apagon</option>
+            <option value="13- Junta/Capacitacion/Convivio">13- Junta/Capacitacion/Convivio</option>
+            <option value="13.1- Enfermeria">13.1- Enfermeria</option>
+            <option value="14- Cambio de hule/color">14- Cambio de hule/color</option>
+            <option value="15- Falta de aluminio">15- Falta de aluminio</option>
+            <option value="16- Falta de solucion">16- Falta de solucion</option>
           </select>
           <input
             type="text"
