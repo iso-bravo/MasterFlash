@@ -71,13 +71,29 @@ const ScrapReport: React.FC = () => {
                 responseType: 'blob',
             });
 
-            const pdfBlob = new Blob([response.data], {
-                type: 'application/pdf',
-            });
+            console.log(response)
 
-            const pdfUrl = URL.createObjectURL(pdfBlob);
 
-            setPdfUrl(pdfUrl);
+            if (response.data.size > 0) {
+                const pdfBlob = new Blob([response.data], {
+                    type: 'application/pdf',
+                });
+
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+
+                // Descargar PDF
+                // const link = document.createElement('a');
+                // link.href = pdfUrl;
+                // link.setAttribute('download', 'reporte.pdf');
+                // document.body.appendChild(link);
+                // link.click();
+                // ___________
+
+
+                setPdfUrl(pdfUrl);
+            } else {
+                toast.error('No se encontraron datos para generar el reporte');
+            }
 
             setFormData({ date: '', caliber: '', insert: '' });
 
@@ -148,7 +164,7 @@ const ScrapReport: React.FC = () => {
             </form>
             {pdfUrl && (
                 <div>
-                    <iframe src={pdfUrl} width='100%' height='100%' className='mt-10 h-screen rounded-md'></iframe>
+                    <iframe src={pdfUrl} width='100%' height='600px' className='mt-10 rounded-md'></iframe>
                 </div>
             )}
         </div>
