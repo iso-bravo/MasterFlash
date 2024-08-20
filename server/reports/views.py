@@ -26,25 +26,38 @@ def generate_report(request):
         'date_time__date': date,
         'caliber':caliber
     }
+
     if insert:
         filters['insert'] = insert
     
-    data = Qc_Scrap.objects.filter(**filters).values('compound','total_rubber_weight_in_insert_lbs','total_rubber_weight_in_insert','total_rubber_weight_lbs','total_inserts_weight_lbs','inserts_total')
-    print(data)
+    data = Qc_Scrap.objects.filter(**filters).values(   'compound',
+                                                        'total_rubber_weight_in_insert_lbs',
+                                                        'total_rubber_weight_in_insert',
+                                                        'total_rubber_weight_lbs',
+                                                        'total_inserts_weight_lbs',
+                                                        'inserts_total')
+    print("Registros filtrados:", data)
 
     try:
-
-        #total de hule
-        total_rubber_weight_in_inserts_sum = sum(item['total_rubber_weight_in_insert'] for item in data)
 
         # Hule/Sil Lbs
         total_rubber_weight_in_insert_lbs_sum = sum(item['total_rubber_weight_in_insert_lbs'] for item in data)
 
         inserts_total_sum = sum(item['inserts_total'] for item in data)
 
+        # Aluminio lbs
+        total_inserts_weight_lbs = sum(item['total_inserts_weight_lbs'] for item in data  )
+
         # suma total
-        total_sum = total_rubber_weight_in_insert_lbs_sum + inserts_total_sum
-    
+        total_sum = total_rubber_weight_in_insert_lbs_sum + total_inserts_weight_lbs
+
+        # Agrupación
+        grouped_data = {field['compound']:[
+                        sum(d['total_rubber_weight_in_insert'] for d in data if d['compound'] == field['compound']),
+                        sum(d['total_rubber_weight_in_insert_lbs'] for d in data if d['compound'] == field['compound'])
+                    ]
+                    for field in data
+                    }
 
 
         # Crear el PDF
@@ -62,13 +75,13 @@ def generate_report(request):
         elements.append(Paragraph(" ", normal_style))  
 
         # Crear la tabla de datos
-        data_table = [["Compound", "Total", "Lbs", "Aluminio lbs"]]
-        for item in data:
+        data_table = [["Compound", "Total", "Lbs"]]
+        for compound,values in grouped_data.items():
+            total_rubber_weight_in_insert, total_rubber_weight_in_insert_lbs = values
             data_table.append([
-                item['compound'],
-                f"{item['total_rubber_weight_in_insert']:.2f}",
-                f"{item['total_rubber_weight_in_insert_lbs']:.2f}",
-                f"{item['total_inserts_weight_lbs']:.2f}"
+                compound,
+                f"{total_rubber_weight_in_insert:.2f}",
+                f"{total_rubber_weight_in_insert_lbs:.2f}",
             ])
 
         table = Table(data_table)
@@ -88,7 +101,7 @@ def generate_report(request):
         totals = [
             f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
             f"Total de insertos: {inserts_total_sum:.2f}",
-            f"Total de hule: {total_rubber_weight_in_inserts_sum:.2f}",
+            f"Metal lbs: {total_inserts_weight_lbs:.2f}",
             f"Suma Total: {total_sum:.2f}"
         ]
         for total in totals:
