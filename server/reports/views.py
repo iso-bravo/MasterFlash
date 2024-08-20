@@ -18,24 +18,46 @@ import io
 def generate_report(request):
     data = request.POST.dict()
     print(data)
-    date = data.get('date')
-    caliber = data.get('caliber')
-    insert = data.get('insert') if caliber == '0.040' else None
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    report = data.get('reporte')
+    insert = data.get('insert') if report == '0.040' else None
 
     filters = {
-        'date_time__date': date,
-        'caliber':caliber
-    }
+        'date_time__date__range': [start_date, end_date]
+    } 
 
+    if report == "Residencial":
+        filters['insert__startswith'] = "RS"
+    elif report == "Gripper":
+        #! Gripper Logic here
+        pass
+    else:
+        filters['caliber'] = report
+    
     if insert:
         filters['insert'] = insert
-    
-    data = Qc_Scrap.objects.filter(**filters).values(   'compound',
-                                                        'total_rubber_weight_in_insert_lbs',
-                                                        'total_rubber_weight_in_insert',
-                                                        'total_rubber_weight_lbs',
-                                                        'total_inserts_weight_lbs',
-                                                        'inserts_total')
+
+    # Omitir registros residenciales si el reporte es 0.025
+    if report == "0.025":
+        data = Qc_Scrap.objects.filter(**filters).exclude(insert__startswith="RS").values(
+            'compound',
+            'total_rubber_weight_in_insert_lbs',
+            'total_rubber_weight_in_insert',
+            'total_rubber_weight_lbs',
+            'total_inserts_weight_lbs',
+            'inserts_total'
+        )
+    else:
+        data = Qc_Scrap.objects.filter(**filters).values(
+            'compound',
+            'total_rubber_weight_in_insert_lbs',
+            'total_rubber_weight_in_insert',
+            'total_rubber_weight_lbs',
+            'total_inserts_weight_lbs',
+            'inserts_total'
+        )
+
     print("Registros filtrados:", data)
 
     try:
@@ -70,7 +92,7 @@ def generate_report(request):
         normal_style = styles['Normal']
 
         # Título del reporte
-        title = Paragraph(f"Reporte para la fecha: {date} y calibre: {caliber}", title_style)
+        title = Paragraph(f"Reporte desde: {start_date} hasta: {end_date} para reporte: {report}", title_style)
         elements.append(title)
         elements.append(Paragraph(" ", normal_style))  
 
@@ -111,8 +133,8 @@ def generate_report(request):
 
         buffer.seek(0)
         response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f"inline; filename=reporte_scrap_{date}.pdf"
+        response['Content-Disposition'] = f"inline; filename=reporte_scrap_{start_date}_a_{end_date}.pdf"
         return response
     except Exception as e:
-        print(f"Error al generar el reporte de fecha  {date} con calibre {caliber}, Excepción: {e}")
+        print(f"Error al generar el reporte de fecha desde {start_date} hasta {end_date} con reporte {report}, Excepción: {e}")
 
