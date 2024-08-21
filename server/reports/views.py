@@ -1,12 +1,11 @@
 from django.shortcuts import render
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
+
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from masterflash.core.models import Qc_Scrap
 import io
@@ -20,26 +19,24 @@ def generate_report(request):
     print(data)
     start_date = data.get('start_date')
     end_date = data.get('end_date')
-    report = data.get('reporte')
+    report = data.get('report')
     insert = data.get('insert') if report == '0.040' else None
+
 
     filters = {
         'date_time__date__range': [start_date, end_date]
-    } 
+    }
 
     if report == "Residencial":
         filters['insert__startswith'] = "RS"
     elif report == "Gripper":
-        #! Gripper Logic here
+        # Aquí agregas la lógica para Grippers si es necesario
         pass
-    else:
+    elif report == "0.025":
         filters['caliber'] = report
-    
-    if insert:
-        filters['insert'] = insert
 
-    # Omitir registros residenciales si el reporte es 0.025
-    if report == "0.025":
+        print(filters)
+        # Omitir registros residenciales si el reporte es 0.025
         data = Qc_Scrap.objects.filter(**filters).exclude(insert__startswith="RS").values(
             'compound',
             'total_rubber_weight_in_insert_lbs',
@@ -48,7 +45,13 @@ def generate_report(request):
             'total_inserts_weight_lbs',
             'inserts_total'
         )
+
     else:
+        filters['caliber'] = report
+        if insert:
+            filters['insert'] = insert
+
+        print(filters) 
         data = Qc_Scrap.objects.filter(**filters).values(
             'compound',
             'total_rubber_weight_in_insert_lbs',
