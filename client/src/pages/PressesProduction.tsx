@@ -137,7 +137,6 @@ const PressesProduction: React.FC = () => {
         // Actualiza los campos si están vacíos con los valores anteriores
         const updatedMachine: MachineData = {
             ...selectedMachine,
-            state: selectedMachine.state,
             employee_number: newEmployeeNumber || selectedMachine.employee_number,
             pieces_ok: newPiecesOK || selectedMachine.pieces_ok,
             pieces_rework: newPiecesRework || selectedMachine.pieces_rework,
@@ -146,7 +145,9 @@ const PressesProduction: React.FC = () => {
             molder_number: newMolderNumber || selectedMachine.molder_number,
         };
 
-        setSelectedMachine(updatedMachine);
+        setMachines(prevMachines =>
+            prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
+        );
 
         try {
             await api.post('/register_data_production/', updatedMachine, {

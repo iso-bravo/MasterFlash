@@ -28,6 +28,7 @@ def generate_report(request):
     }
 
     if report == "Residencial":
+        filters['caliber'] = '0.025'
         filters['insert__startswith'] = "RS"
     elif report == "Gripper":
         # Aquí agregas la lógica para Grippers si es necesario
@@ -61,28 +62,29 @@ def generate_report(request):
             'inserts_total'
         )
 
+    
+
+    if isinstance(data, dict) or not data:
+        print(f"Error: No se encontraron registros o el formato de `data` no es correcto. Datos: {data}")
+        return HttpResponse("Error: No se encontraron registros o el formato de `data` no es correcto.", status=400)
+
     print("Registros filtrados:", data)
 
     try:
 
-        # Hule/Sil Lbs
         total_rubber_weight_in_insert_lbs_sum = sum(item['total_rubber_weight_in_insert_lbs'] for item in data)
 
-        inserts_total_sum = sum(item['inserts_total'] for item in data)
+        inserts_total_sum = sum(item['inserts_total'] if item['inserts_total'] is not None else 0 for item in data)
 
-        # Aluminio lbs
-        total_inserts_weight_lbs = sum(item['total_inserts_weight_lbs'] for item in data  )
+        total_inserts_weight_lbs = sum(item['total_inserts_weight_lbs'] for item in data)
 
-        # suma total
         total_sum = total_rubber_weight_in_insert_lbs_sum + total_inserts_weight_lbs
 
-        # Agrupación
-        grouped_data = {field['compound']:[
+
+        grouped_data = {field['compound']: [
                         sum(d['total_rubber_weight_in_insert'] for d in data if d['compound'] == field['compound']),
                         sum(d['total_rubber_weight_in_insert_lbs'] for d in data if d['compound'] == field['compound'])
-                    ]
-                    for field in data
-                    }
+                    ] for field in data}
 
 
         # Crear el PDF
