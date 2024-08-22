@@ -32,4 +32,8 @@ class ProductionConsumer(WebsocketConsumer):
         message = event['message']
         self.send(text_data=json.dumps(message))
 
+    @staticmethod
+    def get_production_data(machhine_name=None):
+        send_production_data()
+
 

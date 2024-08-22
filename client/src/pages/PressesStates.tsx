@@ -34,33 +34,6 @@ const PressesStates: React.FC = () => {
             });
     }, []);
 
-    useEffect(() => {
-        const ws = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_BASE_URL}/ws/load_machine_data_production/`);
-
-        ws.onopen = () => {
-            console.log('WebSocket connected');
-        };
-
-        ws.onmessage = event => {
-            const data = JSON.parse(event.data);
-            console.log('Received data:', data);
-            handleUpdateMachine(data);
-        };
-
-        ws.onerror = error => {
-            console.error('WebSocket error:', error);
-        };
-
-        ws.onclose = () => {
-            console.log('WebSocket disconnected');
-        };
-
-        return () => {
-            ws.close();
-        };
-
-    }, []);
-
     /*useEffect(() => {
     const ws = new WebSocket('ws://192.168.10.7:8001/ws/arduino_data/');
     
@@ -99,16 +72,25 @@ const PressesStates: React.FC = () => {
     };
 
     const handleUpdateMachine = (updatedMachine: MachineData) => {
-        setMachines(prevMachines =>
-            prevMachines.map(machine => {
+        console.log(updatedMachine.name);
+        console.log(updatedMachine.employee_number);
+        console.log(updatedMachine.state);
+        setMachines(
+            machines.map(machine => {
                 if (machine.name === updatedMachine.name) {
-                    return {
-                        ...machine,
-                        state: updatedMachine.state || machine.state,
-                        employee_number: updatedMachine.employee_number || machine.employee_number,
-                    };
+                    if (updatedMachine.state == null || updatedMachine.state == '') {
+                        updatedMachine.state = machine.state;
+                    }
+                    if (updatedMachine.employee_number == null || updatedMachine.employee_number == '') {
+                        updatedMachine.employee_number = machine.employee_number;
+                    }
+                    console.log(updatedMachine.name);
+                    console.log(updatedMachine.employee_number);
+                    console.log(updatedMachine.state);
+                    return updatedMachine;
+                } else {
+                    return machine;
                 }
-                return machine;
             }),
         );
     };
