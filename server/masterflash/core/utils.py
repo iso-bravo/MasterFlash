@@ -1,8 +1,8 @@
-from datetime import time,datetime
+from datetime import date, time,datetime
 import logging
 from django.db.models import Q,Sum
 
-from masterflash.core.models import LinePress, ProductionPress, StatePress
+from masterflash.core.models import LinePress, Presses_monthly_goals, ProductionPress, StatePress
 
 def set_shift(current_time:time)->str:
     if time(5, 0) <= current_time <= time(16, 35):
@@ -64,6 +64,28 @@ def send_production_data():
     machines = LinePress.objects.all()
     machines_data = []
     total_piecesProduced = 0
+
+    # 'total_pieces and 'porcentage' calculation
+    year = current_date.year
+    month = current_date.month
+
+    try:
+        start_date = date(year,month,1)
+
+        if month == 12:
+            end_date = date(year + 1,1,1)
+        else:
+            end_date = date(year,month + 1,1)
+        
+        total_pieces = ProductionPress.objects.filter(
+            date_time__gte=start_date,
+            date_time__lt=end_date
+        ).aggregate(Sum('pieces_ok'))['pieces_ok__sum'] or 0
+
+
+    except Presses_monthly_goals.DoesNotExist:
+        total_pieces = 0
+
 
     for machine in machines:
         if machine.status != 'Available':
@@ -128,6 +150,7 @@ def send_production_data():
     response_data = {
         'machines_data': machines_data,
         'total_piecesProduced': total_piecesProduced,
+        'actual_produced': total_pieces
         }
     
     return response_data

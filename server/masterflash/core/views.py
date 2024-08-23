@@ -103,12 +103,7 @@ def client_data(request):
             return JsonResponse({'message': 'Registro invalido.'}, status=201)
         
         current_time = datetime.now().time()
-        if time(5, 0) <= current_time <= time(16, 35):
-            shift = 'First'
-        elif time(16, 36) <= current_time or current_time <= time(1, 20):
-            shift = 'Second'
-        else:
-            shift = 'Free'
+        shift = set_shift(current_time)
 
         if last_record:
             if data.get('employeeNumber') == '':

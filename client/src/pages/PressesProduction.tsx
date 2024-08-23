@@ -49,6 +49,7 @@ const PressesProduction: React.FC = () => {
                 } else if (Array.isArray(data.machines_data)) {
                     setMachines(data.machines_data);
                     setTotalPiecesProduced(data.total_piecesProduced);
+                    setProductionTotal(data.actual_produced);
                 } else {
                     console.error('machines_data is not an array:', data.machines_data);
                 }
@@ -85,9 +86,6 @@ const PressesProduction: React.FC = () => {
             try {
                 const goalResponse = await api.get(`/monthly-goal/${year}/${month}/`);
                 setMonthlyGoal(goalResponse.data.target_amount);
-
-                const percentageResponse = await api.get(`/production-percentage/${year}/${month}/`);
-                setProductionTotal(percentageResponse.data.total_pieces);
             } catch (error) {
                 console.error('Error fetching monthly goal or production percentage:', error);
             }
