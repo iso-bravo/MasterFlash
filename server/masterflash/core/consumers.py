@@ -1,11 +1,6 @@
 import json
-from datetime import datetime, time
 from channels.generic.websocket import WebsocketConsumer
-from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from django.db.models import Q, Sum
-from .utils import set_shift
-from .models import LinePress, ProductionPress, StatePress
 from .utils import send_production_data
 
 class ProductionConsumer(WebsocketConsumer):
@@ -31,5 +26,9 @@ class ProductionConsumer(WebsocketConsumer):
     def production_message(self, event):
         message = event['message']
         self.send(text_data=json.dumps(message))
+
+    @staticmethod
+    def get_production_data(machhine_name=None):
+        return send_production_data()
 
 
