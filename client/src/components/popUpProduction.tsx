@@ -179,7 +179,7 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
                                 onChange={handlePiecesOk}
                                 ref={piecesOKRef}
                                 onKeyDown={e => handleKeyDown(e, piecesReworkRef)}
-                                placeholder={`${machineData.pieces_ok}`}
+                                placeholder={`${0}`}
                                 className='bg-white rounded-md w-full md:w-64 px-2'
                                 min='0'
                             />
@@ -196,7 +196,7 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
                                 onChange={handlePiecesRework}
                                 ref={piecesReworkRef}
                                 onKeyDown={e => handleKeyDown(e, null)}
-                                placeholder={`${machineData.pieces_rework}`}
+                                placeholder={`${0}`}
                                 className='bg-white rounded-md w-full md:w-64 px-2'
                                 min='0'
                             />

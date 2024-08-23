@@ -5,8 +5,8 @@ import { VscGitPullRequestCreate } from 'react-icons/vsc';
 import { FaFileAlt } from 'react-icons/fa';
 import Barwell from '../assets/conveyor.png';
 import Troquelado from '../assets/worker.png';
-import { BsFillHouseGearFill } from 'react-icons/bs';
 import { BiSolidDashboard } from 'react-icons/bi';
+import { GiNuclearWaste } from 'react-icons/gi';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { FaFileInvoice } from 'react-icons/fa';
 import { MdNumbers } from 'react-icons/md';
@@ -84,6 +84,12 @@ const Quality: React.FC = () => {
                         </div>
                         <h2 className=' text-center'>Reg. Scrap</h2>
                     </div>
+                    <div className='flex flex-col w-14 items-center cursor-pointer'>
+                        <div className='p-3 rounded-sm bg-[#2459A9]'>
+                            <GiNuclearWaste color='white' size={35} />
+                        </div>
+                        <h2 className='text-center'> Reg. Waste</h2>
+                    </div>
                     <div
                         className='flex flex-col w-14 items-center cursor-pointer'
                         onClick={() => navigate('/reports_menu')}
@@ -93,13 +99,7 @@ const Quality: React.FC = () => {
                         </div>
                         <h2 className=' text-center'>Reportes</h2>
                     </div>
-                    <div className='flex flex-col items-center cursor-pointer'>
-                        <div className=' bg-[#2459A9] p-2 rounded-sm'>
-                            <BsFillHouseGearFill color='white' size={40} />
-                        </div>
-                        <h2 className=' text-center'>Resid.</h2>
-                    </div>
-                    <div className='flex flex-col items-center hidden 300:invisible cursor-pointer'>
+                    <div className='flex flex-col items-center 300:invisible cursor-pointer'>
                         <div className=' bg-[#8F2C2C] p-2 rounded-sm'>
                             <img src={Troquelado} className=' w-10'></img>
                         </div>
