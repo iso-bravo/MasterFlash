@@ -6,15 +6,17 @@ import 'react-toastify/dist/ReactToastify.css';
 import api from '../config/axiosConfig';
 
 interface InputFields {
-    date: string;
-    caliber: string;
+    start_date: string;
+    end_date: string;
+    report: string;
     insert: string;
 }
 
 const ScrapReport: React.FC = () => {
     const [formData, setFormData] = useState<InputFields>({
-        date: '',
-        caliber: '',
+        start_date: '',
+        end_date: '',
+        report: '',
         insert: '',
     });
 
@@ -24,7 +26,7 @@ const ScrapReport: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
-        if (name === 'caliber') {
+        if (name === 'report') {
             setShowInsert(value === '0.040');
         }
         if (name === 'insert') {
@@ -46,11 +48,11 @@ const ScrapReport: React.FC = () => {
         e.preventDefault();
 
         try {
-            if (!formData.date) {
+            if (!formData.start_date) {
                 toast.error('El campo Fecha es requerido');
                 return;
             }
-            if (!formData.caliber) {
+            if (!formData.report) {
                 toast.error('El campo Calibre es requerido');
                 return;
             }
@@ -58,10 +60,12 @@ const ScrapReport: React.FC = () => {
                 toast.error('El campo Insert es requerido');
                 return;
             }
-            const formattedDate = formatDate(formData.date);
+            const formattedStartDate = formatDate(formData.start_date);
+            const formattedEndDate = formatDate(formData.end_date);
             const formBody = new URLSearchParams();
-            formBody.append('date', formattedDate);
-            formBody.append('caliber', formData.caliber);
+            formBody.append('start_date', formattedStartDate);
+            formBody.append('end_date', formattedEndDate);
+            formBody.append('report', formData.report);
             formBody.append('insert', formData.insert);
 
             const response = await api.post('/reports/generate/', formBody.toString(), {
@@ -71,15 +75,29 @@ const ScrapReport: React.FC = () => {
                 responseType: 'blob',
             });
 
-            const pdfBlob = new Blob([response.data], {
-                type: 'application/pdf',
-            });
+            console.log(response);
 
-            const pdfUrl = URL.createObjectURL(pdfBlob);
+            if (response.data.size > 0) {
+                const pdfBlob = new Blob([response.data], {
+                    type: 'application/pdf',
+                });
 
-            setPdfUrl(pdfUrl);
+                const pdfUrl = URL.createObjectURL(pdfBlob);
 
-            setFormData({ date: '', caliber: '', insert: '' });
+                // Descargar PDF
+                // const link = document.createElement('a');
+                // link.href = pdfUrl;
+                // link.setAttribute('download', 'reporte.pdf');
+                // document.body.appendChild(link);
+                // link.click();
+                // ___________
+
+                setPdfUrl(pdfUrl);
+            } else {
+                toast.error('No se encontraron datos para generar el reporte');
+            }
+
+            setFormData({ start_date: '', end_date: '', report: '', insert: '' });
 
             toast.info('PDF generado');
         } catch (error) {
@@ -103,24 +121,36 @@ const ScrapReport: React.FC = () => {
                 className='lg:flex justify-end gap-4 items-center grid md:flex  sm:grid-flow-col sm:grid sm:grid-rows-2'
             >
                 <div className='flex flex-row gap-2'>
-                    <h2>Fecha</h2>
+                    <h2>Fecha Inicio</h2>
                     <input
-                        name='date'
+                        name='start_date'
                         type='date'
-                        value={formData.date}
+                        value={formData.start_date}
                         onChange={e => handleChange(e)}
                         className='rounded-sm w-32 h-6'
                     />
                 </div>
                 <div className='flex flex-row gap-2'>
-                    <h2>Calibre</h2>
-                    <select name='caliber' value={formData.caliber} onChange={e => handleChange(e)} className=''>
+                    <h2>Fecha Fin</h2>
+                    <input
+                        name='end_date'
+                        type='date'
+                        value={formData.end_date}
+                        onChange={e => handleChange(e)}
+                        className='rounded-sm w-32 h-6'
+                    />
+                </div>
+                <div className='flex flex-row gap-2'>
+                    <h2>Reporte</h2>
+                    <select name='report' value={formData.report} onChange={e => handleChange(e)} className=''>
                         <option value='' disabled>
                             {''}
                         </option>
                         <option value='0.025'>0.025</option>
                         <option value='0.032'>0.032</option>
                         <option value='0.040'>0.040</option>
+                        <option value='Residencial'>Residencial</option>
+                        <option value='Grippers'>Grippers</option>
                     </select>
                 </div>
                 <div>
@@ -148,7 +178,7 @@ const ScrapReport: React.FC = () => {
             </form>
             {pdfUrl && (
                 <div>
-                    <iframe src={pdfUrl} width='100%' height='100%' className='mt-10 h-screen rounded-md'></iframe>
+                    <iframe src={pdfUrl} width='100%' height='600px' className='mt-10 rounded-md'></iframe>
                 </div>
             )}
         </div>
