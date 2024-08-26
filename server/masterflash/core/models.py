@@ -178,3 +178,29 @@ class Presses_monthly_goals(models.Model):
 
     def __str__(self):
         return f"{self.month}/{self.year} - {self.target_amount}"
+
+
+class Production_logs(models.Model):
+    press = models.CharField(default=None,max_length=50)
+    employee_number = models.IntegerField(null=True, blank=True)
+    part_number = models.CharField(max_length=50, blank=True)
+    work_order = models.CharField(max_length=50, blank=True)
+    caliber = models.CharField(max_length=50, blank=True, null=True)
+    worked_hrs = models.DecimalField(max_digits=5, decimal_places=2, null=True,blank=True)
+    #? ask for the max lenght
+    dead_time_cause_1 = models.CharField(max_length=255,null=True,blank=True)
+    cavities = models.PositiveIntegerField(null=True, blank=True)
+    standard = models.IntegerField(null=True, blank=True)
+    #? ask for the max lenght
+    proposed_standard = models.CharField(max_length=255)
+    dead_time_cause_2 = models.CharField(max_length=255,null=True,blank=True)
+    pieces_ok = models.PositiveIntegerField(null=True, blank=True)
+    efficiency = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self) -> str:
+        return f"{self.press} - {self.employee_number} - {self.part_number}"
+    
+
+    class Meta:
+        verbose_name = "Production Record"
+        verbose_name_plural = "Production Records"
