@@ -75,6 +75,7 @@ class Part_Number(models.Model):
     mold = models.CharField(max_length=50, blank=True, null=True)
     instructive = models.CharField(max_length=50, blank=True, null=True)
     insert = models.CharField(max_length=50, blank=True, null=True)
+    gripper = models.CharField(max_length=50, blank=True, null=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
     paint = models.CharField(max_length=50, blank=True, null=True)
     std_paint = models.IntegerField(null=True, blank=True)
@@ -111,6 +112,7 @@ class Qc_Scrap(models.Model):
     compound = models.CharField(max_length=50, blank=True, null=True)
     mold = models.CharField(max_length=50, blank=True, null=True)
     insert = models.CharField(max_length=50, blank=True, null=True)
+    gripper = models.CharField(max_length=50,blank=True,null=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
     B = models.IntegerField(null=True, blank=True)
     CC = models.IntegerField(null=True, blank=True)
@@ -163,6 +165,7 @@ class Qc_Scrap(models.Model):
     total_rubber_weight_in_insert_lbs = models.FloatField(null=True, blank=True)
     total_rubber_weight_lbs = models.FloatField(null=True, blank=True)
     inserts_total = models.IntegerField(null=True, blank=True)
+    grippers_total = models.IntegerField(null=True,blank=True)
 
 class Mold_presses(models.Model):
     press = models.CharField(max_length=50, blank=True, null=True)
@@ -177,23 +180,22 @@ class Presses_monthly_goals(models.Model):
         return f"{self.month}/{self.year} - {self.target_amount}"
 
 
-class Production_records(models.Model):
+class Production_logs(models.Model):
     press = models.CharField(default=None,max_length=50)
     employee_number = models.IntegerField(null=True, blank=True)
     part_number = models.CharField(max_length=50, blank=True)
     work_order = models.CharField(max_length=50, blank=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
     worked_hrs = models.DecimalField(max_digits=5, decimal_places=2, null=True,blank=True)
-    dead_time_cause_1 = models.CharField(max_length=50,null=True,blank=True)
+    #? ask for the max lenght
+    dead_time_cause_1 = models.CharField(max_length=255,null=True,blank=True)
     cavities = models.PositiveIntegerField(null=True, blank=True)
     standard = models.IntegerField(null=True, blank=True)
-    proposed_standard = models.PositiveIntegerField(null=True,blank=True)
-    dead_time_cause_2 = models.CharField(max_length=50,null=True,blank=True)
+    #? ask for the max lenght
+    proposed_standard = models.CharField(max_length=255)
+    dead_time_cause_2 = models.CharField(max_length=255,null=True,blank=True)
     pieces_ok = models.PositiveIntegerField(null=True, blank=True)
     efficiency = models.DecimalField(max_digits=5, decimal_places=2)
-    date = models.DateField()
-    shift = models.CharField(default='',max_length=50)
-
 
     def __str__(self) -> str:
         return f"{self.press} - {self.employee_number} - {self.part_number}"
