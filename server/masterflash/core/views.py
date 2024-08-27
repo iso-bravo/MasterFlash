@@ -7,9 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync
-from .models import LinePress, Part_Number, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert, Presses_monthly_goals
+from .models import LinePress, Part_Number, Production_records, StateBarwell, StatePress, StateTroquelado, ProductionPress, Qc_Scrap, Insert, Presses_monthly_goals
 from .utils import set_shift, sum_pieces
-from django.utils import timezone
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404
 
@@ -363,7 +362,6 @@ def get_production_press_by_date(request):
     if not date or not shift:
         return JsonResponse({'error': 'Date parameter is missing'}, status=400)
 
-    #? preguntar de donde sale el produccion
     production_press_records = ProductionPress.objects.filter(  date_time__date=date,
                                                                 shift=shift
                     ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok')
@@ -734,3 +732,36 @@ def get_presses_production_percentage(request, year, month):
         return JsonResponse({'percentage': percentage, 'total_pieces': total_pieces})
     except Presses_monthly_goals.DoesNotExist:
         return HttpResponse(status=404)
+
+@csrf_exempt
+@require_POST
+def save_production_records(request):
+    try:
+        data = json.loads(request.body)
+        date = data['date']
+        shift = data['shift']
+        records = data['records']
+        
+        for record in records:
+            Production_records.objects.create(
+                press=record['press'],
+                employee_number=record['employee_number'],
+                part_number=record['part_number'],
+                work_order=record['work_order'],
+                caliber=record.get('caliber'),
+                worked_hrs=record.get('worked_hrs'),
+                dead_time_cause_1=record.get('dead_time_cause_1'),
+                cavities=record.get('cavities'),
+                standard=record.get('standard'),
+                proposed_standard=record.get('proposed_standard'),
+                dead_time_cause_2=record.get('dead_time_cause_2'),
+                pieces_ok=record['pieces_ok'],
+                efficiency=record['efficiency'],
+                date=date,  
+                shift=shift,     
+            )
+        
+        return JsonResponse({"message":"Records saved successfully"}, status=201)
+    except Exception as e:
+        print(f"Error: {e}")
+        return JsonResponse({"error": str(e)}, status=400)
