@@ -23,6 +23,8 @@ interface DataItem {
     dead_time_cause_2: string;
     pieces_ok: number;
     efficiency: number;
+    date_time: string;
+    shift: string;
     editableField?: keyof DataItem;
 }
 
@@ -47,6 +49,7 @@ const PressesRegisterProduction: React.FC = () => {
 
         return Object.values(groupedData).sort((a, b) => a.press.localeCompare(b.press));
     };
+
 
     const fetchData = useCallback(async () => {
         if (!selectedDate || !selectedShift) {
@@ -131,31 +134,97 @@ const PressesRegisterProduction: React.FC = () => {
         setEditableData(newData);
     };
 
+    const handleSave = async () => {
+
+        const request = {
+            date: selectedDate,
+            shift: selectedShift,
+            records: editableData.map(item => ({
+                press: item.press,
+                employee_number: item.employee_number,
+                part_number: item.part_number,
+                work_order: item.work_order,
+                caliber: item.caliber || '',
+                worked_hrs: item.worked_hrs,
+                dead_time_cause_1: item.dead_time_cause_1 || '',
+                cavities: item.cavities,
+                standard: item.standard,
+                proposed_standard: item.proposed_standard || '',
+                dead_time_cause_2: item.dead_time_cause_2 || '',
+                pieces_ok: item.pieces_ok,
+                efficiency: item.efficiency,
+            })),
+        };
+
+        try {
+            const response = await api.post('/save_production_records/',request, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            toast.success('Datos guardados exitosamente.');
+
+            console.log(response);
+        } catch (error) {
+            console.error('Error al guardar los datos: ', error);
+            toast.error('Hubo un error al guardar los datos.');
+        }
+    };
+
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
-            <header className='flex items-start gap-3'>
+            <header className='flex items-start gap-3 mb-4'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/production_records')} />
                 <h1 className='text-xl'>Registro Producción</h1>
             </header>
 
-            <form className='lg:flex justify-end gap-4 items-center grid md:flex sm:grid-flow-col sm:grid sm:grid-rows-2'>
-                <div className='flex flex-row gap-2'>
-                    <label htmlFor='date'>Fecha</label>
-                    <input name='date' type='date' className='rounded-sm w-32 h-6' onChange={handleDateChange} />
+            <div className='grid grid-cols-3 items-center gap-4'>
+                <div className=' col-start-2 flex justify-center gap-4'>
+                    <div>
+                        <label htmlFor='shifts select' className='block mb-2 text-sm font-medium text-gray-900'>
+                            Turno
+                        </label>
+                        <select
+                            name='shifts select'
+                            defaultValue=''
+                            id='shifts'
+                            onChange={handleShiftChange}
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                        >
+                            <option value='' disabled>
+                                Selecciona un turno
+                            </option>
+                            <option value='First'>First</option>
+                            <option value='Second'>Second</option>
+                            <option value='Free'>Free</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor='date' className='block mb-2 text-sm font-medium text-gray-900'>
+                            Fecha
+                        </label>
+                        <input
+                            name='date'
+                            type='date'
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                            onChange={handleDateChange}
+                        />
+                    </div>
                 </div>
-                <div>
-                    <label htmlFor='shifts select'>Turno </label>
-                    <select name='shifts select' defaultValue='' id='shifts' onChange={handleShiftChange}>
-                        <option value='' disabled>
-                            Selecciona un turno
-                        </option>
-                        <option value='First'>First</option>
-                        <option value='Second'>Second</option>
-                        <option value='Free'>Free</option>
-                    </select>
+                <div className='flex justify-end p-2 gap-4'>
+                    <button
+                        onClick={handleSave}
+                        className='text-gray-900 bg-[#9ADD57] lg:text-sm hover:bg-[#9fe35b] focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                    >
+                        Guardar
+                    </button>
+                    <button className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'>
+                        Editar
+                    </button>
                 </div>
-            </form>
+            </div>
 
             <div className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
                 <table className='w-full text-sm text-left text-gray-500'>
