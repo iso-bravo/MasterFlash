@@ -143,26 +143,24 @@ const PressesProduction: React.FC = () => {
             molder_number: newMolderNumber || selectedMachine.molder_number,
         };
 
-        if (updatedMachine.pieces_ok != '0') {
-            setMachines(prevMachines =>
-                prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
-            );
-            try {
-                console.log('Updated Machine Data:', updatedMachine);
-                await api.post('/register_data_production/', updatedMachine, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-                console.log('Machine state updated successfully!');
-            } catch (error: any) {
-                const errorMessage = getErrorMessage(error);
-                console.error(errorMessage);
-                if (error.response && error.response.status === 404) {
-                    toast.error('Número de parte no existe');
-                } else {
-                    toast.error(errorMessage);
-                }
+        setMachines(prevMachines =>
+            prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
+        );
+        try {
+            console.log('Updated Machine Data:', updatedMachine);
+            await api.post('/register_data_production/', updatedMachine, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            console.log('Machine state updated successfully!');
+        } catch (error: any) {
+            const errorMessage = getErrorMessage(error);
+            console.error(errorMessage);
+            if (error.response && error.response.status === 404) {
+                toast.error('Número de parte no existe');
+            } else {
+                toast.error(errorMessage);
             }
         }
 
