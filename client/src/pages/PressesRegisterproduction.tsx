@@ -172,6 +172,16 @@ const PressesRegisterProduction: React.FC = () => {
         }
     };
 
+
+    const handleEditClick = () =>{
+        const queryString = new URLSearchParams({
+            date:selectedDate,
+            shift:selectedShift,
+        }).toString();
+
+        navigate(`/edit_production_record?${queryString}`);
+    }
+
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
@@ -180,8 +190,8 @@ const PressesRegisterProduction: React.FC = () => {
                 <h1 className='text-xl'>Registro Producción</h1>
             </header>
 
-            <div className='flex justify-between items-center gap-4'>
-                <div className='flex justify-center gap-4'>
+            <div className='grid grid-cols-3 items-center gap-4'>
+                <div className=' col-start-2 flex justify-center gap-4'>
                     <div>
                         <label htmlFor='shifts select' className='block mb-2 text-sm font-medium text-gray-900'>
                             Turno
@@ -213,11 +223,16 @@ const PressesRegisterProduction: React.FC = () => {
                         />
                     </div>
                 </div>
-                <div className='flex gap-4'>
-                    <button className='text-gray-900 bg-[#9ADD57] lg:text-sm hover:bg-[#9fe35b] focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5'>
+                <div className='flex justify-end p-2 gap-4'>
+                    <button
+                        onClick={handleSave}
+                        className='text-gray-900 bg-[#9ADD57] lg:text-sm hover:bg-[#9fe35b] focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                    >
                         Guardar
                     </button>
-                    <button className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'>
+                    <button 
+                    onClick={handleEditClick}
+                    className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'>
                         Editar
                     </button>
                 </div>

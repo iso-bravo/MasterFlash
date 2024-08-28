@@ -312,31 +312,25 @@ def register_data_production(request):
         logger.error('Registro invalido')
         return JsonResponse({'message': 'Registro invalido.'}, status=201)
     
-
     if not Part_Number.objects.filter(part_number=data.get('part_number')).exists():
         return JsonResponse({'message': 'Número de parte no existe'}, status=404)
 
-    last_record = ProductionPress.objects.filter(press=data.get('name')).order_by('-date_time').first()
+    # Asigna los valores directamente desde el request
+    employeeNumber = data.get('employee_number')
+    partNumber = data.get('part_number')
+    molderNumber = data.get('molder_number')
+    workOrder = data.get('work_order')
     
     piecesOk = data.get('pieces_ok') or 0
     piecesRework = data.get('pieces_rework') or 0
 
-    if last_record:
-        employeeNumber = data.get('employee_number') or last_record.employee_number or None
-        partNumber = data.get('part_number') or last_record.part_number or None
-        molderNumber = data.get('molder_number') or last_record.molder_number or None
-        workOrder = data.get('work_order') or last_record.work_order or ''
-    else:
-        employeeNumber = data.get('employee_number') or None
-        partNumber = data.get('part_number')
-        molderNumber = data.get('molder_number') or None
-        workOrder = data.get('work_order') or ''
-
+    # Obtén el turno actual
     current_time = datetime.now().time()
     shift = set_shift(current_time)
     
     logger.error(f'shift: {shift}')
     
+    # Crea un nuevo registro de producción
     ProductionPress.objects.create(
         date_time = datetime.now(),
         employee_number = employeeNumber,
@@ -350,6 +344,7 @@ def register_data_production(request):
         shift = shift,
     )
     return JsonResponse({'message': 'Datos guardados correctamente.'}, status=201)
+
 
 
 @csrf_exempt

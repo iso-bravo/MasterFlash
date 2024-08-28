@@ -136,8 +136,8 @@ const PressesProduction: React.FC = () => {
         const updatedMachine: MachineData = {
             ...selectedMachine,
             employee_number: newEmployeeNumber || selectedMachine.employee_number,
-            pieces_ok: newPiecesOK || selectedMachine.pieces_ok,
-            pieces_rework: newPiecesRework || selectedMachine.pieces_rework,
+            pieces_ok: newPiecesOK === '' ? '0' : newPiecesOK || selectedMachine.pieces_ok,
+            pieces_rework: newPiecesRework === '' ? '0' : newPiecesRework || selectedMachine.pieces_rework,
             part_number: newPartNumber || selectedMachine.part_number,
             work_order: newWork_order || selectedMachine.work_order,
             molder_number: newMolderNumber || selectedMachine.molder_number,
@@ -146,8 +146,8 @@ const PressesProduction: React.FC = () => {
         setMachines(prevMachines =>
             prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
         );
-
         try {
+            console.log('Updated Machine Data:', updatedMachine);
             await api.post('/register_data_production/', updatedMachine, {
                 headers: {
                     'Content-Type': 'application/json',
