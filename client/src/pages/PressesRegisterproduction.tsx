@@ -182,7 +182,6 @@ const PressesRegisterProduction: React.FC = () => {
         navigate(`/edit_production_record?${queryString}`);
     }
 
-
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
