@@ -172,6 +172,17 @@ const PressesRegisterProduction: React.FC = () => {
         }
     };
 
+
+    const handleEditClick = () =>{
+        const queryString = new URLSearchParams({
+            date:selectedDate,
+            shift:selectedShift,
+        }).toString();
+
+        navigate(`/edit_production_record?${queryString}`);
+    }
+
+
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
@@ -220,7 +231,9 @@ const PressesRegisterProduction: React.FC = () => {
                     >
                         Guardar
                     </button>
-                    <button className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'>
+                    <button 
+                    onClick={handleEditClick}
+                    className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'>
                         Editar
                     </button>
                 </div>
