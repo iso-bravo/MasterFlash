@@ -359,7 +359,7 @@ def get_production_press_by_date(request):
 
     production_press_records = ProductionPress.objects.filter(  date_time__date=date,
                                                                 shift=shift
-                    ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok')
+                    ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok','date_time')
 
     print("ProductionPress records found:", production_press_records)
 
@@ -378,7 +378,8 @@ def get_production_press_by_date(request):
                 'caliber': part_number_record['caliber'],
                 'cavities': part_number_record['cavities'],
                 'standard': part_number_record['standard'],
-                'pieces_ok':record['pieces_ok']
+                'pieces_ok':record['pieces_ok'],
+                'hour': record['date_time'].strftime('%H:%M:%S')
             }
             result.append(combined_record)
     print("Final result:", result)
