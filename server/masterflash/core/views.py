@@ -737,27 +737,82 @@ def save_production_records(request):
         date = data['date']
         shift = data['shift']
         records = data['records']
+        overwrite = data.get('overwrite',False)
         
         for record in records:
-            Production_records.objects.create(
+            existing_record = Production_records.objects.filter(
                 press=record['press'],
                 employee_number=record['employee_number'],
                 part_number=record['part_number'],
-                work_order=record['work_order'],
-                caliber=record.get('caliber'),
-                worked_hrs=record.get('worked_hrs'),
-                dead_time_cause_1=record.get('dead_time_cause_1'),
-                cavities=record.get('cavities'),
-                standard=record.get('standard'),
-                proposed_standard=record.get('proposed_standard'),
-                dead_time_cause_2=record.get('dead_time_cause_2'),
-                pieces_ok=record['pieces_ok'],
-                efficiency=record['efficiency'],
-                date=date,  
-                shift=shift,     
-            )
-        
-        return JsonResponse({"message":"Records saved successfully"}, status=201)
+                date=date,
+                shift=shift,
+                mod_date = datetime.now()
+            ).first()
+
+            if existing_record and not overwrite:
+                return JsonResponse({
+                    'status': 'exists',
+                    'message': 'El registro ya existe. ¿Deseas sobrescribirlo?',
+                    'record': {
+                        'id': existing_record.id,
+                        'press': existing_record.press,
+                        'employee_number': existing_record.employee_number,
+                        'part_number': existing_record.part_number,
+                        'work_order': existing_record.work_order,
+                        'caliber': existing_record.caliber,
+                        'worked_hrs': existing_record.worked_hrs,
+                        'dead_time_cause_1': existing_record.dead_time_cause_1,
+                        'cavities': existing_record.cavities,
+                        'standard': existing_record.standard,
+                        'proposed_standard': existing_record.proposed_standard,
+                        'dead_time_cause_2': existing_record.dead_time_cause_2,
+                        'pieces_ok': existing_record.pieces_ok,
+                        'efficiency': existing_record.efficiency,
+                        'date': existing_record.date,
+                        'shift': existing_record.shift,
+                        'mod_date': existing_record.mod_date,
+                    }
+                }, status=200)
+
+            if existing_record and overwrite:
+                # Sobrescribir el registro existente
+                existing_record.press = record['press']
+                existing_record.employee_number = record['employee_number']
+                existing_record.part_number = record['part_number']
+                existing_record.work_order = record['work_order']
+                existing_record.caliber = record['caliber'] or None
+                existing_record.worked_hrs = record['worked_hrs']
+                existing_record.dead_time_cause_1 = record['dead_time_cause_1'] or ''
+                existing_record.cavities = record['cavities']
+                existing_record.standard = record['standard']
+                existing_record.proposed_standard = record['proposed_standard'] or ''
+                existing_record.dead_time_cause_2 = record['dead_time_cause_2'] or ''
+                existing_record.pieces_ok = record['pieces_ok']
+                existing_record.efficiency = record['efficiency']
+                existing_record.mod_date = datetime.now()
+                existing_record.save()
+            else:
+                Production_records.objects.create(
+                    press=record['press'],
+                    employee_number=record['employee_number'],
+                    part_number=record['part_number'],
+                    work_order=record['work_order'],
+                    caliber=record['caliber'] or '',
+                    worked_hrs=record['worked_hrs'],
+                    dead_time_cause_1=record['dead_time_cause_1'] or '',
+                    cavities=record['cavities'],
+                    standard=record['standard'],
+                    proposed_standard=record['proposed_standard'] or '',
+                    dead_time_cause_2=record['dead_time_cause_2'] or '',
+                    pieces_ok=record['pieces_ok'],
+                    efficiency=record['efficiency'],
+                    date=date,
+                    shift=shift,
+                    mod_date=datetime.now()
+                )
+
+        return JsonResponse({'status': 'success', 'message': 'Registros guardados exitosamente.'}, status=201)
+
     except Exception as e:
-        print(f"Error: {e}")
-        return JsonResponse({"error": str(e)}, status=400)
+        print(e)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

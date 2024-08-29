@@ -153,6 +153,7 @@ const PressesRegisterProduction: React.FC = () => {
                 pieces_ok: item.pieces_ok,
                 efficiency: item.efficiency,
             })),
+            overwrite:false
         };
 
         try {
@@ -162,7 +163,20 @@ const PressesRegisterProduction: React.FC = () => {
                 },
             });
 
-            toast.success('Datos guardados exitosamente.');
+            if (response.data.status === 'exists') {
+                const shouldOverwrite = window.confirm(response.data.message);
+                if (shouldOverwrite) {
+                    request.overwrite = true;
+                    await api.post('/save_production_records/', request, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    toast.success('Datos sobrescritos exitosamente.');
+                }
+            } else {
+                toast.success('Datos guardados exitosamente.');
+            }
 
             console.log(response);
         } catch (error) {
