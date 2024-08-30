@@ -26,6 +26,7 @@ urlpatterns = [
     path('production-percentage/<int:year>/<int:month>/', views.get_presses_production_percentage, name='get_production_percentage'),
 
     path('save_production_records/',views.save_production_records, name='save_production_records'),
+    path('update_pieces_ok/<int:id>/',views.update_pieces_ok, name='update_pieces_ok'),
 ]
 
 

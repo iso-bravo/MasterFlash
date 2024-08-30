@@ -196,6 +196,7 @@ class Production_records(models.Model):
     efficiency = models.DecimalField(max_digits=5, decimal_places=2)
     date = models.DateField()
     shift = models.CharField(default='',max_length=50)
+    mod_date = models.DateTimeField()
 
 
     def __str__(self) -> str:
