@@ -359,7 +359,7 @@ def get_production_press_by_date(request):
 
     production_press_records = ProductionPress.objects.filter(  date_time__date=date,
                                                                 shift=shift
-                    ).values('press', 'employee_number', 'part_number', 'work_order','pieces_ok')
+                    ).values('id','press', 'employee_number', 'part_number', 'work_order','pieces_ok','date_time')
 
     print("ProductionPress records found:", production_press_records)
 
@@ -371,6 +371,7 @@ def get_production_press_by_date(request):
         print("Part_Number record found:", part_number_record)
         if part_number_record:
             combined_record = {
+                'id':record['id'],
                 'press': record['press'],
                 'employee_number': record['employee_number'],
                 'part_number': record['part_number'],
@@ -378,7 +379,8 @@ def get_production_press_by_date(request):
                 'caliber': part_number_record['caliber'],
                 'cavities': part_number_record['cavities'],
                 'standard': part_number_record['standard'],
-                'pieces_ok':record['pieces_ok']
+                'pieces_ok':record['pieces_ok'],
+                'hour': record['date_time'].strftime('%H:%M:%S')
             }
             result.append(combined_record)
     print("Final result:", result)
@@ -736,27 +738,65 @@ def save_production_records(request):
         date = data['date']
         shift = data['shift']
         records = data['records']
-        
+        overwrite = data.get('overwrite', False)
+
+        # Verifica si ya existen registros para la misma fecha y turno
+        existing_records = Production_records.objects.filter(date=date, shift=shift)
+
+        if existing_records.exists() and not overwrite:
+            return JsonResponse({
+                'status': 'exists',
+                'message': 'Ya existen registros para la fecha y turno seleccionados. ¿Desea sobrescribirlos?',
+            }, status=200)
+
+        if overwrite:
+            # Elimina los registros anteriores si se decide sobrescribir
+            existing_records.delete()
+
+        # Crea nuevos registros
         for record in records:
             Production_records.objects.create(
                 press=record['press'],
                 employee_number=record['employee_number'],
                 part_number=record['part_number'],
                 work_order=record['work_order'],
-                caliber=record.get('caliber'),
-                worked_hrs=record.get('worked_hrs'),
-                dead_time_cause_1=record.get('dead_time_cause_1'),
-                cavities=record.get('cavities'),
-                standard=record.get('standard'),
-                proposed_standard=record.get('proposed_standard'),
-                dead_time_cause_2=record.get('dead_time_cause_2'),
+                caliber=record['caliber'],
+                worked_hrs=record['worked_hrs'],
+                dead_time_cause_1=record['dead_time_cause_1'],
+                cavities=record['cavities'],
+                standard=record['standard'],
+                proposed_standard=record['proposed_standard'],
+                dead_time_cause_2=record['dead_time_cause_2'],
                 pieces_ok=record['pieces_ok'],
                 efficiency=record['efficiency'],
-                date=date,  
-                shift=shift,     
+                date=date,
+                shift=shift,
+                mod_date = datetime.now()
             )
-        
-        return JsonResponse({"message":"Records saved successfully"}, status=201)
+
+        return JsonResponse({'status': 'success'}, status=200)
+
     except Exception as e:
-        print(f"Error: {e}")
-        return JsonResponse({"error": str(e)}, status=400)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["PATCH"])
+def update_pieces_ok(request,id):
+    try:
+        data = json.loads(request.body)
+        print(data)
+        production_press = ProductionPress.objects.get(id=id)
+
+        production_press.pieces_ok = data.get('pieces_ok',production_press.pieces_ok)
+        production_press.save()
+
+        return JsonResponse({"message":"Registro actualizado correctamente"})
+
+    except ProductionPress.DoesNotExist:
+
+        return JsonResponse({"error":"Registro no encontrado"},status=404)
+    
+    except Exception as e:
+        print("Error: ",e)
+        return JsonResponse({"error":str(e)},status=400)

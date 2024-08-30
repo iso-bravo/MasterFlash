@@ -6,7 +6,8 @@ import '../App.css';
 import '../index.css';
 import '../output.css';
 import { IoIosArrowBack } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import OverWritePopUp from '../components/OverWritePopUp';
 
 interface DataItem {
     id: number;
@@ -29,10 +30,15 @@ interface DataItem {
 }
 
 const PressesRegisterProduction: React.FC = () => {
-    const [editableData, setEditableData] = useState<DataItem[]>([]);
-    const [selectedDate, setSelectedDate] = useState<string>('');
-    const [selectedShift, setSelectedShift] = useState<string>('');
+    const location = useLocation();
     const navigate = useNavigate();
+
+    const [editableData, setEditableData] = useState<DataItem[]>([]);
+    const [selectedDate, setSelectedDate] = useState<string>(location.state?.date || '');
+    const [selectedShift, setSelectedShift] = useState<string>(location.state?.shift || '');
+    const [showModal,setShowModal] = useState<boolean>(false);
+    const [overwrite,setOverwrite] = useState<boolean>(false);
+
 
     const groupDataItems = (data: DataItem[]): DataItem[] => {
         const groupedData: { [key: string]: DataItem } = {};
@@ -49,7 +55,6 @@ const PressesRegisterProduction: React.FC = () => {
 
         return Object.values(groupedData).sort((a, b) => a.press.localeCompare(b.press));
     };
-
 
     const fetchData = useCallback(async () => {
         if (!selectedDate || !selectedShift) {
@@ -135,7 +140,6 @@ const PressesRegisterProduction: React.FC = () => {
     };
 
     const handleSave = async () => {
-
         const request = {
             date: selectedDate,
             shift: selectedShift,
@@ -154,37 +158,96 @@ const PressesRegisterProduction: React.FC = () => {
                 pieces_ok: item.pieces_ok,
                 efficiency: item.efficiency,
             })),
+            overwrite: overwrite,
         };
 
         try {
-            const response = await api.post('/save_production_records/',request, {
+            const response = await api.post('/save_production_records/', request, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
 
-            toast.success('Datos guardados exitosamente.');
-
-            console.log(response);
+            if (response.data.status === 'exists') {
+                setShowModal(true); 
+            } else {
+                toast.success('Datos guardados exitosamente.');
+            }
         } catch (error) {
             console.error('Error al guardar los datos: ', error);
             toast.error('Hubo un error al guardar los datos.');
         }
     };
 
+    const handleConfirmOverwrite = async () => {
+        setOverwrite(true);
+        setShowModal(false);
 
-    const handleEditClick = () =>{
+        try {
+            const response = await api.post(
+                '/save_production_records/',
+                {
+                    date: selectedDate,
+                    shift: selectedShift,
+                    records: editableData.map(item => ({
+                        press: item.press,
+                        employee_number: item.employee_number,
+                        part_number: item.part_number,
+                        work_order: item.work_order,
+                        caliber: item.caliber || '',
+                        worked_hrs: item.worked_hrs,
+                        dead_time_cause_1: item.dead_time_cause_1 || '',
+                        cavities: item.cavities,
+                        standard: item.standard,
+                        proposed_standard: item.proposed_standard || '',
+                        dead_time_cause_2: item.dead_time_cause_2 || '',
+                        pieces_ok: item.pieces_ok,
+                        efficiency: item.efficiency,
+                    })),
+                    overwrite: true,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
+
+            console.log(response);
+            toast.success('Datos sobrescritos exitosamente.');
+        } catch (error) {
+            console.error('Error al sobrescribir los datos: ', error);
+            toast.error('Hubo un error al sobrescribir los datos.');
+        }
+    };
+
+    const handleEditClick = () => {
         const queryString = new URLSearchParams({
-            date:selectedDate,
-            shift:selectedShift,
+            date: selectedDate,
+            shift: selectedShift,
         }).toString();
 
         navigate(`/edit_production_record?${queryString}`);
-    }
+    };
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
-            <ToastContainer />
+            <ToastContainer
+                position='top-center'
+                autoClose={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                theme='colored'
+            />
+            <OverWritePopUp
+                show={showModal}
+                onClose={() => setShowModal(false)}
+                onConfirm={handleConfirmOverwrite}
+                message='Los datos ya existen. ¿Desea sobrescribirlos?'
+            />
             <header className='flex items-start gap-3 mb-4'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/production_records')} />
                 <h1 className='text-xl'>Registro Producción</h1>
@@ -200,6 +263,7 @@ const PressesRegisterProduction: React.FC = () => {
                             name='shifts select'
                             defaultValue=''
                             id='shifts'
+                            value={selectedShift}
                             onChange={handleShiftChange}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         >
@@ -220,6 +284,7 @@ const PressesRegisterProduction: React.FC = () => {
                             type='date'
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             onChange={handleDateChange}
+                            value={selectedDate}
                         />
                     </div>
                 </div>
@@ -230,9 +295,10 @@ const PressesRegisterProduction: React.FC = () => {
                     >
                         Guardar
                     </button>
-                    <button 
-                    onClick={handleEditClick}
-                    className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'>
+                    <button
+                        onClick={handleEditClick}
+                        className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                    >
                         Editar
                     </button>
                 </div>

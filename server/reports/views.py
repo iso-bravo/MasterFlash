@@ -30,6 +30,16 @@ def generate_report(request):
     if report == "Residencial":
         filters['caliber'] = '0.025'
         filters['insert__startswith'] = "RS"
+
+        data = Qc_Scrap.objects.filter(**filters).values(
+            'compound',
+            'total_rubber_weight_in_insert_lbs',
+            'total_rubber_weight_in_insert',
+            'total_rubber_weight_lbs',
+            'total_inserts_weight_lbs',
+            'inserts_total'
+        )
+
     elif report == "Gripper":
         # Aquí agregas la lógica para Grippers si es necesario
         pass
