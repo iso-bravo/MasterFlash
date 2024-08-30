@@ -3,6 +3,7 @@ import api from '../config/axiosConfig';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
+import { toast, ToastContainer } from 'react-toastify';
 
 interface TableData {
     id: number;
@@ -33,6 +34,7 @@ const EditProductionRecords = () => {
 
     const [groupedData, setGroupedData] = useState<GroupedData>({});
     const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
+    const [modifiedRows, setModifiedRows] = useState<{ [key: string]: TableData[] }>({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -96,23 +98,23 @@ const EditProductionRecords = () => {
         setExpandedGroups(prev => ({ ...prev, [press]: !prev[press] }));
     };
 
-    const handleDoubleClick = (groupKey:string,index:number,field:keyof TableData) =>{
-        const newGroupedData ={...groupedData}
-        newGroupedData[groupKey].items[index]= {
+    const handleDoubleClick = (groupKey: string, index: number, field: keyof TableData) => {
+        const newGroupedData = { ...groupedData };
+        newGroupedData[groupKey].items[index] = {
             ...newGroupedData[groupKey].items[index],
             editableField: field,
         };
         setGroupedData(newGroupedData);
-    }
+    };
 
-    const handleBlur = (groupKey:string,index:number)=>{
+    const handleBlur = (groupKey: string, index: number) => {
         const newGroupedData = { ...groupedData };
         newGroupedData[groupKey].items[index] = {
             ...newGroupedData[groupKey].items[index],
             editableField: undefined,
         };
         setGroupedData(newGroupedData);
-    }
+    };
 
     const handleChange = (groupKey: string, index: number, field: keyof TableData, value: string | number) => {
         const newGroupedData = { ...groupedData };
@@ -121,10 +123,46 @@ const EditProductionRecords = () => {
             [field]: value,
         };
         setGroupedData(newGroupedData);
+
+        // Modified rows mark
+        const modified = modifiedRows[groupKey] || [];
+        if (!modified.includes(newGroupedData[groupKey].items[index])) {
+            modified.push(newGroupedData[groupKey].items[index]);
+            setModifiedRows({ ...modifiedRows, [groupKey]: modified });
+        }
+    };
+
+    const handleSaveAll = async () => {
+        try {
+            for (const groupkey in modifiedRows) {
+                for (const row of modifiedRows[groupkey]) {
+                    await api.patch(`/update_pieces_ok/${row.id}/`, {
+                        pieces_ok: row.pieces_ok,
+                    });
+                }
+            }
+
+            console.log('Todas las filas modificadas fueron actualizadas');
+            toast.success('Todas las filas modificadas fueron actualizadas');
+            setModifiedRows({});
+        } catch (error) {
+            console.error('Error al actualizar las filas', error);
+            toast.error('Error al actualizar las filas');
+        }
     };
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-scree'>
+            <ToastContainer
+                position='top-center'
+                autoClose={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                theme='colored'
+            />
             <header className='flex items-start gap-3 mb-4'>
                 <IoIosArrowBack
                     size={30}
@@ -133,6 +171,16 @@ const EditProductionRecords = () => {
                 />
                 <h1 className='text-xl'>{`Editar registros del turno ${shift} en la fecha ${date} `}</h1>
             </header>
+
+                <div className='flex flex-row justify-end'>
+                    <button
+                        onClick={handleSaveAll}
+                        className='text-gray-900 bg-[#9ADD57] lg:text-sm hover:bg-[#9fe35b] focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                    >
+                        Guardar
+                    </button>
+                </div>
+
             <div className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
                 <table className='w-full text-sm text-left text-gray-500'>
                     <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
@@ -208,7 +256,7 @@ const EditProductionRecords = () => {
                                                                 )
                                                             }
                                                             onBlur={() => handleBlur(key, index)}
-                                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5'
                                                             autoFocus
                                                         />
                                                     ) : (
