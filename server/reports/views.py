@@ -14,7 +14,7 @@ import io
 
 @csrf_exempt
 @require_POST
-def generate_report(request):
+def generate_inserts_report(request):
     data = request.POST.dict()
     print(data)
     start_date = data.get('start_date')
@@ -153,3 +153,88 @@ def generate_report(request):
     except Exception as e:
         print(f"Error al generar el reporte de fecha desde {start_date} hasta {end_date} con reporte {report}, Excepción: {e}")
 
+
+@csrf_exempt
+@require_POST
+def generate_rubber_report(request):
+    data = request.POST.dict()
+    print(data)
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    shift = data.get('shift') 
+
+
+    filters = {
+        'date_time__date__range': [start_date, end_date],
+        'shift': shift
+    }
+
+    data = Qc_Scrap.objects.filter(**filters).values(
+        'compound',
+        'total_bodies_weight_lbs',
+    )
+
+    if isinstance(data, dict) or not data:
+        print(f"Error: No se encontraron registros o el formato de `data` no es correcto. Datos: {data}")
+        return HttpResponse("Error: No se encontraron registros o el formato de `data` no es correcto.", status=400)
+
+    print("Registros filtrados:", data)
+
+    try:
+
+        grouped_data = {field['compound']: [
+                        sum(d['total_bodies_weight_lbs'] for d in data if d['compound'] == field['compound']),
+                    ] for field in data}
+
+
+        # Crear el PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        title_style = styles['Heading1']
+        normal_style = styles['Normal']
+
+        # Título del reporte
+        title = Paragraph(f"Reporte desde: {start_date} hasta: {end_date} durante el {shift}º turno", title_style)
+        elements.append(title)
+        elements.append(Paragraph(" ", normal_style))  
+
+        # Crear la tabla de datos
+        data_table = [["Compound", "Lbs"]]
+        for compound,values in grouped_data.items():
+            data['total_bodies_weight_lbs'] = values
+            data_table.append([
+                compound,
+                f"{data['total_bodies_weight_lbs'] :.2f}",
+            ])
+
+        table = Table(data_table)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+        elements.append(Paragraph(" ", normal_style))  
+
+        # Añadir los totales
+        totals = [
+            f"Suma Total: {sum(data['total_bodies_weight_lbs']):.2f}"
+        ]
+        for total in totals:
+            elements.append(Paragraph(total, normal_style))
+
+        doc.build(elements)
+
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f"inline; filename=reporte_scrap_{start_date}_a_{end_date}.pdf"
+        return response
+    except Exception as e:
+        print(f"Error al generar el reporte desde: {start_date} hasta: {end_date} durante el {shift}º turno, Excepción: {e}")
