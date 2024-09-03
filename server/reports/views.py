@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
@@ -6,7 +5,7 @@ from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from masterflash.core.models import Qc_Scrap
 import io
 
@@ -184,6 +183,8 @@ def generate_rubber_report(request):
 
         # Agrupar y sumar los pesos por compound
         grouped_data = {}
+        total_weight = 0
+
         for item in data:
             compound = item['compound']
             weight = item['total_bodies_weight_lbs']
@@ -191,6 +192,7 @@ def generate_rubber_report(request):
                 grouped_data[compound] += weight
             else:
                 grouped_data[compound] = weight
+            total_weight += weight
 
 
         # Crear el PDF
@@ -200,35 +202,42 @@ def generate_rubber_report(request):
 
         styles = getSampleStyleSheet()
         title_style = styles['Heading1']
+        title_style.fontSize = 20 
+        title_style.alignment = 1
+
+        subtitle_style = styles['Heading2']
+        subtitle_style.fontSize = 16 
+        subtitle_style.alignment = 1  
+
         normal_style = styles['Normal']
+        normal_style.fontSize = 12
 
         # Título del reporte
-        title = Paragraph(f"Reporte desde: {start_date} hasta: {end_date} durante el {shift}º turno", title_style)
+        title = Paragraph(f"Reporte de mermas", title_style)
         elements.append(title)
-        elements.append(Paragraph(" ", normal_style))  
+        elements.append(Paragraph(f"Fecha: {start_date} a {end_date} - Turno: {shift}", subtitle_style))
+        elements.append(Spacer(1, 12))
 
         # Crear la tabla de datos
         data_table = [["Compound", "Lbs"]]
-        total_weight = 0
-        for compound, total_weight in grouped_data.items():
-            data_table.append([
-                compound,
-                f"{total_weight:.2f}",
-            ])
-            total_weight += total_weight
+        for compound, weight in grouped_data.items():
+            data_table.append([Paragraph(compound, normal_style), Paragraph(f"{weight:.2f}", normal_style)])
 
-        table = Table(data_table)
+        column_widths = [200, 100]  # Puedes ajustar estos valores según tus necesidades
+
+        table = Table(data_table, colWidths=column_widths)
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  # Alinear tabla a la izquierda
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),  # Añadir padding a la izquierda
         ]))
         elements.append(table)
-        elements.append(Paragraph(" ", normal_style))  
+        elements.append(Spacer(1, 12))
 
         # Añadir los totales
         elements.append(Paragraph(f"Suma Total: {total_weight:.2f} Lbs", normal_style))
@@ -237,7 +246,7 @@ def generate_rubber_report(request):
 
         buffer.seek(0)
         response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f"inline; filename=reporte_scrap_{start_date}_a_{end_date}.pdf"
+        response['Content-Disposition'] = f"inline; filename=reporte_merma_{start_date}_a_{end_date}.pdf"
         return response
     except Exception as e:
         print(f"Error al generar el reporte desde: {start_date} hasta: {end_date} durante el {shift}º turno, Excepción: {e}")
