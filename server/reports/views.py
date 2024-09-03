@@ -174,17 +174,23 @@ def generate_rubber_report(request):
         'total_bodies_weight_lbs',
     )
 
-    if isinstance(data, dict) or not data:
-        print(f"Error: No se encontraron registros o el formato de `data` no es correcto. Datos: {data}")
-        return HttpResponse("Error: No se encontraron registros o el formato de `data` no es correcto.", status=400)
+    if not data.exists():
+        print(f"Error: No se encontraron registros. Datos: {data}")
+        return HttpResponse("Error: No se encontraron registros.", status=400)
 
     print("Registros filtrados:", data)
 
     try:
 
-        grouped_data = {field['compound']: [
-                        sum(d['total_bodies_weight_lbs'] for d in data if d['compound'] == field['compound']),
-                    ] for field in data}
+        # Agrupar y sumar los pesos por compound
+        grouped_data = {}
+        for item in data:
+            compound = item['compound']
+            weight = item['total_bodies_weight_lbs']
+            if compound in grouped_data:
+                grouped_data[compound] += weight
+            else:
+                grouped_data[compound] = weight
 
 
         # Crear el PDF
@@ -203,12 +209,13 @@ def generate_rubber_report(request):
 
         # Crear la tabla de datos
         data_table = [["Compound", "Lbs"]]
-        for compound,values in grouped_data.items():
-            data['total_bodies_weight_lbs'] = values
+        total_weight = 0
+        for compound, total_weight in grouped_data.items():
             data_table.append([
                 compound,
-                f"{data['total_bodies_weight_lbs'] :.2f}",
+                f"{total_weight:.2f}",
             ])
+            total_weight += total_weight
 
         table = Table(data_table)
         table.setStyle(TableStyle([
@@ -224,11 +231,7 @@ def generate_rubber_report(request):
         elements.append(Paragraph(" ", normal_style))  
 
         # Añadir los totales
-        totals = [
-            f"Suma Total: {sum(data['total_bodies_weight_lbs']):.2f}"
-        ]
-        for total in totals:
-            elements.append(Paragraph(total, normal_style))
+        elements.append(Paragraph(f"Suma Total: {total_weight:.2f} Lbs", normal_style))
 
         doc.build(elements)
 
