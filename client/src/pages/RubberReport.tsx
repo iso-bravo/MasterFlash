@@ -70,6 +70,8 @@ const RubberReport = () => {
 
                 const pdfUrl = URL.createObjectURL(pdfBlob);
 
+                setFormData({ start_date: '', end_date: '', shift: '' });
+
                 setPdfUrl(pdfUrl);
             } else {
                 toast.error('No se encontraron datos para generar el reporte');

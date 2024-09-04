@@ -103,35 +103,46 @@ def generate_inserts_report(request):
 
         styles = getSampleStyleSheet()
         title_style = styles['Heading1']
+        title_style.fontSize = 20 
+        title_style.alignment = 1
+
+        subtitle_style = styles['Heading2']
+        subtitle_style.fontSize = 16 
+        subtitle_style.alignment = 1  
+
         normal_style = styles['Normal']
+        normal_style.fontSize = 12
 
         # Título del reporte
         title = Paragraph(f"Reporte desde: {start_date} hasta: {end_date} para reporte: {report}", title_style)
         elements.append(title)
-        elements.append(Paragraph(" ", normal_style))  
+        elements.append(Spacer(1, 12))
 
         # Crear la tabla de datos
         data_table = [["Compound", "Total", "Lbs"]]
         for compound,values in grouped_data.items():
             total_rubber_weight_in_insert, total_rubber_weight_in_insert_lbs = values
             data_table.append([
-                compound,
-                f"{total_rubber_weight_in_insert:.2f}",
-                f"{total_rubber_weight_in_insert_lbs:.2f}",
+                Paragraph(compound,normal_style),
+                Paragraph(f"{total_rubber_weight_in_insert:.2f}",normal_style),
+                Paragraph(f"{total_rubber_weight_in_insert_lbs:.2f}",),
             ])
 
-        table = Table(data_table)
+        column_widths = [200, 100]  # Puedes ajustar estos valores según tus necesidades
+
+        table = Table(data_table, colWidths=column_widths)
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  # Alinear tabla a la izquierda
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),  # Añadir padding a la izquierda
         ]))
         elements.append(table)
-        elements.append(Paragraph(" ", normal_style))  
+        elements.append(Spacer(1, 12))
 
         # Añadir los totales
         totals = [
@@ -213,7 +224,7 @@ def generate_rubber_report(request):
         normal_style.fontSize = 12
 
         # Título del reporte
-        title = Paragraph(f"Reporte de mermas", title_style)
+        title = Paragraph("Reporte de mermas", title_style)
         elements.append(title)
         elements.append(Paragraph(f"Fecha: {start_date} a {end_date} - Turno: {shift}", subtitle_style))
         elements.append(Spacer(1, 12))
