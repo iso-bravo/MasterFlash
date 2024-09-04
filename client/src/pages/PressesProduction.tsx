@@ -49,6 +49,7 @@ const PressesProduction: React.FC = () => {
                 } else if (Array.isArray(data.machines_data)) {
                     setMachines(data.machines_data);
                     setTotalPiecesProduced(data.total_piecesProduced);
+                    setProductionTotal(data.actual_produced);
                 } else {
                     console.error('machines_data is not an array:', data.machines_data);
                 }
@@ -85,9 +86,6 @@ const PressesProduction: React.FC = () => {
             try {
                 const goalResponse = await api.get(`/monthly-goal/${year}/${month}/`);
                 setMonthlyGoal(goalResponse.data.target_amount);
-
-                const percentageResponse = await api.get(`/production-percentage/${year}/${month}/`);
-                setProductionTotal(percentageResponse.data.total_pieces);
             } catch (error) {
                 console.error('Error fetching monthly goal or production percentage:', error);
             }
@@ -137,18 +135,19 @@ const PressesProduction: React.FC = () => {
         // Actualiza los campos si están vacíos con los valores anteriores
         const updatedMachine: MachineData = {
             ...selectedMachine,
-            state: selectedMachine.state,
             employee_number: newEmployeeNumber || selectedMachine.employee_number,
-            pieces_ok: newPiecesOK || selectedMachine.pieces_ok,
-            pieces_rework: newPiecesRework || selectedMachine.pieces_rework,
+            pieces_ok: newPiecesOK === '' ? '0' : newPiecesOK || selectedMachine.pieces_ok,
+            pieces_rework: newPiecesRework === '' ? '0' : newPiecesRework || selectedMachine.pieces_rework,
             part_number: newPartNumber || selectedMachine.part_number,
             work_order: newWork_order || selectedMachine.work_order,
             molder_number: newMolderNumber || selectedMachine.molder_number,
         };
 
-        setSelectedMachine(updatedMachine);
-
+        setMachines(prevMachines =>
+            prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
+        );
         try {
+            console.log('Updated Machine Data:', updatedMachine);
             await api.post('/register_data_production/', updatedMachine, {
                 headers: {
                     'Content-Type': 'application/json',

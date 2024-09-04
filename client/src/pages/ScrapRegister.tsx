@@ -24,7 +24,7 @@ const ScrapRegister: React.FC = () => {
         shift: '',
         line: '',
         auditor: '',
-        inputs: Array(11).fill(''),
+        inputs: Array(12).fill(''),
         codes: {},
     });
 
@@ -37,9 +37,9 @@ const ScrapRegister: React.FC = () => {
         'Inserto',
         'Gripper',
         'Metal',
+        'Inserto s/hule',
         'Peso Hule',
         'Inserto c/hule',
-        'Inserto s/hule',
         'Incertos Reciclados',
         'Total Insertos',
         'Total grippers',
@@ -135,14 +135,15 @@ const ScrapRegister: React.FC = () => {
                 'Auditor necesario': formData.auditor,
                 'Moldeador necesario': formData.inputs[1],
                 'Metal necesario': formData.inputs[5],
-                'Peso Hule necesario': formData.inputs[6],
-                'Inserto. c/hule necesario': formData.inputs[7],
-                'Inserto s/hule necesario': formData.inputs[8],
+                'Inserto s/hule necesario': formData.inputs[6],
+                'Peso Hule necesario': formData.inputs[7],
+                'Inserto. c/hule necesario': formData.inputs[8],
+                'Incertos Reciclados necesario': formData.inputs[9],
                 'Total Insertos necesario': formData.inputs[10],
             };
 
-            if(formData.inputs[4]){
-                requiredFields['Total Grippers necesario'] = formData.inputs[11]
+            if (formData.inputs[4]) {
+                requiredFields['Total Grippers necesario'] = formData.inputs[11];
             }
 
             for (const [message, value] of Object.entries(requiredFields)) {
@@ -270,12 +271,12 @@ const ScrapRegister: React.FC = () => {
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer />
-            <div className='flex items-start gap-3'>
+            <header className='flex items-start gap-3'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
                 <h1 className='text-xl'>Registro Scrap</h1>
-            </div>
+            </header>
 
-            <div className='lg:flex justify-end gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2'>
+            <section className='lg:flex gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2'>
                 <div className='flex flex-row gap-2'>
                     <h2>Fecha</h2>
                     <input
@@ -329,13 +330,17 @@ const ScrapRegister: React.FC = () => {
                         className='rounded-sm w-20 h-6'
                     />
                 </div>
-                <button
-                    onClick={handleRegister}
-                    className='px-3 py-2 bg-[#9ADD57] rounded-md md:ml-4 text-lg lg:text-sm hover:bg-[#8ddd3e]'
-                >
-                    <h2>Registrar</h2>
-                </button>
-            </div>
+                <div className='flex flex-row gap-2'>
+                    <h2>Moldeador</h2>
+                    <input
+                        type='number'
+                        name='auditor'
+                        value={formData.auditor}
+                        onChange={e => handleChange(e, 'moldeador')}
+                        className='rounded-sm w-20 h-6'
+                    />
+                </div>
+            </section>
 
             <div className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
                 <div>
@@ -381,6 +386,14 @@ const ScrapRegister: React.FC = () => {
                             </div>
                         ))}
                     </div>
+                    <div className='justify-center mt-5 items-center'>
+                        <button
+                            onClick={handleRegister}
+                            className='px-3 py-2 bg-[#9ADD57] rounded-md md:ml-4 text-lg lg:text-sm hover:bg-[#8ddd3e]'
+                        >
+                            <h2>Registrar</h2>
+                        </button>
+                    </div>
                 </div>
 
                 <div>
@@ -405,4 +418,3 @@ const ScrapRegister: React.FC = () => {
 };
 
 export default ScrapRegister;
-
