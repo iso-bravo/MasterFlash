@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
-from django.core.asgi import get_asgi_application
-from django.urls import re_path
+
 
 urlpatterns = [
     path('client_data/', views.client_data, name='client_data'),
