@@ -7,14 +7,14 @@ import api from '../config/axiosConfig';
 interface FormData {
     start_date: string;
     end_date: string;
-    shift: string;
+    compound: string;
 }
 
 const RubberReport = () => {
     const [formData, setFormData] = useState<FormData>({
         start_date: '',
         end_date: '',
-        shift: '',
+        compound: 'general',
     });
 
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -40,8 +40,8 @@ const RubberReport = () => {
                 toast.error('La fecha de inicio es requerida');
                 return;
             }
-            if (!formData.shift) {
-                toast.error('El campo Turno es requerido');
+            if (!formData.compound) {
+                toast.error('El campo Compuesto es requerido');
                 return;
             }
             if (!formData.end_date) {
@@ -54,7 +54,7 @@ const RubberReport = () => {
             const formBody = new URLSearchParams();
             formBody.append('start_date', formattedStartDate);
             formBody.append('end_date', formattedEndDate);
-            formBody.append('shift', formData.shift);
+            formBody.append('compound', formData.compound);
 
             const response = await api.post('/reports/rubber/generate/', formBody.toString(), {
                 headers: {
@@ -125,21 +125,23 @@ const RubberReport = () => {
                     />
                 </div>
                 <div>
-                    <label htmlFor='shifts' className='block mb-2 text-sm font-medium text-gray-900'>
-                        Turno
+                    <label htmlFor='compounds' className='block mb-2 text-sm font-medium text-gray-900'>
+                        Compuesto
                     </label>
                     <select
-                        name='shift'
-                        value={formData.shift}
+                        name='compound'
+                        value={formData.compound}
                         onChange={handleChange}
-                        id='shifts'
+                        id='compounds'
                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     >
-                        <option value='' disabled>
-                            Selecciona un turno
+                        <option value='general' >
+                            General
                         </option>
-                        <option value='1'>First</option>
-                        <option value='2'>Second</option>
+                        <option value='MF E BLK 70'>MF E BLK 70</option>
+                        <option value='MF E BLK'>MF E BLK</option>
+                        <option value='MF E GRY'>MF E GRY</option>
+                        <option value='MF E DGRY 4606'>MF E DGRY 4606</option>
                     </select>
                 </div>
                 <button
