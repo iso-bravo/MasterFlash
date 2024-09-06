@@ -53,7 +53,7 @@ class ProductionPress(models.Model):
 
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
-    weight = models.IntegerField(null=True, blank=True)
+    weight = models.FloatField(null=True, blank=True)
     caliber = models.FloatField(null=True, blank=True)                         
 
 def upload_path(filename):
