@@ -340,24 +340,39 @@ const ScrapRegister: React.FC = () => {
         try {
             const metal = formData.inputs.metal;
             const inserto = formData.inputs.insert;
+            const gripper = formData.inputs.gripper;
 
             if (!metal || !inserto) {
                 toast.error('Metal y/o Inserto faltantes');
                 return;
             }
 
-            const response = await api.get(`/search_weight`, {
-                params: { metal, inserto },
-            });
-
-            const { 'Ito. s/hule': ItoSHule } = response.data;
-            setFormData(prevState => ({
-                ...prevState,
-                inputs: {
-                    ...prevState.inputs,
-                    insertWithoutRubber: ItoSHule,
-                },
-            }));
+            if (!gripper) {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto },
+                });
+                const { 'Ito. s/hule': ItoSHule } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                    },
+                }));
+            } else {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto, gripper },
+                });
+                const { 'Ito. s/hule': ItoSHule, 'Gripper': GripsHule } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                        gripperWithoutRubber: GripsHule,
+                    },
+                }));
+            }
         } catch (error) {
             console.error('Error fetching metal data:', error);
             toast.error('Inserto s/hule no encontrado');
@@ -458,7 +473,9 @@ const ScrapRegister: React.FC = () => {
                                     key={index}
                                     className='flex flex-row items-center gap-2 lg:grid-cols-3 lg:grid xl:gap-10'
                                 >
-                                    <label className='block mb-2 w-full text-sm font-medium text-gray-900'>{input}</label>
+                                    <label className='block mb-2 w-full text-sm font-medium text-gray-900'>
+                                        {input}
+                                    </label>
                                     {input === 'No. Parte' ? (
                                         <>
                                             <input
