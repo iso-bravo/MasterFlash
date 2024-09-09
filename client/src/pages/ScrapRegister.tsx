@@ -24,8 +24,10 @@ interface InputFields {
         gripper: string;
         metal: string;
         insertWithoutRubber: string;
+        gripperWithoutRubber: string;
         rubberWeight: string;
         insertWithRubber: string;
+        gripperWithRubber: string;
         recycledInserts: string;
         totalInserts: string;
         totalGrippers: string;
@@ -47,8 +49,10 @@ const ScrapRegister: React.FC = () => {
             gripper: '',
             metal: '',
             insertWithoutRubber: '',
+            gripperWithoutRubber: '',
             rubberWeight: '',
             insertWithRubber: '',
+            gripperWithRubber: '',
             recycledInserts: '',
             totalInserts: '',
             totalGrippers: '',
@@ -66,10 +70,10 @@ const ScrapRegister: React.FC = () => {
         'Gripper',
         'Metal',
         'Inserto s/hule',
-        //'Gripper s/hule',
+        'Gripper s/hule',
         'Peso Hule',
         'Inserto c/hule',
-        //'Gripper c/hule',
+        'Gripper c/hule',
         'Incertos Reciclados',
         'Total Insertos',
         'Total grippers',
@@ -129,6 +133,41 @@ const ScrapRegister: React.FC = () => {
 
         fetchMachines();
     }, []);
+
+    const keyMaker = (input: string) => {
+        switch (input) {
+            case 'No. Parte':
+                return 'partNumber';
+            case 'Compuesto':
+                return 'compound';
+            case 'Inserto':
+                return 'insert';
+            case 'Gripper':
+                return 'gripper';
+            case 'Metal':
+                return 'metal';
+            case 'Inserto s/hule':
+                return 'insertWithoutRubber';
+            case 'Gripper s/hule':
+                return 'gripperWithoutRubber';
+            case 'Peso Hule':
+                return 'rubberWeight';
+            case 'Inserto c/hule':
+                return 'insertWithRubber';
+            case 'Gripper c/hule':
+                return 'gripperWithRubber';
+            case 'Incertos Reciclados':
+                return 'recycledInserts';
+            case 'Total Insertos':
+                return 'totalInserts';
+            case 'Total grippers':
+                return 'totalGrippers';
+            default:
+                return '';
+        }
+    };
+
+    const inputMap = Object.fromEntries(inputs.map(input => [inputs.indexOf(input), keyMaker(input)]));
 
     const handleOpenModal = () => {
         const requiredFields: { [key: string]: string | undefined } = {
@@ -240,8 +279,10 @@ const ScrapRegister: React.FC = () => {
                     gripper: '',
                     metal: '',
                     insertWithoutRubber: '',
+                    gripperWithoutRubber: '',
                     rubberWeight: '',
                     insertWithRubber: '',
+                    gripperWithRubber: '',
                     recycledInserts: '',
                     totalInserts: '',
                     totalGrippers: '',
@@ -295,27 +336,43 @@ const ScrapRegister: React.FC = () => {
     };
 
     const handleSearchMetal = async () => {
+        //TODO search for gripper s/hule
         try {
             const metal = formData.inputs.metal;
             const inserto = formData.inputs.insert;
+            const gripper = formData.inputs.gripper;
 
             if (!metal || !inserto) {
                 toast.error('Metal y/o Inserto faltantes');
                 return;
             }
 
-            const response = await api.get(`/search_weight`, {
-                params: { metal, inserto },
-            });
-
-            const { 'Ito. s/hule': ItoSHule } = response.data;
-            setFormData(prevState => ({
-                ...prevState,
-                inputs: {
-                    ...prevState.inputs,
-                    insertWithoutRubber: ItoSHule,
-                },
-            }));
+            if (!gripper) {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto },
+                });
+                const { 'Ito. s/hule': ItoSHule } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                    },
+                }));
+            } else {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto, gripper },
+                });
+                const { 'Ito. s/hule': ItoSHule, 'Gripper': GripsHule } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                        gripperWithoutRubber: GripsHule,
+                    },
+                }));
+            }
         } catch (error) {
             console.error('Error fetching metal data:', error);
             toast.error('Inserto s/hule no encontrado');
@@ -323,7 +380,7 @@ const ScrapRegister: React.FC = () => {
     };
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] min-h-screen'>
             <ToastContainer
                 position='top-center'
                 autoClose={false}
@@ -407,31 +464,22 @@ const ScrapRegister: React.FC = () => {
 
             <div className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
                 <div>
-                    <div className='grid gap-y-5 md:grid-cols-2 grid-cols-1 lg:grid-cols-1 '>
+                    <div className='grid gap-y-5 md:grid-cols-2 gap-8 lg:grid-cols-1 grid-cols-1'>
                         {inputs.map((input, index) => {
-                            const inputMap: { [key: number]: keyof typeof formData.inputs } = {
-                                0: 'partNumber',
-                                1: 'compound',
-                                2: 'insert',
-                                3: 'gripper',
-                                4: 'metal',
-                                5: 'insertWithoutRubber',
-                                6: 'rubberWeight',
-                                7: 'insertWithRubber',
-                                8: 'recycledInserts',
-                                9: 'totalInserts',
-                                10: 'totalGrippers',
-                            };
+                            const inputName = inputMap[index] as keyof typeof formData.inputs;
+
                             return (
                                 <div
                                     key={index}
-                                    className='flex flex-row items-center lg:grid-cols-3 lg:grid xl:gap-10'
+                                    className='flex flex-row items-center gap-2 lg:grid-cols-3 lg:grid xl:gap-10'
                                 >
-                                    <label className='block mb-2 text-sm font-medium text-gray-900'>{input}</label>
+                                    <label className='block mb-2 w-full text-sm font-medium text-gray-900'>
+                                        {input}
+                                    </label>
                                     {input === 'No. Parte' ? (
                                         <>
                                             <input
-                                                value={formData.inputs[inputMap[index]] || ''}
+                                                value={formData.inputs[inputName] || ''}
                                                 onChange={e => handleChange(e, 'input')}
                                                 name={inputMap[index]} // Importante agregar el name para manejar el campo
                                                 className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
@@ -446,7 +494,7 @@ const ScrapRegister: React.FC = () => {
                                     ) : input === 'Metal' ? (
                                         <>
                                             <input
-                                                value={formData.inputs[inputMap[index]] || ''}
+                                                value={formData.inputs[inputName] || ''}
                                                 onChange={e => handleChange(e, 'input')}
                                                 name={inputMap[index]}
                                                 className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
@@ -460,7 +508,7 @@ const ScrapRegister: React.FC = () => {
                                         </>
                                     ) : (
                                         <input
-                                            value={formData.inputs[inputMap[index]] || ''}
+                                            value={formData.inputs[inputName] || ''}
                                             onChange={e => handleChange(e, 'input')}
                                             name={inputMap[index]}
                                             className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
@@ -489,9 +537,9 @@ const ScrapRegister: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-4 gap-x-6 gap-y-5 justify-items-center lg:ml-12'>
+                    <div className='grid grid-cols-4 ml-8 gap-2 '>
                         {codes.map((code, index) => (
-                            <div key={index} className='flex flex-row items-center'>
+                            <div key={index} className='flex flex-row items-center p-1'>
                                 <label className='block w-14 text-sm font-medium text-gray-900'>{code}</label>
                                 <input
                                     type='number'
