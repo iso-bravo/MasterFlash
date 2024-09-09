@@ -194,18 +194,26 @@ def generate_rubber_report(request):
     start_date = data.get("start_date")
     end_date = data.get("end_date")
     compound = data.get("compound")
-    
+
     filters = {"date_time__date__range": [start_date, end_date]}
 
     if compound != "general":
         filters["compound"] = compound
 
-    data = Qc_Scrap.objects.filter(**filters).values(
-        "compound",
-        "total_bodies_weight_lbs",
-    )
-
-
+        data = Qc_Scrap.objects.filter(**filters).values(
+            "compound",
+            "total_bodies_weight_lbs",
+        )
+    else:
+        exclude_compounds = ["MF E BLK 70", "MF E BLK", "MF E GRY", "MF E DGRY 4606"]
+        data = (
+            Qc_Scrap.objects.filter(**filters)
+            .exclude(compound__in=exclude_compounds)
+            .values(
+                "compound",
+                "total_bodies_weight_lbs",
+            )
+        )
 
     if not data.exists():
         print(f"Error: No se encontraron registros. Datos: {data}")
@@ -249,7 +257,8 @@ def generate_rubber_report(request):
         elements.append(title)
         elements.append(
             Paragraph(
-                f"Fecha: {start_date} a {end_date} - Compuesto: {compound}", subtitle_style
+                f"Fecha: {start_date} a {end_date} - Compuesto: {compound}",
+                subtitle_style,
             )
         )
         elements.append(Spacer(1, 12))
