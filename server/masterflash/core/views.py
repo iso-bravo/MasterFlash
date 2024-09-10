@@ -583,7 +583,6 @@ def search_weight(request):
         "Ito. s/hule": weight,
     }
 
-
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
         gripper_weight = getattr(gripper_record, "weight", None)
@@ -692,14 +691,12 @@ def register_scrap(request):
         total_inserts_weight = (
             int(insert_without_rubber) * int(total_inserts)
             if insert_without_rubber and total_inserts
-
             else 0
         )
 
         total_grippers_weight = (
-            int(gripper_without_rubber) * int(total_grippers)
+            gripper_without_rubber * total_grippers
             if gripper_without_rubber and total_grippers
-
             else 0
         )
 
