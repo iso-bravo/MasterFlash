@@ -723,6 +723,7 @@ def register_scrap(request):
         scrap_entry.total_rubber_weight = total_rubber_weight
         scrap_entry.total_bodies_weight_lbs = gr_to_lbs(total_bodies_weight)
         scrap_entry.total_inserts_weight_lbs = gr_to_lbs(total_inserts_weight)
+        scrap_entry.total_grippers_weight = total_grippers_weight
         scrap_entry.total_grippers_weight_lbs = gr_to_lbs(total_grippers_weight)
         scrap_entry.total_rubber_weight_in_insert_lbs = gr_to_lbs(
             total_rubber_weight_in_insert
