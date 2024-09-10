@@ -13,8 +13,10 @@ interface Summary {
         gripper: string;
         metal: string;
         insertWithoutRubber: string;
+        gripperWithoutRubber: string;
         rubberWeight: string;
         insertWithRubber: string;
+        gripperWithRubber: string;
         recycledInserts: string;
         totalInserts: string;
         totalGrippers: string;
@@ -48,10 +50,10 @@ const ConfirmationPopUp: React.FC<ModalProps> = ({ show, onClose, onConfirm, sum
                     </p>
                     <p className='text-3xl text-gray-900 font-medium'>Inputs</p>
                     <p>-------------------</p>
-                    {Object.keys(summary.inputs).map((key, value) => (
+                    {Object.keys(summary.inputs).map(key => (
                         <p key={key} className='tracking-tighter text-gray-700 md:text-lg'>
                             <strong>{key}: </strong>
-                            {value}
+                            {summary.inputs[key as keyof typeof summary.inputs]}
                         </p>
                     ))}
                     <div className='flex flex-row justify-between pt-8'>
