@@ -230,6 +230,10 @@ const PressesRegisterProduction: React.FC = () => {
         navigate(`/edit_production_record?${queryString}`);
     };
 
+    const calculateTotalProduction = (): number =>{
+        return editableData.reduce((total,item)=>total + item.pieces_ok,0);
+    }
+    
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
@@ -286,6 +290,9 @@ const PressesRegisterProduction: React.FC = () => {
                             onChange={handleDateChange}
                             value={selectedDate}
                         />
+                    </div>
+                    <div className='flex justify-end p-2'>
+                        <span className='text-lg font-medium'>Total Producción: {calculateTotalProduction()}</span>
                     </div>
                 </div>
                 <div className='flex justify-end p-2 gap-4'>
