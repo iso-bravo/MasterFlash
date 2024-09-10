@@ -695,7 +695,7 @@ def register_scrap(request):
         )
 
         total_grippers_weight = (
-            gripper_without_rubber * total_grippers
+            float(gripper_without_rubber) * float(total_grippers)
             if gripper_without_rubber and total_grippers
             else 0
         )
