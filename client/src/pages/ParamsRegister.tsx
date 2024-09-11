@@ -20,8 +20,9 @@ const ParamsRegister = () => {
             />
             <header className='flex items-start gap-3'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
-                <h1 className='text-xl'>Registro Scrap</h1>
-            </header>{' '}
+                <h1 className='text-xl'>Reg. Params.</h1>
+            </header>
+            
         </div>
     );
 };
