@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -584,109 +584,6 @@ def search_weight(request):
     return JsonResponse(response_data, safe=False)
 
 
-@csrf_exempt
-@require_POST
-def register_scrap(request):
-    try:
-        print("entro")
-        data = json.loads(request.body.decode("utf-8"))
-
-        print(data)
-
-        total_pieces = 0
-
-        def empty_to_none(value):
-            return None if value == "" else value
-
-        def part_number_data(field, part_number):
-            try:
-                part = Part_Number.objects.get(part_number=part_number)
-                print(part)
-                return getattr(part, field, None)
-            except Exception as e:
-                print(f"Error in client_data view: {str(e)}")
-                return JsonResponse({"error": str(e)}, status=500)
-
-        def gr_to_lbs(gr):
-            return gr * 0.00220462
-
-        date = empty_to_none(data.get("date"))
-        shift = empty_to_none(data.get("shift"))
-        line = empty_to_none(data.get("line"))
-        auditor = empty_to_none(data.get("auditor"))
-        molder = empty_to_none(data.get("molder"))
-        inputs = [empty_to_none(input) for input in data.get("inputs", [""] * 12)]
-        codes = {
-            code: empty_to_none(value) for code, value in data.get("codes", {}).items()
-        }
-
-        if inputs[0] is None:
-            return JsonResponse({"message": "Part Number Required"}, status=400)
-
-        current_time_str = datetime.now().strftime("%H:%M:%S.%f")
-
-        if not date:
-            date = (datetime.now(),)
-        else:
-            date = f"{data.get('date')} {current_time_str}"
-
-        scrap_entry = Qc_Scrap(
-            date_time=date,
-            shift=shift,
-            line=line,
-            auditor_qc=auditor,
-            molder_number=molder,
-            part_number=inputs[0],
-            gripper=inputs[3],
-            caliber=inputs[4],
-            rubber_weight=inputs[6],
-            insert_weight_w_rubber=inputs[7],
-            insert_weight_wout_rubber=inputs[5],
-            recycled_inserts=inputs[8],
-            compound=inputs[1],
-            mold=part_number_data("mold", inputs[0]),
-            insert=inputs[3],
-            inserts_total=inputs[10],
-        )
-
-        for code, value in codes.items():
-            if value is None:
-                setattr(scrap_entry, code, None)
-            else:
-                setattr(scrap_entry, code, int(value))
-                total_pieces += int(value)
-
-        print(total_pieces)
-
-        total_bodies_weight = int(inputs[6]) if inputs[6] else 0
-        total_inserts_weight = (
-            int(inputs[8]) * int(inputs[10]) if inputs[8] and inputs[10] else 0
-        )
-        total_rubber_weight_in_insert = (
-            int(inputs[7]) - total_inserts_weight if inputs[7] else 0
-        )
-        total_rubber_weight = total_bodies_weight + total_rubber_weight_in_insert
-
-        scrap_entry.total_pieces = total_pieces
-        scrap_entry.total_bodies_weight = total_bodies_weight
-        scrap_entry.total_inserts_weight = total_inserts_weight
-        scrap_entry.total_rubber_weight_in_insert = total_rubber_weight_in_insert
-        scrap_entry.total_rubber_weight = total_rubber_weight
-        scrap_entry.total_bodies_weight_lbs = gr_to_lbs(total_bodies_weight)
-        scrap_entry.total_inserts_weight_lbs = gr_to_lbs(total_inserts_weight)
-        scrap_entry.total_rubber_weight_in_insert_lbs = gr_to_lbs(
-            total_rubber_weight_in_insert
-        )
-        scrap_entry.total_rubber_weight_lbs = gr_to_lbs(total_rubber_weight)
-
-        scrap_entry.save()
-
-        return JsonResponse({"message": "Registro exitoso"}, status=200)
-
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-
 def register(request):
     print("Aqui")
     return JsonResponse({"message": "Registro exitoso"}, status=200)
@@ -1010,4 +907,42 @@ def update_pieces_ok(request, id):
 
     except Exception as e:
         print("Error: ", e)
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+def get_rubber_compounds(request):
+    compounds = Part_Number.objects.values_list("rubber_compound", flat=True).distinct()
+
+    return JsonResponse(list(compounds), safe=False)
+
+
+@csrf_exempt
+@require_POST
+def get_total_weight(request):
+    data = json.loads(request.body)
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    compound = data.get("compound")
+    print(data)
+
+    try:
+        # Convertir las fechas a formato de datetime
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+        # Incluir el final del día en end_date
+        end_date = end_date + timedelta(days=1) - timedelta(seconds=1)
+
+        records = Qc_Scrap.objects.filter(
+            date_time__range=(start_date, end_date), compound=compound
+        )
+        total_weight = sum(
+            record.total_bodies_weight_lbs
+            for record in records
+            if record.total_bodies_weight_lbs
+        )
+        print(records)
+
+        return JsonResponse({"total_weight": total_weight or 0})
+    except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)

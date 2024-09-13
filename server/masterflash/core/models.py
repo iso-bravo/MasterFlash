@@ -1,10 +1,13 @@
-from pyexpat import model
+# type: ignore
 from django.db import models
+from django.utils import timezone
+
 
 class LinePress(models.Model):
     name = models.CharField(max_length=50)
     status = models.CharField(max_length=50)
     comments = models.TextField(null=True, blank=True)
+
 
 class StatePress(models.Model):
     name = models.CharField(max_length=50)
@@ -17,6 +20,7 @@ class StatePress(models.Model):
     employee_number = models.IntegerField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
 
+
 class StateTroquelado(models.Model):
     name = models.CharField(max_length=50)
     shift = models.CharField(max_length=50, null=True, blank=True)
@@ -27,6 +31,7 @@ class StateTroquelado(models.Model):
     state = models.CharField(max_length=50)
     employee_number = models.IntegerField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
+
 
 class StateBarwell(models.Model):
     name = models.CharField(max_length=50)
@@ -39,8 +44,9 @@ class StateBarwell(models.Model):
     employee_number = models.IntegerField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
 
+
 class ProductionPress(models.Model):
-    press = models.CharField(default=None,max_length=50)
+    press = models.CharField(default=None, max_length=50)
     date_time = models.DateTimeField()
     employee_number = models.IntegerField(null=True, blank=True)
     pieces_ok = models.IntegerField(null=True, blank=True)
@@ -48,16 +54,19 @@ class ProductionPress(models.Model):
     pieces_rework = models.IntegerField(null=True, blank=True)
     part_number = models.CharField(max_length=50, blank=True)
     work_order = models.CharField(max_length=50, blank=True)
-    shift = models.CharField(default='',max_length=50)
+    shift = models.CharField(default="", max_length=50)
     molder_number = models.IntegerField(default=None, null=True, blank=True)
+
 
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
     weight = models.IntegerField(null=True, blank=True)
-    caliber = models.FloatField(null=True, blank=True)                         
+    caliber = models.FloatField(null=True, blank=True)
+
 
 def upload_path(filename):
-    return '/'.join(['images'], filename)
+    return "/".join(["images"], filename)
+
 
 class Part_Number(models.Model):
     part_number = models.CharField(max_length=50, blank=True, null=True)
@@ -100,7 +109,8 @@ class Part_Number(models.Model):
     image_piece_label = models.ImageField(upload_to=upload_path, null=True, blank=True)
     image_box_label = models.ImageField(upload_to=upload_path, null=True, blank=True)
     image_box_label_2 = models.ImageField(upload_to=upload_path, null=True, blank=True)
-    image_box_label_3 = models.ImageField(upload_to=upload_path, null=True, blank=True)                                                                                                                                           
+    image_box_label_3 = models.ImageField(upload_to=upload_path, null=True, blank=True)
+
 
 class Qc_Scrap(models.Model):
     date_time = models.DateTimeField()
@@ -112,11 +122,11 @@ class Qc_Scrap(models.Model):
     compound = models.CharField(max_length=50, blank=True, null=True)
     mold = models.CharField(max_length=50, blank=True, null=True)
     insert = models.CharField(max_length=50, blank=True, null=True)
-    gripper = models.CharField(max_length=50,blank=True,null=True)
+    gripper = models.CharField(max_length=50, blank=True, null=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
     B = models.IntegerField(null=True, blank=True)
     CC = models.IntegerField(null=True, blank=True)
-    CD= models.IntegerField(null=True, blank=True)
+    CD = models.IntegerField(null=True, blank=True)
     CH = models.IntegerField(null=True, blank=True)
     CM = models.IntegerField(null=True, blank=True)
     CMB = models.IntegerField(null=True, blank=True)
@@ -165,11 +175,13 @@ class Qc_Scrap(models.Model):
     total_rubber_weight_in_insert_lbs = models.FloatField(null=True, blank=True)
     total_rubber_weight_lbs = models.FloatField(null=True, blank=True)
     inserts_total = models.IntegerField(null=True, blank=True)
-    grippers_total = models.IntegerField(null=True,blank=True)
+    grippers_total = models.IntegerField(null=True, blank=True)
+
 
 class Mold_presses(models.Model):
     press = models.CharField(max_length=50, blank=True, null=True)
     mold = models.CharField(max_length=50, blank=True, null=True)
+
 
 class Presses_monthly_goals(models.Model):
     month = models.IntegerField()
@@ -181,28 +193,38 @@ class Presses_monthly_goals(models.Model):
 
 
 class Production_records(models.Model):
-    press = models.CharField(default=None,max_length=50)
+    press = models.CharField(default=None, max_length=50)
     employee_number = models.IntegerField(null=True, blank=True)
     part_number = models.CharField(max_length=50, blank=True)
     work_order = models.CharField(max_length=50, blank=True)
     caliber = models.CharField(max_length=50, blank=True, null=True)
-    worked_hrs = models.DecimalField(max_digits=5, decimal_places=2, null=True,blank=True)
-    dead_time_cause_1 = models.CharField(max_length=50,null=True,blank=True)
+    worked_hrs = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    dead_time_cause_1 = models.CharField(max_length=50, null=True, blank=True)
     cavities = models.PositiveIntegerField(null=True, blank=True)
     standard = models.IntegerField(null=True, blank=True)
-    proposed_standard = models.PositiveIntegerField(null=True,blank=True)
-    dead_time_cause_2 = models.CharField(max_length=50,null=True,blank=True)
+    proposed_standard = models.PositiveIntegerField(null=True, blank=True)
+    dead_time_cause_2 = models.CharField(max_length=50, null=True, blank=True)
     pieces_ok = models.PositiveIntegerField(null=True, blank=True)
     efficiency = models.DecimalField(max_digits=5, decimal_places=2)
     date = models.DateField()
-    shift = models.CharField(default='',max_length=50)
+    shift = models.CharField(default="", max_length=50)
     mod_date = models.DateTimeField()
-
 
     def __str__(self) -> str:
         return f"{self.press} - {self.employee_number} - {self.part_number}"
-    
 
     class Meta:
         verbose_name = "Production Record"
         verbose_name_plural = "Production Records"
+
+
+class RubberQueryhistory(models.Model):
+    query_date = models.DateTimeField(default=timezone.now)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    compound = models.CharField(max_length=100)
+
+    def __str__(self) -> str:
+        return f"{self.query_date} - {self.compound}"

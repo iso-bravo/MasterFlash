@@ -1,12 +1,13 @@
+import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from masterflash.core.models import Qc_Scrap
+from masterflash.core.models import Qc_Scrap, RubberQueryhistory
 import io
 
 # Create your views here.
@@ -189,127 +190,132 @@ def generate_inserts_report(request):
 @csrf_exempt
 @require_POST
 def generate_rubber_report(request):
-    data = request.POST.dict()
-    print(data)
-    start_date = data.get("start_date")
-    end_date = data.get("end_date")
-    compound = data.get("compound")
-
-    filters = {"date_time__date__range": [start_date, end_date]}
-
-    if compound != "general":
-        filters["compound"] = compound
-
-        data = Qc_Scrap.objects.filter(**filters).values(
-            "compound",
-            "total_bodies_weight_lbs",
-        )
-    else:
-        exclude_compounds = ["MF E BLK 70", "MF E BLK", "MF E GRY", "MF E DGRY 4606"]
-        data = (
-            Qc_Scrap.objects.filter(**filters)
-            .exclude(compound__in=exclude_compounds)
-            .values(
-                "compound",
-                "total_bodies_weight_lbs",
-            )
-        )
-
-    if not data.exists():
-        print(f"Error: No se encontraron registros. Datos: {data}")
-        return HttpResponse("Error: No se encontraron registros.", status=400)
-
-    print("Registros filtrados:", data)
-
     try:
-        # Agrupar y sumar los pesos por compound
-        grouped_data = {}
-        total_weight = 0
+        data = json.loads(request.body.decode("utf-8"))
+        print(f"se recibio esto {data}")
 
-        for item in data:
-            compound = item["compound"]
-            weight = item["total_bodies_weight_lbs"]
-            if compound in grouped_data:
-                grouped_data[compound] += weight
-            else:
-                grouped_data[compound] = weight
-            total_weight += weight
+        compounds_data = data
+        start_date = data[0].get(
+            "startDate"
+        )  # Usa la primera entrada para las fechas si son iguales para todos
+        end_date = data[0].get("endDate")
 
-        # Crear el PDF
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        elements = []
+        # Lista de compuestos especiales
+        special_compounds = ["MF E BLK 70", "MF E BLK", "MF E GRY", "MF E DGRY 4606"]
 
-        styles = getSampleStyleSheet()
-        title_style = styles["Heading1"]
-        title_style.fontSize = 20
-        title_style.alignment = 1
+        # Filtrar los compuestos especiales y normales
+        all_compounds = [item["compound"] for item in compounds_data]
+        special_compound_selected = [c for c in all_compounds if c in special_compounds]
+        normal_compounds = [c for c in all_compounds if c not in special_compounds]
 
-        subtitle_style = styles["Heading2"]
-        subtitle_style.fontSize = 16
-        subtitle_style.alignment = 1
-
-        normal_style = styles["Normal"]
-        normal_style.fontSize = 12
-
-        # Título del reporte
-        title = Paragraph("Reporte de mermas", title_style)
-        elements.append(title)
-        elements.append(
-            Paragraph(
-                f"Fecha: {start_date} a {end_date} - Compuesto: {compound}",
-                subtitle_style,
-            )
-        )
-        elements.append(Spacer(1, 12))
-
-        # Crear la tabla de datos
-        data_table = [["Compound", "Lbs"]]
-        for compound, weight in grouped_data.items():
-            data_table.append(
-                [
-                    Paragraph(compound, normal_style),
-                    Paragraph(f"{weight:.2f}", normal_style),
-                ]
+        # Guardar en el historial cada compuesto por separado
+        for compound in compounds_data:
+            RubberQueryhistory.objects.create(
+                start_date=start_date, end_date=end_date, compound=compound
             )
 
-        column_widths = [200, 100]  # Puedes ajustar estos valores según tus necesidades
-
-        table = Table(data_table, colWidths=column_widths)
-        table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                    ("ALIGN", (0, 0), (-1, -1), "LEFT"),  # Alinear tabla a la izquierda
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
-                    (
-                        "LEFTPADDING",
-                        (0, 0),
-                        (-1, -1),
-                        10,
-                    ),  # Añadir padding a la izquierda
-                ]
+        # Función auxiliar para generar reportes
+        def create_report(selected_compounds, report_name):
+            filters = {
+                "date_time__date__range": [start_date, end_date],
+                "compound__in": selected_compounds,
+            }
+            data = Qc_Scrap.objects.filter(**filters).values(
+                "compound", "total_bodies_weight_lbs"
             )
-        )
-        elements.append(table)
-        elements.append(Spacer(1, 12))
 
-        # Añadir los totales
-        elements.append(Paragraph(f"Suma Total: {total_weight:.2f} Lbs", normal_style))
+            if not data.exists():
+                return None, f"Error: No se encontraron registros para {report_name}."
 
-        doc.build(elements)
+            # Agrupar y sumar pesos por compound
+            grouped_data = {}
+            total_weight = 0
+            for item in data:
+                compound = item["compound"]
+                weight = item["total_bodies_weight_lbs"]
+                grouped_data[compound] = grouped_data.get(compound, 0) + weight
+                total_weight += weight
 
-        buffer.seek(0)
-        response = HttpResponse(buffer, content_type="application/pdf")
-        response["Content-Disposition"] = (
-            f"inline; filename=reporte_merma_{start_date}_a_{end_date}.pdf"
-        )
-        return response
+            # Crear PDF
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            styles = getSampleStyleSheet()
+
+            title = Paragraph(f"Reporte de Mermas: {report_name}", styles["Heading1"])
+            elements.append(title)
+            elements.append(Spacer(1, 12))
+
+            data_table = [["Compound", "Lbs"]]
+            for compound, weight in grouped_data.items():
+                data_table.append(
+                    [
+                        Paragraph(compound, styles["Normal"]),
+                        Paragraph(f"{weight:.2f}", styles["Normal"]),
+                    ]
+                )
+
+            table = Table(data_table, colWidths=[200, 100])
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                    ]
+                )
+            )
+            elements.append(table)
+            elements.append(
+                Paragraph(f"Total Weight: {total_weight:.2f} Lbs", styles["Normal"])
+            )
+
+            doc.build(elements)
+            buffer.seek(0)
+            return buffer, None
+
+        # Generar el primer reporte (compuestos normales)
+        normal_buffer, normal_error = create_report(normal_compounds, "Reporte General")
+        if normal_compounds:
+            normal_buffer, normal_error = create_report(
+                normal_compounds, "Reporte General"
+            )
+            if normal_error:
+                return HttpResponse(normal_error, status=400)
+
+            # Generar el segundo reporte (compuestos especiales)
+            normal_buffer, normal_error = create_report(
+                normal_compounds, "Reporte General"
+            )
+            if normal_error:
+                return HttpResponse(normal_error, status=400)
+
+            # Generar el segundo reporte (compuestos especiales)
+            special_buffer, special_error = create_report(
+                special_compound_selected, "Reporte Especial"
+            )
+            if special_error:
+                return HttpResponse(special_error, status=400)
+
+            # Preparar la respuesta
+            if normal_compounds and special_compound_selected:
+                # Combinar ambos reportes en un ZIP o alguna forma de descarga múltiple
+                response = HttpResponse(
+                    "Multiple report generation logic to be implemented",
+                    content_type="text/plain",
+                )
+            elif normal_compounds:
+                response = HttpResponse(normal_buffer, content_type="application/pdf")
+                response["Content-Disposition"] = "inline; filename=reporte_general.pdf"
+            elif special_compound_selected:
+                response = HttpResponse(special_buffer, content_type="application/pdf")
+                response["Content-Disposition"] = (
+                    "inline; filename=reporte_especial.pdf"
+                )
+
+            return response
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:
-        print(
-            f"Error al generar el reporte desde: {start_date} hasta: {end_date} durante el {compound}º turno, Excepción: {e}"
-        )
+        print(f"Error al generar el reporte: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
