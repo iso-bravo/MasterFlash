@@ -60,8 +60,8 @@ class ProductionPress(models.Model):
 
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
-    weight = models.IntegerField(null=True, blank=True)
-    caliber = models.FloatField(null=True, blank=True)
+    weight = models.FloatField(null=True, blank=True)
+    caliber = models.FloatField(null=True, blank=True)                         
 
 
 def upload_path(filename):
@@ -164,15 +164,21 @@ class Qc_Scrap(models.Model):
     total_pieces = models.IntegerField(null=True, blank=True)
     rubber_weight = models.FloatField(null=True, blank=True)
     insert_weight_wout_rubber = models.FloatField(null=True, blank=True)
+    gripper_weight_wout_rubber = models.FloatField(null=True,blank=True)
     insert_weight_w_rubber = models.FloatField(null=True, blank=True)
+    gripper_weight_w_rubber = models.FloatField(null=True, blank=True)
     recycled_inserts = models.IntegerField(null=True, blank=True)
     total_bodies_weight = models.FloatField(null=True, blank=True)
     total_inserts_weight = models.FloatField(null=True, blank=True)
+    total_grippers_weight = models.FloatField(null=True, blank=True)
     total_rubber_weight_in_insert = models.FloatField(null=True, blank=True)
+    total_rubber_weight_in_gripper = models.FloatField(null=True, blank=True)
     total_rubber_weight = models.FloatField(null=True, blank=True)
     total_bodies_weight_lbs = models.FloatField(null=True, blank=True)
     total_inserts_weight_lbs = models.FloatField(null=True, blank=True)
+    total_grippers_weight_lbs = models.FloatField(null=True, blank=True)
     total_rubber_weight_in_insert_lbs = models.FloatField(null=True, blank=True)
+    total_rubber_weight_in_gripper_lbs = models.FloatField(null=True, blank=True)
     total_rubber_weight_lbs = models.FloatField(null=True, blank=True)
     inserts_total = models.IntegerField(null=True, blank=True)
     grippers_total = models.IntegerField(null=True, blank=True)

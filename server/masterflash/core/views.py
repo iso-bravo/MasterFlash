@@ -565,11 +565,13 @@ def search_in_part_number(request):
 
 
 def search_weight(request):
+    # TODO search for gripper info
     data = request.GET.dict()
     metal = data.get("metal")
     insert = data.get("inserto")
+    gripper = data.get("gripper")
 
-    print(metal, insert)
+    print(metal, insert, gripper)
 
     if not metal or not insert:
         return JsonResponse({"error": "metal and insert are required"}, status=400)
@@ -581,12 +583,15 @@ def search_weight(request):
         "Ito. s/hule": weight,
     }
 
+
+    if gripper:
+        gripper_record = get_object_or_404(Insert, insert=gripper)
+        gripper_weight = getattr(gripper_record, "weight", None)
+        response_data["Gripper"] = gripper_weight
+
+    print(response_data)
+
     return JsonResponse(response_data, safe=False)
-
-
-def register(request):
-    print("Aqui")
-    return JsonResponse({"message": "Registro exitoso"}, status=200)
 
 
 @csrf_exempt
@@ -631,8 +636,10 @@ def register_scrap(request):
         gripper = empty_to_none(inputs.get("gripper"))
         metal = empty_to_none(inputs.get("metal"))
         insert_without_rubber = empty_to_none(inputs.get("insertWithoutRubber"))
+        gripper_without_rubber = empty_to_none(inputs.get("gripperWithoutRubber"))
         rubber_weight = empty_to_none(inputs.get("rubberWeight"))
         insert_with_rubber = empty_to_none(inputs.get("insertWithRubber"))
+        gripper_with_rubber = empty_to_none(inputs.get("gripperWithRubber"))
         recycled_inserts = empty_to_none(inputs.get("recycledInserts"))
         total_inserts = empty_to_none(inputs.get("totalInserts"))
         total_grippers = empty_to_none(inputs.get("totalGrippers"))
@@ -659,7 +666,9 @@ def register_scrap(request):
             caliber=metal,
             rubber_weight=rubber_weight,
             insert_weight_w_rubber=insert_with_rubber,
+            gripper_weight_w_rubber=gripper_with_rubber,
             insert_weight_wout_rubber=insert_without_rubber,
+            gripper_weight_wout_rubber=gripper_without_rubber,
             recycled_inserts=recycled_inserts,
             compound=compound,
             mold=part_number_data("mold", part_number),
@@ -681,24 +690,44 @@ def register_scrap(request):
         # Cálculos de peso
         total_bodies_weight = int(rubber_weight) if rubber_weight else 0
         total_inserts_weight = (
-            int(recycled_inserts) * int(total_inserts)
-            if recycled_inserts and total_inserts
+            int(insert_without_rubber) * int(total_inserts)
+            if insert_without_rubber and total_inserts
             else 0
         )
+
+        total_grippers_weight = (
+            float(gripper_without_rubber) * float(total_grippers)
+            if gripper_without_rubber and total_grippers
+            else 0
+        )
+
         total_rubber_weight_in_insert = (
             int(insert_with_rubber) - total_inserts_weight if insert_with_rubber else 0
         )
+
+        total_rubber_weight_in_gripper = (
+            int(gripper_with_rubber) - total_grippers_weight
+            if gripper_with_rubber
+            else 0
+        )
+
         total_rubber_weight = total_bodies_weight + total_rubber_weight_in_insert
 
         scrap_entry.total_pieces = total_pieces
         scrap_entry.total_bodies_weight = total_bodies_weight
         scrap_entry.total_inserts_weight = total_inserts_weight
         scrap_entry.total_rubber_weight_in_insert = total_rubber_weight_in_insert
+        scrap_entry.total_rubber_weight_in_gripper = total_rubber_weight_in_gripper
         scrap_entry.total_rubber_weight = total_rubber_weight
         scrap_entry.total_bodies_weight_lbs = gr_to_lbs(total_bodies_weight)
         scrap_entry.total_inserts_weight_lbs = gr_to_lbs(total_inserts_weight)
+        scrap_entry.total_grippers_weight = total_grippers_weight
+        scrap_entry.total_grippers_weight_lbs = gr_to_lbs(total_grippers_weight)
         scrap_entry.total_rubber_weight_in_insert_lbs = gr_to_lbs(
             total_rubber_weight_in_insert
+        )
+        scrap_entry.total_rubber_weight_in_gripper_lbs = gr_to_lbs(
+            total_rubber_weight_in_gripper
         )
         scrap_entry.total_rubber_weight_lbs = gr_to_lbs(total_rubber_weight)
 
@@ -710,36 +739,9 @@ def register_scrap(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
 
-# Report Quality
-# """"
-def export_report(request):
-    try:
-        data = request.POST.dict()
-
-        caliber = data.get("aluminio")
-        date = data.get("fecha")
-
-        records = Qc_Scrap.objects.filter(date_time=date)
-
-        def gr_to_lbs(gr):
-            return gr * 0.00220462
-
-    except Exception as e:
-        return JsonResponse({"message": "Error: {}".format(str(e))}, status=400)
-
-
-# """
-
-
-def register_production(request):
-    try:
-        data = request.POST.dict()
-        date = data.get("fecha")
-
-        records = ProductionPress.objects.filter(date_time=date)
-
-    except Exception as e:
-        return JsonResponse({"message": "Error: {}".format(str(e))}, status=400)
+def register(request):
+    print("Aqui")
+    return JsonResponse({"message": "Registro exitoso"}, status=200)
 
 
 @csrf_exempt
