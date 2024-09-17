@@ -287,6 +287,7 @@ def generate_rubber_report(request):
                 )
             )
             elements.append(table)
+            elements.append(Spacer(1, 12))
             elements.append(
                 Paragraph(f"Total Weight: {total_weight:.2f} Lbs", styles["Normal"])
             )
