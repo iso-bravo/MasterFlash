@@ -220,11 +220,12 @@ class Production_records(models.Model):
         verbose_name_plural = "Production Records"
 
 
-class RubberQueryhistory(models.Model):
+class Rubber_Query_history(models.Model):
     query_date = models.DateTimeField(default=timezone.now)
     start_date = models.DateField()
     end_date = models.DateField()
     compound = models.CharField(max_length=100)
+    total_weight = models.FloatField()
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"

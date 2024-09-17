@@ -7,7 +7,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from masterflash.core.models import Qc_Scrap, RubberQueryhistory
+from masterflash.core.models import Qc_Scrap, Rubber_Query_history
+from django.db.models import Q
+import base64
 import io
 
 # Create your views here.
@@ -191,52 +193,69 @@ def generate_inserts_report(request):
 @require_POST
 def generate_rubber_report(request):
     try:
+        # Decodificación del JSON y manejo de excepciones
         data = json.loads(request.body.decode("utf-8"))
-        print(f"se recibio esto {data}")
+        print(f"Datos recibidos: {data}")
 
         compounds_data = data
-        start_date = data[0].get(
-            "startDate"
-        )  # Usa la primera entrada para las fechas si son iguales para todos
-        end_date = data[0].get("endDate")
-
-        # Lista de compuestos especiales
         special_compounds = ["MF E BLK 70", "MF E BLK", "MF E GRY", "MF E DGRY 4606"]
 
-        # Filtrar los compuestos especiales y normales
-        all_compounds = [item["compound"] for item in compounds_data]
-        special_compound_selected = [c for c in all_compounds if c in special_compounds]
-        normal_compounds = [c for c in all_compounds if c not in special_compounds]
-
-        # Guardar en el historial cada compuesto por separado
+        # Guardar en el historial cada compuesto con sus propias fechas
         for compound in compounds_data:
-            RubberQueryhistory.objects.create(
-                start_date=start_date, end_date=end_date, compound=compound
+            Rubber_Query_history.objects.create(
+                start_date=compound["startDate"],
+                end_date=compound["endDate"],
+                compound=compound["compound"],
+                total_weight=compound["totalWeight"],
             )
 
-        # Función auxiliar para generar reportes
-        def create_report(selected_compounds, report_name):
-            filters = {
-                "date_time__date__range": [start_date, end_date],
-                "compound__in": selected_compounds,
-            }
-            data = Qc_Scrap.objects.filter(**filters).values(
+        def create_report(selected_compounds_data, report_name):
+            print(f"Creando reporte para: {report_name}")
+            filters = [
+                Q(
+                    compound=item["compound"],
+                    date_time__date__range=[item["startDate"], item["endDate"]],
+                )
+                for item in selected_compounds_data
+            ]
+            print(f"Filtros: {filters}")
+
+            # Combinación de filtros
+            if len(filters) > 1:
+                combined_filter = filters[0]
+                for f in filters[1:]:
+                    combined_filter |= f
+            elif filters:
+                combined_filter = filters[0]
+            else:
+                return None, f"Error: No se encontraron registros para {report_name}."
+
+            data = Qc_Scrap.objects.filter(combined_filter).values(
                 "compound", "total_bodies_weight_lbs"
             )
+            print(f"Datos obtenidos de la base de datos: {data}")
 
             if not data.exists():
                 return None, f"Error: No se encontraron registros para {report_name}."
 
-            # Agrupar y sumar pesos por compound
             grouped_data = {}
             total_weight = 0
-            for item in data:
+            for item in selected_compounds_data:
                 compound = item["compound"]
-                weight = item["total_bodies_weight_lbs"]
-                grouped_data[compound] = grouped_data.get(compound, 0) + weight
+                weight = sum(
+                    d["total_bodies_weight_lbs"]
+                    for d in data
+                    if d["compound"] == compound
+                )
+                grouped_data[compound] = {
+                    "weight": weight,
+                    "start_date": item["startDate"],
+                    "end_date": item["endDate"],
+                }
                 total_weight += weight
 
-            # Crear PDF
+            print(f"Datos agrupados: {grouped_data}")
+
             buffer = io.BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=letter)
             elements = []
@@ -246,16 +265,19 @@ def generate_rubber_report(request):
             elements.append(title)
             elements.append(Spacer(1, 12))
 
-            data_table = [["Compound", "Lbs"]]
-            for compound, weight in grouped_data.items():
+            # Actualizar la tabla para incluir fecha de inicio, fecha de fin, compuesto y peso
+            data_table = [["Fecha Inicio", "Fecha Fin", "Compuesto", "Lbs"]]
+            for compound, info in grouped_data.items():
                 data_table.append(
                     [
+                        Paragraph(info["start_date"], styles["Normal"]),
+                        Paragraph(info["end_date"], styles["Normal"]),
                         Paragraph(compound, styles["Normal"]),
-                        Paragraph(f"{weight:.2f}", styles["Normal"]),
+                        Paragraph(f"{info['weight']:.2f}", styles["Normal"]),
                     ]
                 )
 
-            table = Table(data_table, colWidths=[200, 100])
+            table = Table(data_table, colWidths=[100, 100, 200, 100])
             table.setStyle(
                 TableStyle(
                     [
@@ -273,49 +295,38 @@ def generate_rubber_report(request):
             buffer.seek(0)
             return buffer, None
 
-        # Generar el primer reporte (compuestos normales)
-        normal_buffer, normal_error = create_report(normal_compounds, "Reporte General")
-        if normal_compounds:
-            normal_buffer, normal_error = create_report(
-                normal_compounds, "Reporte General"
-            )
-            if normal_error:
-                return HttpResponse(normal_error, status=400)
+        normal_buffer, normal_error = create_report(
+            [
+                comp
+                for comp in compounds_data
+                if comp["compound"] not in special_compounds
+            ],
+            "Reporte General",
+        )
+        special_buffer, special_error = create_report(
+            [comp for comp in compounds_data if comp["compound"] in special_compounds],
+            "Reporte Especial",
+        )
 
-            # Generar el segundo reporte (compuestos especiales)
-            normal_buffer, normal_error = create_report(
-                normal_compounds, "Reporte General"
-            )
-            if normal_error:
-                return HttpResponse(normal_error, status=400)
+        print(f"Error Reporte General: {normal_error}")
+        print(f"Error Reporte Especial: {special_error}")
 
-            # Generar el segundo reporte (compuestos especiales)
-            special_buffer, special_error = create_report(
-                special_compound_selected, "Reporte Especial"
-            )
-            if special_error:
-                return HttpResponse(special_error, status=400)
+        pdfs = []
+        if normal_buffer:
+            normal_base64 = base64.b64encode(normal_buffer.getvalue()).decode("utf-8")
+            pdfs.append({"name": "reporte_general.pdf", "data": normal_base64})
+        if special_buffer:
+            special_base64 = base64.b64encode(special_buffer.getvalue()).decode("utf-8")
+            pdfs.append({"name": "reporte_especial.pdf", "data": special_base64})
 
-            # Preparar la respuesta
-            if normal_compounds and special_compound_selected:
-                # Combinar ambos reportes en un ZIP o alguna forma de descarga múltiple
-                response = HttpResponse(
-                    "Multiple report generation logic to be implemented",
-                    content_type="text/plain",
-                )
-            elif normal_compounds:
-                response = HttpResponse(normal_buffer, content_type="application/pdf")
-                response["Content-Disposition"] = "inline; filename=reporte_general.pdf"
-            elif special_compound_selected:
-                response = HttpResponse(special_buffer, content_type="application/pdf")
-                response["Content-Disposition"] = (
-                    "inline; filename=reporte_especial.pdf"
-                )
+        if pdfs:
+            return JsonResponse({"pdfs": pdfs})
 
-            return response
+        # Si no hay PDFs generados, retornar un error general
+        return JsonResponse({"error": "No se generaron reportes."}, status=400)
 
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:
-        print(f"Error al generar el reporte: {e}")
+        print(f"Excepción: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

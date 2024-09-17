@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 interface CompoundSelectorProps {
     onAddCompound: (compoundData: {
@@ -55,16 +55,6 @@ const CompoundSelector = ({ onAddCompound }: CompoundSelectorProps) => {
 
     return (
         <div className='lg:flex justify-end gap-4 items-center grid md:flex  sm:grid-flow-col sm:grid sm:grid-rows-2'>
-            <ToastContainer
-                position='top-center'
-                autoClose={false}
-                newestOnTop
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                theme='colored'
-            />
             <div>
                 <label htmlFor='start_date' className='block mb-2 text-sm font-medium text-gray-900'>
                     Fecha Inicio

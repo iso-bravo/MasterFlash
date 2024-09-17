@@ -13,6 +13,11 @@ interface compoundData {
     totalWeight: number;
 }
 
+interface PdfData {
+    name: string;
+    data: string;
+}
+
 const RubberReport = () => {
     const [tableData, setTableData] = useState<Array<compoundData>>([]);
     const [pdfUrls, setPdfUrls] = useState<Array<string>>([]);
@@ -26,32 +31,41 @@ const RubberReport = () => {
         setTableData(prevData => prevData.filter((_, i) => i !== index)); // Elimina el compuesto basado en el índice
     };
 
-    const handleSubmit = async () => {
-        if (tableData.length === 0) {
-            toast.error('Debe agregar al menos un compuesto antes de enviar.');
-            return;
-        }
+const handleSubmit = async () => {
+    if (tableData.length === 0) {
+        toast.error('Debe agregar al menos un compuesto antes de enviar.');
+        return;
+    }
 
-        try {
-            console.log(tableData);
+    try {
+        const response = await api.post('/reports/rubber/generate/', tableData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-            const response = await api.post('/reports/rubber/generate/', tableData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+        const pdfs = response.data.pdfs;
+
+        if (pdfs.length > 0) {
+            const urls = pdfs.map((pdf:PdfData) => {
+                const binary = atob(pdf.data);
+                const arrayBuffer = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    arrayBuffer[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+                return URL.createObjectURL(blob);
             });
 
-            const pdfBlobs = response.data.map(
-                (pdfData: ArrayBuffer) => new Blob([pdfData], { type: 'application/pdf' }),
-            );
-            const pdfUrls = pdfBlobs.map(blob => URL.createObjectURL(blob));
-
-            setPdfUrls(pdfUrls);
-        } catch (error) {
-            toast.error('Error al generar el reporte');
-            console.error(error);
+            setPdfUrls(urls); // Set the URLs for displaying the PDFs
+        } else {
+            toast.error('No se encontraron reportes para los compuestos seleccionados.');
         }
-    };
+    } catch (error) {
+        toast.error('Error al generar el reporte');
+        console.error(error);
+    }
+};
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
