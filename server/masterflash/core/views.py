@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -565,7 +565,6 @@ def search_in_part_number(request):
 
 
 def search_weight(request):
-    # TODO search for gripper info
     data = request.GET.dict()
     metal = data.get("metal")
     insert = data.get("inserto")
@@ -582,6 +581,7 @@ def search_weight(request):
     response_data = {
         "Ito. s/hule": weight,
     }
+
 
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
@@ -705,7 +705,7 @@ def register_scrap(request):
         )
 
         total_rubber_weight_in_gripper = (
-            int(gripper_with_rubber) - total_grippers_weight
+            float(gripper_with_rubber) - total_grippers_weight
             if gripper_with_rubber
             else 0
         )
@@ -908,4 +908,42 @@ def update_pieces_ok(request, id):
 
     except Exception as e:
         print("Error: ", e)
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+def get_rubber_compounds(request):
+    compounds = Part_Number.objects.values_list("rubber_compound", flat=True).distinct()
+
+    return JsonResponse(list(compounds), safe=False)
+
+
+@csrf_exempt
+@require_POST
+def get_total_weight(request):
+    data = json.loads(request.body)
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    compound = data.get("compound")
+    print(data)
+
+    try:
+        # Convertir las fechas a formato de datetime
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+        # Incluir el final del día en end_date
+        end_date = end_date + timedelta(days=1) - timedelta(seconds=1)
+
+        records = Qc_Scrap.objects.filter(
+            date_time__range=(start_date, end_date), compound=compound
+        )
+        total_weight = sum(
+            record.total_bodies_weight_lbs
+            for record in records
+            if record.total_bodies_weight_lbs
+        )
+        print(records)
+
+        return JsonResponse({"total_weight": total_weight or 0})
+    except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
