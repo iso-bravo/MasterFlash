@@ -336,7 +336,6 @@ const ScrapRegister: React.FC = () => {
     };
 
     const handleSearchMetal = async () => {
-        //TODO search for gripper s/hule
         try {
             const metal = formData.inputs.metal;
             const inserto = formData.inputs.insert;
