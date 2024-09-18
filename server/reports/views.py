@@ -6,11 +6,19 @@ from django.http import HttpResponse, JsonResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    PageBreak,
+)
 from masterflash.core.models import Qc_Scrap, Rubber_Query_history
 from django.db.models import Q
 import base64
 import io
+import datetime
 
 # Create your views here.
 
@@ -218,7 +226,6 @@ def generate_rubber_report(request):
                 )
                 for item in selected_compounds_data
             ]
-            print(f"Filtros: {filters}")
 
             # Combinación de filtros
             if len(filters) > 1:
@@ -233,7 +240,6 @@ def generate_rubber_report(request):
             data = Qc_Scrap.objects.filter(combined_filter).values(
                 "compound", "total_bodies_weight_lbs"
             )
-            print(f"Datos obtenidos de la base de datos: {data}")
 
             if not data.exists():
                 return None, f"Error: No se encontraron registros para {report_name}."
@@ -254,18 +260,20 @@ def generate_rubber_report(request):
                 }
                 total_weight += weight
 
-            print(f"Datos agrupados: {grouped_data}")
-
             buffer = io.BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=letter)
             elements = []
             styles = getSampleStyleSheet()
 
-            title = Paragraph(f"Reporte de Mermas: {report_name}", styles["Heading1"])
+            full_date = datetime.datetime.now()
+            date = full_date.strftime("%x")
+
+            title = Paragraph(
+                f"{date} - Reporte de Mermas: {report_name}", styles["Heading1"]
+            )
             elements.append(title)
             elements.append(Spacer(1, 12))
 
-            # Actualizar la tabla para incluir fecha de inicio, fecha de fin, compuesto y peso
             data_table = [["Fecha Inicio", "Fecha Fin", "Compuesto", "Lbs"]]
             for compound, info in grouped_data.items():
                 data_table.append(
@@ -296,6 +304,59 @@ def generate_rubber_report(request):
             buffer.seek(0)
             return buffer, None
 
+        def create_report_for_special_compounds(compounds_data):
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            styles = getSampleStyleSheet()
+
+            full_date = datetime.datetime.now()
+            date = full_date.strftime("%x")
+
+            title = Paragraph(
+                "Reporte de Compuestos Especiales", styles["Heading1"]
+            )
+            elements.append(title)
+            elements.append(Spacer(1, 12))
+
+            for compound_data in compounds_data:
+                # Título de la sección para cada compuesto
+                elements.append(
+                    Paragraph(
+                        f"{date} - Compuesto: {compound_data['compound']}", styles["Heading2"]
+                    )
+                )
+
+                # Datos del compuesto
+                data_table = [["Fecha Inicio", "Fecha Fin", "Compuesto", "Lbs"]]
+                data_table.append(
+                    [
+                        Paragraph(compound_data["startDate"], styles["Normal"]),
+                        Paragraph(compound_data["endDate"], styles["Normal"]),
+                        Paragraph(compound_data["compound"], styles["Normal"]),
+                        Paragraph(
+                            f"{compound_data['totalWeight']:.2f}", styles["Normal"]
+                        ),
+                    ]
+                )
+                table = Table(data_table, colWidths=[100, 100, 200, 100])
+                table.setStyle(
+                    TableStyle(
+                        [
+                            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                        ]
+                    )
+                )
+                elements.append(table)
+
+                # Agregar un salto de página
+                elements.append(PageBreak())
+
+            doc.build(elements)
+            buffer.seek(0)
+            return buffer
+
         normal_buffer, normal_error = create_report(
             [
                 comp
@@ -304,13 +365,11 @@ def generate_rubber_report(request):
             ],
             "Reporte General",
         )
-        special_buffer, special_error = create_report(
+        special_buffer = create_report_for_special_compounds(
             [comp for comp in compounds_data if comp["compound"] in special_compounds],
-            "Reporte Especial",
         )
 
         print(f"Error Reporte General: {normal_error}")
-        print(f"Error Reporte Especial: {special_error}")
 
         pdfs = []
         if normal_buffer:
