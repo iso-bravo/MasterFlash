@@ -565,7 +565,6 @@ def search_in_part_number(request):
 
 
 def search_weight(request):
-    # TODO search for gripper info
     data = request.GET.dict()
     metal = data.get("metal")
     insert = data.get("inserto")
@@ -706,7 +705,7 @@ def register_scrap(request):
         )
 
         total_rubber_weight_in_gripper = (
-            int(gripper_with_rubber) - total_grippers_weight
+            float(gripper_with_rubber) - total_grippers_weight
             if gripper_with_rubber
             else 0
         )
