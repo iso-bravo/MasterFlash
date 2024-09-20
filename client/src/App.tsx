@@ -11,26 +11,23 @@ import ProductionRecordsMenu from './pages/ProductionRecordsMenu';
 import EditProductionRecords from './pages/EditProductionRecords';
 import RubberReport from './pages/RubberReport';
 import ParamsRegister from './pages/ParamsRegister';
-import ParamsFormProvider from './providers/ParamsRegisterProvider';
 
 function App() {
     return (
         <Router>
-            <ParamsFormProvider>
-                <Routes>
-                    <Route path='/presses_states' element={<PressesStates />} />
-                    <Route path='/presses_production' element={<PressesProduction />} />
-                    <Route path='/' element={<Quality />} />
-                    <Route path='/scrap_register' element={<ScrapRegister />} />
-                    <Route path='/presses_register_production' element={<PressesRegisterProduction />} />
-                    <Route path='/reports_menu' element={<ReportsMenu />} />
-                    <Route path='/scrap_report' element={<ScrapReport />} />
-                    <Route path='/rubber_report' element={<RubberReport />} />
-                    <Route path='/production_records' element={<ProductionRecordsMenu />} />
-                    <Route path='/edit_production_record' element={<EditProductionRecords />} />
-                    <Route path='/params_register' element={<ParamsRegister />} />
-                </Routes>
-            </ParamsFormProvider>
+            <Routes>
+                <Route path='/presses_states' element={<PressesStates />} />
+                <Route path='/presses_production' element={<PressesProduction />} />
+                <Route path='/' element={<Quality />} />
+                <Route path='/scrap_register' element={<ScrapRegister />} />
+                <Route path='/presses_register_production' element={<PressesRegisterProduction />} />
+                <Route path='/reports_menu' element={<ReportsMenu />} />
+                <Route path='/scrap_report' element={<ScrapReport />} />
+                <Route path='/rubber_report' element={<RubberReport />} />
+                <Route path='/production_records' element={<ProductionRecordsMenu />} />
+                <Route path='/edit_production_record' element={<EditProductionRecords />} />
+                <Route path='/params_register' element={<ParamsRegister />} />
+            </Routes>
         </Router>
     );
 }
