@@ -583,7 +583,6 @@ def search_weight(request):
         "Ito. s/hule": weight,
     }
 
-
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
         gripper_weight = getattr(gripper_record, "weight", None)
@@ -944,6 +943,8 @@ def get_total_weight(request):
             if record.total_bodies_weight_lbs
         )
         print(records)
+
+        total_weight = round(total_weight, 2)
 
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:

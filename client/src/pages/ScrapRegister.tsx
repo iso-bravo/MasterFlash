@@ -407,7 +407,7 @@ const ScrapRegister: React.FC = () => {
                     />
                 </div>
                 <div>
-                    <label className='block mb-2 text-sm font-medium text-gray-900'>LIN-</label>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>MP</label>
                     <select
                         name='line'
                         value={formData.line}
