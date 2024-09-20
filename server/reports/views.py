@@ -351,7 +351,7 @@ def generate_rubber_report(request):
                 elements.append(table)
 
                 # Agregar un salto de página
-                elements.append(PageBreak())
+                elements.append(Spacer(1,16))
 
             doc.build(elements)
             buffer.seek(0)
