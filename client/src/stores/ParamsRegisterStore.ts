@@ -28,23 +28,23 @@ const useFormStore = create<FormState>((set, get) => ({
     progress: 0,
     initParams: {
         partnum: '',
-        auditor: '',
+        auditor: 0,
         turn: '',
         mp: '',
-        molder: '',
+        molder: 0,
         icc: false,
     },
     secondParams: {
         mold: '',
         cavities: 1,
         metal: '',
-        body: '',
-        strips: '',
-        full_cycle: '',
-        cycle_time: '',
-        screen: { Superior: '', Inferior: '' },
-        mold2: { Superior: '', Inferior: '' },
-        platen: { Superior: '', Inferior: '' },
+        body: 0,
+        strips: 0,
+        full_cycle: 0,
+        cycle_time: 0,
+        screen: { Superior: 0, Inferior: 0 },
+        mold2: { Superior: 0, Inferior: 0 },
+        platen: { Superior: 0, Inferior: 0 },
         pressure: 0,
         waste_pct: 0,
     },
@@ -61,9 +61,9 @@ const useFormStore = create<FormState>((set, get) => ({
         set({ initParams: params });
         // Verificar si usar IccParams o ThirdParams basado en 'icc'
         if (params.icc) {
-            set({ thirdParams: null, iccParams: { batch: '', julian: '', cavities_arr: [] } });
+            set({ thirdParams: null, iccParams: { batch: '', julian: 0, cavities_arr: [] } });
         } else {
-            set({ iccParams: null, thirdParams: { batch: '', ts2: '', cavities_arr: [] } });
+            set({ iccParams: null, thirdParams: { batch: '', ts2: 0, cavities_arr: [] } });
         }
         get().calculateProgress();
     },
@@ -110,23 +110,23 @@ const useFormStore = create<FormState>((set, get) => ({
             progress: 0,
             initParams: {
                 partnum: '',
-                auditor: '',
+                auditor: 0,
                 turn: '',
                 mp: '',
-                molder: '',
+                molder: 0,
                 icc: false,
             },
             secondParams: {
                 mold: '',
                 cavities: 1,
                 metal: '',
-                body: '',
-                strips: '',
-                full_cycle: '',
-                cycle_time: '',
-                screen: { Superior: '', Inferior: '' },
-                mold2: { Superior: '', Inferior: '' },
-                platen: { Superior: '', Inferior: '' },
+                body: 0,
+                strips: 0,
+                full_cycle: 0,
+                cycle_time: 0,
+                screen: { Superior: 0, Inferior: 0 },
+                mold2: { Superior: 0, Inferior: 0 },
+                platen: { Superior: 0, Inferior: 0 },
                 pressure: 0,
                 waste_pct: 0,
             },
