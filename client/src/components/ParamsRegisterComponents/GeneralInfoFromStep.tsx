@@ -39,7 +39,7 @@ const GeneralInfoFromStep = () => {
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
             <form className='space-y-6' onSubmit={handleSubmit}>
-                <h5 className='text-xl font-medium text-gray-900'>Valores generales</h5>
+                    <h5 className='text-xl font-medium text-gray-900'>Valores generales</h5>
                 <div className='grid grid-cols-2 gap-4'>
                     <div>
                         <label htmlFor='mp' className='block mb-2 text-sm font-medium text-gray-900'>

@@ -60,4 +60,9 @@ urlpatterns = [
     path("update_pieces_ok/<int:id>/", views.update_pieces_ok, name="update_pieces_ok"),
     path("rubber_compounds/", views.get_rubber_compounds, name="get_rubber_compounds"),
     path("get_total_weight_lbs/", views.get_total_weight, name="get_total_weight"),
+    path(
+        "get-mold/<str:part_number>/",
+        views.get_mold_by_part_number,
+        name="get_mold_by_part_number",
+    ),
 ]

@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import date, datetime, time, timedelta
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -947,3 +947,12 @@ def get_total_weight(request):
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+
+def get_mold_by_part_number(request, part_number):
+    try:
+        part = Part_Number.objects.get(part_number = part_number)
+        return JsonResponse({'mold':part.mold})
+    except Part_Number.DoesNotExist:
+        raise Http404("Part number not found")
+    
