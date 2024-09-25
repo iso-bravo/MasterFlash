@@ -44,12 +44,13 @@ const PressesRegisterProduction: React.FC = () => {
         const groupedData: { [key: string]: DataItem } = {};
 
         data.forEach(item => {
-            const key = `${item.press}-${item.employee_number}-${item.part_number}`;
+            const partPrefix = item.part_number.split('-')[0];
+            const key = `${item.press}-${item.employee_number}-${partPrefix}`;
 
             if (groupedData[key]) {
                 groupedData[key].pieces_ok += item.pieces_ok;
             } else {
-                groupedData[key] = { ...item };
+                groupedData[key] = { ...item, part_number: partPrefix };
             }
         });
 
