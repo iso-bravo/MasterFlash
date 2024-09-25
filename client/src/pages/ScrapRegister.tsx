@@ -46,16 +46,16 @@ const ScrapRegister: React.FC = () => {
             partNumber: '',
             compound: '',
             insert: '',
-            gripper: '',
+            gripper: '0',
             metal: '',
             insertWithoutRubber: '',
-            gripperWithoutRubber: '',
+            gripperWithoutRubber: '0',
             rubberWeight: '',
             insertWithRubber: '',
-            gripperWithRubber: '',
+            gripperWithRubber: '0',
             recycledInserts: '',
             totalInserts: '',
-            totalGrippers: '',
+            totalGrippers: '0',
         },
         codes: {},
     });
@@ -362,7 +362,7 @@ const ScrapRegister: React.FC = () => {
                 const response = await api.get(`/search_weight`, {
                     params: { metal, inserto, gripper },
                 });
-                const { 'Ito. s/hule': ItoSHule, 'Gripper': GripsHule } = response.data;
+                const { 'Ito. s/hule': ItoSHule, Gripper: GripsHule } = response.data;
                 setFormData(prevState => ({
                     ...prevState,
                     inputs: {
