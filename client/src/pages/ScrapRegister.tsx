@@ -46,16 +46,16 @@ const ScrapRegister: React.FC = () => {
             partNumber: '',
             compound: '',
             insert: '',
-            gripper: '',
+            gripper: '0',
             metal: '',
             insertWithoutRubber: '',
-            gripperWithoutRubber: '',
+            gripperWithoutRubber: '0',
             rubberWeight: '',
             insertWithRubber: '',
-            gripperWithRubber: '',
+            gripperWithRubber: '0',
             recycledInserts: '',
             totalInserts: '',
-            totalGrippers: '',
+            totalGrippers: '0',
         },
         codes: {},
     });
@@ -336,7 +336,6 @@ const ScrapRegister: React.FC = () => {
     };
 
     const handleSearchMetal = async () => {
-        //TODO search for gripper s/hule
         try {
             const metal = formData.inputs.metal;
             const inserto = formData.inputs.insert;
@@ -363,7 +362,7 @@ const ScrapRegister: React.FC = () => {
                 const response = await api.get(`/search_weight`, {
                     params: { metal, inserto, gripper },
                 });
-                const { 'Ito. s/hule': ItoSHule, 'Gripper': GripsHule } = response.data;
+                const { 'Ito. s/hule': ItoSHule, Gripper: GripsHule } = response.data;
                 setFormData(prevState => ({
                     ...prevState,
                     inputs: {
@@ -408,7 +407,7 @@ const ScrapRegister: React.FC = () => {
                     />
                 </div>
                 <div>
-                    <label className='block mb-2 text-sm font-medium text-gray-900'>LIN-</label>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>MP</label>
                     <select
                         name='line'
                         value={formData.line}
