@@ -7,7 +7,7 @@ export interface InitParamsRegister {
     icc: boolean;
 }
 
-export type SectionType = 'Superior' | 'Inferior';
+export type SectionType = 'superior' | 'inferior';
 
 export interface SecondParamsRegister {
     mold: string;

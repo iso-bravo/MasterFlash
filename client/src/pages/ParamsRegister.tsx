@@ -1,28 +1,32 @@
 import { IoIosArrowBack } from 'react-icons/io';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import GeneralInfoFromStep from '../components/ParamsRegisterComponents/GeneralInfoFromStep';
 import ProgressBar from '../components/ParamsRegisterComponents/ProgressBar';
 import ProgressSummary from '../components/ParamsRegisterComponents/ProgressSummary';
 import useFormStore from '../stores/ParamsRegisterStore';
 import SecondPartFormStep from '../components/ParamsRegisterComponents/SecondPartFormStep';
+import ThirdFormStep from '../components/ParamsRegisterComponents/ThirdFormStep';
 
 const ParamsRegister = () => {
     const navigate = useNavigate();
-    const {step} = useFormStore();
+    const { step } = useFormStore();
 
     let formStep;
     switch (step) {
         case 1:
             formStep = <GeneralInfoFromStep />;
             break;
-        
+
         case 2:
-            formStep = <SecondPartFormStep/>
+            formStep = <SecondPartFormStep />;
             break;
-    
+        case 3:
+            formStep = <ThirdFormStep />;
+            break;
+
         default:
-            formStep = <div> Nada </div>
+            formStep = <div> Nada </div>;
             break;
     }
 
@@ -43,9 +47,7 @@ const ParamsRegister = () => {
                 <h1 className='text-xl'>Reg. Params.</h1>
             </header>
             <section className='flex flex-col md:flex-row gap-6'>
-                <div className='flex-1'>
-                    {formStep}
-                </div>
+                <div className='flex-1'>{formStep}</div>
                 <div className='flex-1 md:w-1/3'>
                     <ProgressBar />
                     <ProgressSummary />

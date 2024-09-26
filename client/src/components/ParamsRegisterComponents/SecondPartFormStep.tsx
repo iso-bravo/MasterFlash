@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
+import { MdArrowBack } from 'react-icons/md';
 
 const SecondPartFormStep = () => {
     const { initParams, secondParams, setSecondParams, setSteps } = useFormStore();
     const options = Array.from({ length: 9 }, (_, i) => i + 1);
-    const sectionTypes: SectionType[] = ['Superior', 'Inferior'];
+    const sectionTypes: SectionType[] = ['superior', 'inferior'];
 
     useEffect(() => {
         const fetchMold = async () => {
@@ -37,11 +38,12 @@ const SecondPartFormStep = () => {
 
         if (name.includes('-')) {
             const [field, section] = name.split('-');
+
             setSecondParams({
                 ...secondParams,
                 [field]: {
                     ...(secondParams[field as keyof SecondParamsRegister] as Record<SectionType, number>),
-                    [section as SectionType]: numericValue,
+                    [section]: numericValue,
                 },
             });
         } else {
@@ -52,9 +54,16 @@ const SecondPartFormStep = () => {
         }
     };
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Cambiar al siguiente paso
+        setSteps(3);
+    };
+
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
-            <form className='space-y-6'>
+            <form className='space-y-6' onSubmit={handleSubmit}>
+                <MdArrowBack size={30} onClick={() => setSteps(1)} className='cursor-pointer' />
                 <h5 className='text-xl font-medium text-gray-900'>Segunda parte</h5>
                 <div className='grid grid-cols-2 gap-4'>
                     <div>
@@ -129,7 +138,7 @@ const SecondPartFormStep = () => {
                                             {sectionTypes.map(section => (
                                                 <div key={section} className='mb-2'>
                                                     <label
-                                                        htmlFor={`${type}_${section.toLowerCase()}`}
+                                                        htmlFor={`${type}-${section.toLowerCase()}`}
                                                         className='block mb-1 text-xs text-gray-700'
                                                     >
                                                         {section}
