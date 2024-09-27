@@ -3,6 +3,7 @@ import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
 import { MdArrowBack } from 'react-icons/md';
+import { toast } from 'react-toastify';
 
 const SecondPartFormStep = () => {
     const { initParams, secondParams, setSecondParams, setSteps } = useFormStore();
@@ -34,7 +35,7 @@ const SecondPartFormStep = () => {
         const { name, value } = e.target;
 
         // Evitar números negativos
-        const numericValue = Math.max(0, Number(value));
+        const numericValue = Math.max(0, parseFloat(value));
 
         if (name.includes('-')) {
             const [field, section] = name.split('-');
@@ -56,9 +57,41 @@ const SecondPartFormStep = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Cambiar al siguiente paso
+
+        // Definir los campos requeridos
+        const requiredFields = ['cavities', 'metal', 'body', 'strips', 'full_cycle', 'cycle_time', 'pressure'];
+        const sectionFields = ['screen', 'mold2', 'platen'];
+
+        // Validar campos sencillos
+        const isSimpleFieldsValid = requiredFields.every(field => secondParams[field as keyof SecondParamsRegister]);
+
+        // Validar los campos que tienen secciones (superior/inferior)
+        const isSectionFieldsValid = sectionFields.every(field => {
+            const sectionData = secondParams[field as keyof SecondParamsRegister];
+            return sectionData && typeof sectionData === 'object'
+                ? sectionTypes.every(section => (sectionData as Record<SectionType, number>)[section])
+                : false;
+        });
+
+        if (!isSimpleFieldsValid || !isSectionFieldsValid) {
+            toast.error('Por favor, completa todos los campos obligatorios.');
+            return;
+        }
+
+        // Si todos los campos están completos, cambiar al siguiente paso
         setSteps(3);
     };
+
+    const isFormValid =
+        ['cavities', 'metal', 'body', 'strips', 'full_cycle', 'cycle_time', 'pressure'].every(
+            field => secondParams[field as keyof SecondParamsRegister],
+        ) &&
+        ['screen', 'mold2', 'platen'].every(field => {
+            const sectionData = secondParams[field as keyof SecondParamsRegister];
+            return sectionData && typeof sectionData === 'object'
+                ? sectionTypes.every(section => (sectionData as Record<SectionType, number>)[section])
+                : false;
+        });
 
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
@@ -117,6 +150,7 @@ const SecondPartFormStep = () => {
                                     type='number'
                                     id={input}
                                     name={input}
+                                    step='0.01'
                                     min={0}
                                     value={isStringOrNumber ? value : ''}
                                     onChange={handleChange}
@@ -145,6 +179,7 @@ const SecondPartFormStep = () => {
                                                     </label>
                                                     <input
                                                         type='number'
+                                                        step='0.01'
                                                         id={`${type}-${section.toLowerCase()}`}
                                                         name={`${type}-${section.toLowerCase()}`}
                                                         min={0}
@@ -169,6 +204,7 @@ const SecondPartFormStep = () => {
                             type='number'
                             name='pressure'
                             id='pressure'
+                            step='0.01'
                             min={0}
                             value={secondParams.pressure || ''}
                             onChange={handleChange}
@@ -178,7 +214,10 @@ const SecondPartFormStep = () => {
                 </div>
                 <button
                     type='submit'
-                    className='w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
+                    className={`w-full text-white ${
+                        isFormValid ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-300 cursor-not-allowed'
+                    } focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center`}
+                    disabled={!isFormValid}
                 >
                     Siguiente
                 </button>

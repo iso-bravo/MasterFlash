@@ -7,6 +7,7 @@ import ProgressSummary from '../components/ParamsRegisterComponents/ProgressSumm
 import useFormStore from '../stores/ParamsRegisterStore';
 import SecondPartFormStep from '../components/ParamsRegisterComponents/SecondPartFormStep';
 import ThirdFormStep from '../components/ParamsRegisterComponents/ThirdFormStep';
+import { MdArrowBack } from 'react-icons/md';
 
 const ParamsRegister = () => {
     const navigate = useNavigate();
@@ -26,8 +27,12 @@ const ParamsRegister = () => {
             break;
 
         default:
-            formStep = <div> Nada </div>;
+            formStep = <></>;
             break;
+    }
+
+    function setSteps(arg0: number): void {
+        throw new Error('Function not implemented.');
     }
 
     return (
@@ -47,11 +52,20 @@ const ParamsRegister = () => {
                 <h1 className='text-xl'>Reg. Params.</h1>
             </header>
             <section className='flex flex-col md:flex-row gap-6'>
-                <div className='flex-1'>{formStep}</div>
-                <div className='flex-1 md:w-1/3'>
-                    <ProgressBar />
-                    <ProgressSummary />
-                </div>
+                {step != 4 ? (
+                    <>
+                        <div className='flex-1'>{formStep}</div>
+                        <div className='flex-1 md:w-1/3'>
+                            <ProgressBar />
+                            <ProgressSummary />
+                        </div>
+                    </>
+                ) : (
+                    <div className='flex-1'>
+                        <ProgressBar />
+                        <ProgressSummary />
+                    </div>
+                )}
             </section>
         </div>
     );
