@@ -7,7 +7,6 @@ import ProgressSummary from '../components/ParamsRegisterComponents/ProgressSumm
 import useFormStore from '../stores/ParamsRegisterStore';
 import SecondPartFormStep from '../components/ParamsRegisterComponents/SecondPartFormStep';
 import ThirdFormStep from '../components/ParamsRegisterComponents/ThirdFormStep';
-import { MdArrowBack } from 'react-icons/md';
 
 const ParamsRegister = () => {
     const navigate = useNavigate();
@@ -29,10 +28,6 @@ const ParamsRegister = () => {
         default:
             formStep = <></>;
             break;
-    }
-
-    function setSteps(arg0: number): void {
-        throw new Error('Function not implemented.');
     }
 
     return (
