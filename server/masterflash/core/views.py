@@ -583,7 +583,6 @@ def search_weight(request):
         "Ito. s/hule": weight,
     }
 
-
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
         gripper_weight = getattr(gripper_record, "weight", None)
@@ -692,14 +691,12 @@ def register_scrap(request):
         total_inserts_weight = (
             int(insert_without_rubber) * int(total_inserts)
             if insert_without_rubber and total_inserts
-
             else 0
         )
 
         total_grippers_weight = (
             int(gripper_without_rubber) * int(total_grippers)
             if gripper_without_rubber and total_grippers
-
             else 0
         )
 
@@ -969,6 +966,7 @@ def get_scrap_register_summary(request, date):
     # Extrae los datos que necesitas de cada registro
     result = list(
         scrap_data.values(
+            "id",
             "rubber_weight",
             "total_pieces",
             "insert_weight_w_rubber",
@@ -985,3 +983,17 @@ def get_scrap_register_summary(request, date):
 
     # Retorna la respuesta en formato JSON
     return JsonResponse(result, safe=False)
+
+
+@csrf_exempt
+def delete_scrap_register(request, id):
+    if request.method == "DELETE":
+        try:
+            scrap_record = Qc_Scrap.objects.get(id=id)
+            scrap_record.delete()
+            return JsonResponse(
+                {"message": "Registro eliminado exitosamente."}, status=200
+            )
+        except Qc_Scrap.DoesNotExist:
+            return JsonResponse({"error": "Registro no encontrado."}, status=404)
+    return JsonResponse({"error": "Método no permitido."}, status=405)
