@@ -3,82 +3,69 @@ import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import api from '../config/axiosConfig';
+import CompoundSelector from '../components/CompoundSelector';
+import CompoundsTable from '../components/CompoundsTable';
 
-interface FormData {
-    start_date: string;
-    end_date: string;
+interface compoundData {
     compound: string;
+    startDate: string;
+    endDate: string;
+    totalWeight: number;
+}
+
+interface PdfData {
+    name: string;
+    data: string;
 }
 
 const RubberReport = () => {
-    const [formData, setFormData] = useState<FormData>({
-        start_date: '',
-        end_date: '',
-        compound: 'general',
-    });
-
-    const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-
+    const [tableData, setTableData] = useState<Array<compoundData>>([]);
+    const [pdfUrls, setPdfUrls] = useState<Array<string>>([]);
     const navigate = useNavigate();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
+    const handleAddCompound = (compoundData: compoundData) => {
+        setTableData(prevData => [...prevData, compoundData]);
+    };
+
+    const handleRemoveCompound = (index: number) => {
+        setTableData(prevData => prevData.filter((_, i) => i !== index)); // Elimina el compuesto basado en el índice
+    };
+
+const handleSubmit = async () => {
+    if (tableData.length === 0) {
+        toast.error('Debe agregar al menos un compuesto antes de enviar.');
+        return;
+    }
+
+    try {
+        const response = await api.post('/reports/rubber/generate/', tableData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
-    };
 
-    const formatDate = (date: string) => {
-        const [year, month, day] = date.split('-');
-        return `${year}-${month}-${day}`;
-    };
+        const pdfs = response.data.pdfs;
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if (!formData.start_date) {
-                toast.error('La fecha de inicio es requerida');
-                return;
-            }
-            if (!formData.compound) {
-                toast.error('El campo Compuesto es requerido');
-                return;
-            }
-            if (!formData.end_date) {
-                toast.error('La fecha de fin es requerida');
-                return;
-            }
-
-            const formattedStartDate = formatDate(formData.start_date);
-            const formattedEndDate = formatDate(formData.end_date);
-            const formBody = new URLSearchParams();
-            formBody.append('start_date', formattedStartDate);
-            formBody.append('end_date', formattedEndDate);
-            formBody.append('compound', formData.compound);
-
-            const response = await api.post('/reports/rubber/generate/', formBody.toString(), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                responseType: 'blob',
+        if (pdfs.length > 0) {
+            const urls = pdfs.map((pdf:PdfData) => {
+                const binary = atob(pdf.data);
+                const arrayBuffer = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    arrayBuffer[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+                return URL.createObjectURL(blob);
             });
 
-            if (response.data.size > 0) {
-                const pdfBlob = new Blob([response.data], {
-                    type: 'application/pdf',
-                });
-
-                const pdfUrl = URL.createObjectURL(pdfBlob);
-
-                setPdfUrl(pdfUrl);
-            } else {
-                toast.error('No se encontraron datos para generar el reporte');
-            }
-        } catch (error) {
-            toast.error('Error al generar el report');
-            console.error(error);
+            setPdfUrls(urls); // Set the URLs for displaying the PDFs
+        } else {
+            toast.error('No se encontraron reportes para los compuestos seleccionados.');
         }
-    };
+    } catch (error) {
+        toast.error('Error al generar el reporte');
+        console.error(error);
+    }
+};
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -96,65 +83,30 @@ const RubberReport = () => {
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/reports_menu')} />
                 <h1 className='text-xl'>Reportes</h1>
             </header>
-            <form
-                onSubmit={handleSubmit}
-                className='lg:flex justify-end gap-4 items-center grid md:flex  sm:grid-flow-col sm:grid sm:grid-rows-2'
-            >
-                <div>
-                    <label htmlFor='start_date' className='block mb-2 text-sm font-medium text-gray-900'>
-                        Fecha Inicio
-                    </label>
-                    <input
-                        name='start_date'
-                        type='date'
-                        value={formData.start_date}
-                        onChange={handleChange}
-                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                    />
+            <div className='mt-5'>
+                <div className='mb-8'>
+                    <CompoundSelector onAddCompound={handleAddCompound} />
                 </div>
-                <div>
-                    <label htmlFor='end_date' className='block mb-2 text-sm font-medium text-gray-900'>
-                        Fecha Fin
-                    </label>
-                    <input
-                        name='end_date'
-                        type='date'
-                        value={formData.end_date}
-                        onChange={handleChange}
-                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                    />
-                </div>
-                <div>
-                    <label htmlFor='compounds' className='block mb-2 text-sm font-medium text-gray-900'>
-                        Compuesto
-                    </label>
-                    <select
-                        name='compound'
-                        value={formData.compound}
-                        onChange={handleChange}
-                        id='compounds'
-                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                    >
-                        <option value='general' >
-                            General
-                        </option>
-                        <option value='MF E BLK 70'>MF E BLK 70</option>
-                        <option value='MF E BLK'>MF E BLK</option>
-                        <option value='MF E GRY'>MF E GRY</option>
-                        <option value='MF E DGRY 4606'>MF E DGRY 4606</option>
-                    </select>
-                </div>
+
+                <CompoundsTable tableData={tableData} onRemoveCompound={handleRemoveCompound} />
+
                 <button
-                    type='submit'
-                    className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center'
+                    onClick={handleSubmit}
+                    className='mt-5 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5'
                 >
-                    Buscar
+                    Generar reporte
                 </button>
-            </form>
-            <div>
-                {pdfUrl && (
-                    <div>
-                        <iframe src={pdfUrl} width='100%' height='600px' className='mt-10 rounded-md'></iframe>
+                {pdfUrls.length > 0 && (
+                    <div className='mt-10'>
+                        {pdfUrls.map((pdfUrl, index) => (
+                            <iframe
+                                key={index}
+                                src={pdfUrl}
+                                width='100%'
+                                height='600px'
+                                className='mt-10 rounded-md'
+                            ></iframe>
+                        ))}
                     </div>
                 )}
             </div>

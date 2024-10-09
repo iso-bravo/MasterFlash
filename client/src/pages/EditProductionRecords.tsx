@@ -22,6 +22,7 @@ interface GroupedData {
         press: string;
         work_order: string;
         part_number: string;
+        totalPiecesOk: number;
     };
 }
 
@@ -72,10 +73,12 @@ const EditProductionRecords = () => {
                     press: item.press,
                     work_order: item.work_order,
                     part_number: item.part_number,
+                    totalPiecesOk: 0, // Agrega la propiedad para almacenar el total
                 };
             }
 
             acc[key].items.push(item);
+            acc[key].totalPiecesOk += item.pieces_ok; // Calcula el total
             return acc;
         }, {} as GroupedData);
 
@@ -172,14 +175,14 @@ const EditProductionRecords = () => {
                 <h1 className='text-xl'>{`Editar registros del turno ${shift} en la fecha ${date} `}</h1>
             </header>
 
-                <div className='flex flex-row justify-end'>
-                    <button
-                        onClick={handleSaveAll}
-                        className='text-gray-900 bg-[#9ADD57] lg:text-sm hover:bg-[#9fe35b] focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5'
-                    >
-                        Guardar
-                    </button>
-                </div>
+            <div className='flex flex-row justify-end'>
+                <button
+                    onClick={handleSaveAll}
+                    className='text-gray-900 bg-[#9ADD57] lg:text-sm hover:bg-[#9fe35b] focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                >
+                    Guardar
+                </button>
+            </div>
 
             <div className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
                 <table className='w-full text-sm text-left text-gray-500'>
@@ -195,13 +198,13 @@ const EditProductionRecords = () => {
                                 No.Parte
                             </th>
                             <th scope='col' className='px-6 py-3 '>
-                                No.Operador
+                                Producción
                             </th>
                             <th scope='col' className='px-6 py-3 '>
                                 Hora
                             </th>
                             <th scope='col' className='px-6 py-3 '>
-                                Producción
+                                No.Operador
                             </th>
                         </tr>
                     </thead>
@@ -227,6 +230,10 @@ const EditProductionRecords = () => {
                                         </td>
                                         <td className='px-6 py-4 font-medium'>{workOrder}</td>
                                         <td className='px-6 py-4 font-medium'>{partNumber}</td>
+                                        <td className='px-6 py-4 font-medium'>
+                                            <strong>Total Producción: </strong>
+                                            {group.totalPiecesOk} 
+                                        </td>
                                     </tr>
                                     {expandedGroups[key] &&
                                         group.items.map((item, index) => (
@@ -237,8 +244,6 @@ const EditProductionRecords = () => {
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
-                                                <td className='px-6 py-4'>{item.employee_number}</td>
-                                                <td className='px-6 py-4'>{item.hour}</td>
                                                 <td
                                                     className='px-6 py-4'
                                                     onDoubleClick={() => handleDoubleClick(key, index, 'pieces_ok')}
@@ -263,6 +268,8 @@ const EditProductionRecords = () => {
                                                         <span>{item.pieces_ok}</span>
                                                     )}
                                                 </td>
+                                                <td className='px-6 py-4'>{item.hour}</td>
+                                                <td className='px-6 py-4'>{item.employee_number}</td>
                                             </tr>
                                         ))}
                                 </React.Fragment>

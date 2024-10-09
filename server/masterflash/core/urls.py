@@ -70,4 +70,5 @@ urlpatterns = [
         views.delete_scrap_register,
         name="delete_scrap_register",
     ),
+
 ]

@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -565,7 +565,6 @@ def search_in_part_number(request):
 
 
 def search_weight(request):
-    # TODO search for gripper info
     data = request.GET.dict()
     metal = data.get("metal")
     insert = data.get("inserto")
@@ -695,7 +694,7 @@ def register_scrap(request):
         )
 
         total_grippers_weight = (
-            int(gripper_without_rubber) * int(total_grippers)
+            float(gripper_without_rubber) * float(total_grippers)
             if gripper_without_rubber and total_grippers
             else 0
         )
@@ -705,7 +704,7 @@ def register_scrap(request):
         )
 
         total_rubber_weight_in_gripper = (
-            int(gripper_with_rubber) - total_grippers_weight
+            float(gripper_with_rubber) - total_grippers_weight
             if gripper_with_rubber
             else 0
         )
@@ -720,6 +719,7 @@ def register_scrap(request):
         scrap_entry.total_rubber_weight = total_rubber_weight
         scrap_entry.total_bodies_weight_lbs = gr_to_lbs(total_bodies_weight)
         scrap_entry.total_inserts_weight_lbs = gr_to_lbs(total_inserts_weight)
+        scrap_entry.total_grippers_weight = total_grippers_weight
         scrap_entry.total_grippers_weight_lbs = gr_to_lbs(total_grippers_weight)
         scrap_entry.total_rubber_weight_in_insert_lbs = gr_to_lbs(
             total_rubber_weight_in_insert
@@ -948,8 +948,7 @@ def get_total_weight(request):
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-
-
+      
 @csrf_exempt
 def get_scrap_register_summary(request, date):
     # Convierte la fecha del parámetro

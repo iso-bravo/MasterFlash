@@ -44,12 +44,13 @@ const PressesRegisterProduction: React.FC = () => {
         const groupedData: { [key: string]: DataItem } = {};
 
         data.forEach(item => {
-            const key = `${item.press}-${item.employee_number}-${item.part_number}`;
+            const partPrefix = item.part_number.split('-')[0];
+            const key = `${item.press}-${item.employee_number}-${partPrefix}`;
 
             if (groupedData[key]) {
                 groupedData[key].pieces_ok += item.pieces_ok;
             } else {
-                groupedData[key] = { ...item };
+                groupedData[key] = { ...item, part_number: partPrefix };
             }
         });
 
@@ -230,6 +231,10 @@ const PressesRegisterProduction: React.FC = () => {
         navigate(`/edit_production_record?${queryString}`);
     };
 
+    const calculateTotalProduction = (): number =>{
+        return editableData.reduce((total,item)=>total + item.pieces_ok,0);
+    }
+    
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
@@ -286,6 +291,9 @@ const PressesRegisterProduction: React.FC = () => {
                             onChange={handleDateChange}
                             value={selectedDate}
                         />
+                    </div>
+                    <div className='flex justify-end p-2'>
+                        <span className='text-lg font-medium'>Total Producción: {calculateTotalProduction()}</span>
                     </div>
                 </div>
                 <div className='flex justify-end p-2 gap-4'>

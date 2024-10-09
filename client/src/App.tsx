@@ -11,6 +11,7 @@ import ProductionRecordsMenu from './pages/ProductionRecordsMenu';
 import EditProductionRecords from './pages/EditProductionRecords';
 import RubberReport from './pages/RubberReport';
 import ScrapSummary from './pages/ScrapSummary';
+import ParamsRegister from './pages/ParamsRegister';
 
 function App() {
     return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/rubber_report" element={<RubberReport/>} />
             <Route path='/production_records' element={<ProductionRecordsMenu/>} />
             <Route path='/edit_production_record' element={<EditProductionRecords/>} />
+            <Route path='/params_register' element={<ParamsRegister/>}/>
         </Routes>
         </Router>
     );

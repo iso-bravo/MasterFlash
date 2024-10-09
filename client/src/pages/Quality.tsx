@@ -69,7 +69,10 @@ const Quality: React.FC = () => {
             <div className='flex flex-col items-center py-5 px-10'>
                 <h1 className='w-3/4 text-xl m-3'>Calidad</h1>
                 <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
-                    <div className='flex flex-col w-14 items-center cursor-pointer'>
+                    <div
+                        className='flex flex-col w-14 items-center cursor-pointer'
+                        onClick={() => navigate('/params_register')}
+                    >
                         <div className=' bg-[#538D4A] p-3 rounded-sm'>
                             <BsFillFileEarmarkCheckFill color='white' size={35} className='' />
                         </div>
