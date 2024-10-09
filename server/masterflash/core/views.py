@@ -911,3 +911,77 @@ def update_pieces_ok(request, id):
     except Exception as e:
         print("Error: ", e)
         return JsonResponse({"error": str(e)}, status=400)
+
+
+def get_rubber_compounds(request):
+    compounds = Part_Number.objects.values_list("rubber_compound", flat=True).distinct()
+
+    return JsonResponse(list(compounds), safe=False)
+
+
+@csrf_exempt
+@require_POST
+def get_total_weight(request):
+    data = json.loads(request.body)
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    compound = data.get("compound")
+    print(data)
+
+    try:
+        # Convertir las fechas a formato de datetime
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+        # Incluir el final del día en end_date
+        end_date = end_date + timedelta(days=1) - timedelta(seconds=1)
+
+        records = Qc_Scrap.objects.filter(
+            date_time__range=(start_date, end_date), compound=compound
+        )
+        total_weight = sum(
+            record.total_bodies_weight_lbs
+            for record in records
+            if record.total_bodies_weight_lbs
+        )
+        print(records)
+
+        total_weight = round(total_weight, 2)
+
+        return JsonResponse({"total_weight": total_weight or 0})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+def get_scrap_register_summary(request, date):
+    # Convierte la fecha del parámetro
+    try:
+        date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return JsonResponse(
+            {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
+        )
+
+    # Filtra los registros de acuerdo a la fecha
+    scrap_data = Qc_Scrap.objects.filter(date_time__date=date)
+
+    # Extrae los datos que necesitas de cada registro
+    result = list(
+        scrap_data.values(
+            "rubber_weight",
+            "total_pieces",
+            "insert_weight_w_rubber",
+            "date_time",
+            "shift",
+            "line",
+            "auditor_qc",
+            "molder_number",
+            "part_number",
+            "compound",
+            "caliber",
+        )
+    )
+
+    # Retorna la respuesta en formato JSON
+    return JsonResponse(result, safe=False)

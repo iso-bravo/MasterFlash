@@ -77,7 +77,7 @@ const Quality: React.FC = () => {
                     </div>
                     <div
                         className='flex flex-col items-center cursor-pointer'
-                        onClick={() => navigate('/scrap_register')}
+                        onClick={() => navigate('/scrap_summary')}
                     >
                         <div className=' bg-[#6A3A90] p-2 rounded-sm'>
                             <img src={Scrap} className=' w-10'></img>
