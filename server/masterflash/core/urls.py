@@ -60,4 +60,15 @@ urlpatterns = [
     path("update_pieces_ok/<int:id>/", views.update_pieces_ok, name="update_pieces_ok"),
     path("rubber_compounds/", views.get_rubber_compounds, name="get_rubber_compounds"),
     path("get_total_weight_lbs/", views.get_total_weight, name="get_total_weight"),
+    path(
+        "get_scrap_sumary/<str:date>",
+        views.get_scrap_register_summary,
+        name="get_scrap_register_summary",
+    ),
+    path(
+        "delete_scrap_register/<int:id>",
+        views.delete_scrap_register,
+        name="delete_scrap_register",
+    ),
+
 ]
