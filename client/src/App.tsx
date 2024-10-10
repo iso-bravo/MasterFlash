@@ -12,6 +12,8 @@ import EditProductionRecords from './pages/EditProductionRecords';
 import RubberReport from './pages/RubberReport';
 import ScrapSummary from './pages/ScrapSummary';
 import ParamsRegister from './pages/ParamsRegister';
+import RubberReportsMenu from './pages/RubberReportsMenu';
+import WareHouseShipsHistory from './pages/WareHouseShipsHistory';
 
 function App() {
     return (
@@ -25,6 +27,8 @@ function App() {
             <Route path="/presses_register_production" element={<PressesRegisterProduction />} />
             <Route path="/reports_menu" element={<ReportsMenu/>} />
             <Route path="/scrap_report" element={<ScrapReport/>} />
+            <Route path='/rubber_menu' element={<RubberReportsMenu/>}/>
+            <Route path='/rubber_history' element={<WareHouseShipsHistory/>} />
             <Route path="/rubber_report" element={<RubberReport/>} />
             <Route path='/production_records' element={<ProductionRecordsMenu/>} />
             <Route path='/edit_production_record' element={<EditProductionRecords/>} />

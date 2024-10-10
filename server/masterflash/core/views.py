@@ -9,6 +9,7 @@ from .models import (
     LinePress,
     Part_Number,
     Production_records,
+    Rubber_Query_history,
     StateBarwell,
     StatePress,
     StateTroquelado,
@@ -996,3 +997,28 @@ def delete_scrap_register(request, id):
         except Qc_Scrap.DoesNotExist:
             return JsonResponse({"error": "Registro no encontrado."}, status=404)
     return JsonResponse({"error": "Método no permitido."}, status=405)
+
+
+@csrf_exempt
+def get_rubber_report_history(request,date):
+    try:
+        date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return JsonResponse(
+            {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
+        )
+
+    history = Rubber_Query_history.objects.filter(query_date__date = date)
+
+    data = [
+        {
+            "query_date": h.query_date,
+            "start_date": h.start_date,
+            "end_date": h.end_date,
+            "compound": h.compound,
+            "total_weight": h.total_weight,
+        }
+        for h in history
+    ]
+
+    return JsonResponse(data,safe=False)
