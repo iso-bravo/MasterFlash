@@ -391,7 +391,7 @@ const ScrapRegister: React.FC = () => {
                 theme='colored'
             />
             <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
+                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/scrap_summary')} />
                 <h1 className='text-xl'>Registro Scrap</h1>
             </header>
 

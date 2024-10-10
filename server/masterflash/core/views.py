@@ -948,3 +948,51 @@ def get_total_weight(request):
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+      
+@csrf_exempt
+def get_scrap_register_summary(request, date):
+    # Convierte la fecha del parámetro
+    try:
+        date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return JsonResponse(
+            {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
+        )
+
+    # Filtra los registros de acuerdo a la fecha
+    scrap_data = Qc_Scrap.objects.filter(date_time__date=date)
+
+    # Extrae los datos que necesitas de cada registro
+    result = list(
+        scrap_data.values(
+            "id",
+            "rubber_weight",
+            "total_pieces",
+            "insert_weight_w_rubber",
+            "date_time",
+            "shift",
+            "line",
+            "auditor_qc",
+            "molder_number",
+            "part_number",
+            "compound",
+            "caliber",
+        )
+    )
+
+    # Retorna la respuesta en formato JSON
+    return JsonResponse(result, safe=False)
+
+
+@csrf_exempt
+def delete_scrap_register(request, id):
+    if request.method == "DELETE":
+        try:
+            scrap_record = Qc_Scrap.objects.get(id=id)
+            scrap_record.delete()
+            return JsonResponse(
+                {"message": "Registro eliminado exitosamente."}, status=200
+            )
+        except Qc_Scrap.DoesNotExist:
+            return JsonResponse({"error": "Registro no encontrado."}, status=404)
+    return JsonResponse({"error": "Método no permitido."}, status=405)
