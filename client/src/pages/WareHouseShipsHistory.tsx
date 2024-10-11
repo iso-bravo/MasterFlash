@@ -82,26 +82,26 @@ const WareHouseShipsHistory = () => {
                     <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
                         <tr>
                             <th scope='col' className='px-6 py-3'>
-                                Query date
+                                Fecha de envio
                             </th>
                             <th scope='col' className='px-6 py-3'>
-                                Start date
+                                Fecha Inicio
                             </th>
                             <th scope='col' className='px-6 py-3'>
-                                End date
+                                Fecha Fin
                             </th>
                             <th scope='col' className='px-6 py-3'>
                                 Compound
                             </th>
                             <th scope='col' className='px-6 py-3'>
-                                Total weight
+                                Peso Total (lbs)
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredData.map((item, index) => (
                             <tr key={index}>
-                                <td className='px-6 py-3'>{item.query_date}</td>
+                                <td className='px-6 py-3'>{item.query_date.split('T')[0]}</td>
                                 <td className='px-6 py-3'>{item.start_date}</td>
                                 <td className='px-6 py-3'>{item.end_date}</td>
                                 <td className='px-6 py-3'>{item.compound}</td>
