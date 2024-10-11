@@ -80,7 +80,7 @@ const handleSubmit = async () => {
                 theme='colored'
             />
             <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/reports_menu')} />
+                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/rubber_menu')} />
                 <h1 className='text-xl'>Reportes</h1>
             </header>
             <div className='mt-5'>
