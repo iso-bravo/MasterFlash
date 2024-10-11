@@ -71,7 +71,7 @@ urlpatterns = [
         name="delete_scrap_register",
     ),
     path(
-        "get_rubber_report_history/<str:date>",
+        "get_rubber_report_history/",
         views.get_rubber_report_history,
         name="get_rubber_report_history"
     )

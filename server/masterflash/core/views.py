@@ -1000,15 +1000,9 @@ def delete_scrap_register(request, id):
 
 
 @csrf_exempt
-def get_rubber_report_history(request,date):
-    try:
-        date = datetime.strptime(date, "%Y-%m-%d")
-    except ValueError:
-        return JsonResponse(
-            {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
-        )
+def get_rubber_report_history(request):
 
-    history = Rubber_Query_history.objects.filter(query_date__date = date)
+    history = Rubber_Query_history.objects.all()
 
     data = [
         {
