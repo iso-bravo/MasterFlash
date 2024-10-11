@@ -120,37 +120,37 @@ const ScrapSummary = () => {
                         <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
                             <tr>
                                 <th scope='col' className='px-6 py-3'>
-                                    Date
+                                    Fecha
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
                                     MP
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Shift
+                                    Turno
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
                                     Auditor QC
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Molder Number
+                                    No.moldeador
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Part Number
+                                    No. Parte
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Compound
+                                    Compuesto
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Caliber
+                                    Calibre
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Total Pieces
+                                    Total de piezas
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Rubber Weight
+                                    Peso del hule
                                 </th>
                                 <th scope='col' className='px-6 py-3'>
-                                    Insert Weight w/ Rubber
+                                    Peso Inserto con Hule
                                 </th>
                                 <th scope='col' className='px-6 py-3'></th>
                             </tr>
