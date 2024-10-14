@@ -14,6 +14,9 @@ import ScrapSummary from './pages/ScrapSummary';
 import ParamsRegister from './pages/ParamsRegister';
 import RubberReportsMenu from './pages/RubberReportsMenu';
 import WareHouseShipsHistory from './pages/WareHouseShipsHistory';
+import PartNumMenu from './pages/PartNumMenu';
+import PartNumCataloge from './pages/PartNumCataloge';
+import PartNumCreation from './pages/PartNumCreation';
 
 function App() {
     return (
@@ -33,6 +36,9 @@ function App() {
             <Route path='/production_records' element={<ProductionRecordsMenu/>} />
             <Route path='/edit_production_record' element={<EditProductionRecords/>} />
             <Route path='/params_register' element={<ParamsRegister/>}/>
+            <Route path='/part_num' element={<PartNumMenu/>} />
+            <Route path='/part_num_cataloge' element={<PartNumCataloge/>} />
+            <Route path='/part_num_creation' element={<PartNumCreation/>} />
         </Routes>
         </Router>
     );
