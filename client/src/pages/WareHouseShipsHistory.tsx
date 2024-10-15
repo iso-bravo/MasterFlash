@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axiosConfig';
+import { FaPlus } from 'react-icons/fa';
 
 interface reportHistory {
     query_date: string;
@@ -89,6 +90,12 @@ const WareHouseShipsHistory = () => {
                         onChange={e => setSelectedCompound(e.target.value)}
                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     />
+                </div>
+                <div className='ml-3'>
+                    <button className='flex items-center gap-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'>
+                        <FaPlus />
+                        <span>Nuevo envio</span>
+                    </button>
                 </div>
             </section>
             <section className='relative overflow-x-auto shadow-md sm:rounded-lg mt-7 '>
