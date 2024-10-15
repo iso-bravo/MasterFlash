@@ -949,7 +949,8 @@ def get_total_weight(request):
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-      
+
+
 @csrf_exempt
 def get_scrap_register_summary(request, date):
     # Convierte la fecha del parámetro
@@ -1001,7 +1002,6 @@ def delete_scrap_register(request, id):
 
 @csrf_exempt
 def get_rubber_report_history(request):
-
     history = Rubber_Query_history.objects.all()
 
     data = [
@@ -1015,4 +1015,30 @@ def get_rubber_report_history(request):
         for h in history
     ]
 
-    return JsonResponse(data,safe=False)
+    return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_part_nums(request):
+    part_nums = Part_Number.objects.all()
+
+    data = [
+        {
+            "part_number": p.part_number,
+            "client": p.client,
+            "box": p.box,
+            "pieces_x_box": p.pieces_x_box,
+            "rubber_compound": p.rubber_compound,
+            "standard": p.standard,
+            "pallet": p.pallet,
+            "box_x_pallet": p.box_x_pallet,
+            "pieces_x_pallet": p.pieces_x_pallet,
+            "mold": p.mold,
+            "insert": p.insert,
+            "caliber": p.caliber,
+            "gripper": p.gripper,
+        }
+        for p in part_nums
+    ]
+
+    return JsonResponse(data, safe=False)
