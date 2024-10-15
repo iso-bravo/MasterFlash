@@ -15,7 +15,8 @@ const WareHouseShipsHistory = () => {
     const navigate = useNavigate();
     const [historyData, setHistoryData] = useState<reportHistory[]>([]);
     const [filteredData, setFilteredData] = useState<reportHistory[]>([]);
-    const [selectedQueryDate, setSelectedQueryDate] = useState<string>('');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
     const [selectedCompound, setSelectedCompound] = useState<string>('');
 
     useEffect(() => {
@@ -33,17 +34,18 @@ const WareHouseShipsHistory = () => {
 
     useEffect(() => {
         const filtered = historyData.filter(item => {
-            const queryDate = item.query_date.split('T')[0]; // Esto obtiene solo la fecha en formato YYYY-MM-DD
+            const queryDate = item.query_date.split('T')[0]; // Obtener solo la fecha en formato YYYY-MM-DD
 
-            // Comparar solo la fecha
-            const matchesDate = !selectedQueryDate || queryDate === selectedQueryDate;
+            // Verificar si el query_date está dentro del rango
+            const matchesDateRange = (!startDate || queryDate >= startDate) && (!endDate || queryDate <= endDate);
+
             const matchesCompound =
                 !selectedCompound || item.compound.toLowerCase().includes(selectedCompound.toLowerCase());
 
-            return matchesDate && matchesCompound;
+            return matchesDateRange && matchesCompound;
         });
         setFilteredData(filtered);
-    }, [selectedQueryDate, selectedCompound, historyData]);
+    }, [startDate, endDate, selectedCompound, historyData]);
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -53,14 +55,26 @@ const WareHouseShipsHistory = () => {
             </header>
             <section className='flex justify-end p-4'>
                 <div className='mr-3'>
-                    <label htmlFor='query_date' className='block mb-2 text-sm font-medium text-gray-900'>
-                        Query Date
+                    <label htmlFor='start_date' className='block mb-2 text-sm font-medium text-gray-900'>
+                        Fecha Inicio
                     </label>
                     <input
                         type='date'
-                        name='query_date'
-                        value={selectedQueryDate}
-                        onChange={e => setSelectedQueryDate(e.target.value)}
+                        name='start_date'
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                    />
+                </div>
+                <div className='mr-3'>
+                    <label htmlFor='end_date' className='block mb-2 text-sm font-medium text-gray-900'>
+                        Fecha Fin
+                    </label>
+                    <input
+                        type='date'
+                        name='end_date'
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     />
                 </div>
@@ -100,7 +114,7 @@ const WareHouseShipsHistory = () => {
                     </thead>
                     <tbody>
                         {filteredData.map((item, index) => (
-                            <tr key={index}>
+                            <tr key={index} className='odd:bg-white even:bg-gray-50 border-b'>
                                 <td className='px-6 py-3'>{item.query_date.split('T')[0]}</td>
                                 <td className='px-6 py-3'>{item.start_date}</td>
                                 <td className='px-6 py-3'>{item.end_date}</td>
