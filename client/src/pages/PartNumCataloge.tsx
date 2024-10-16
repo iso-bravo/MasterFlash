@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axiosConfig';
+import { FaPlus } from 'react-icons/fa';
 
 interface PartNum {
     part_number: string | null;
@@ -42,9 +43,18 @@ const PartNumCataloge = () => {
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/part_num')} />
+                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
                 <h1 className='text-xl'>Catálogo de Números de Parte</h1>
             </header>
+            <section className='flex justify-end'>
+                <button
+                    className='flex items-center gap-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
+                    onClick={() => navigate('/part_num_creation')}
+                >
+                    <FaPlus />
+                    <span>Nuevo número de parte</span>
+                </button>
+            </section>
             <section className='relative overflow-x-auto shadow-md sm:rounded-lg mt-7 '>
                 {loading ? (
                     <p className='text-center'>Cargando datos...</p>
