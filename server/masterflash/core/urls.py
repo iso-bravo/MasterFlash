@@ -73,7 +73,7 @@ urlpatterns = [
     path(
         "get_rubber_report_history/",
         views.get_rubber_report_history,
-        name="get_rubber_report_history"
-    )
-
+        name="get_rubber_report_history",
+    ),
+    path("get_all_part_nums/", views.get_part_nums, name="get_all_part_nums"),
 ]

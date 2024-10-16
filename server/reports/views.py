@@ -211,6 +211,7 @@ def generate_rubber_report(request):
         # Guardar en el historial cada compuesto con sus propias fechas
         for compound in compounds_data:
             Rubber_Query_history.objects.create(
+                query_date = datetime.datetime.now(),
                 start_date=compound["startDate"],
                 end_date=compound["endDate"],
                 compound=compound["compound"],
