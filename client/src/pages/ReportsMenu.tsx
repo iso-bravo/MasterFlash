@@ -29,7 +29,7 @@ const ReportsMenu: React.FC = () => {
                 <div className='flex flex-col items-center justify-center'>
                     <div
                         className='flex flex-col w-14 items-center cursor-pointer'
-                        onClick={() => navigate('/rubber_menu')}
+                        onClick={() => navigate('/rubber_history')}
                     >
                         <div className=' bg-[#2459A9] p-2 rounded-sm'>
                             <SiRoundcube color='white' size={40} />
