@@ -12,7 +12,6 @@ import EditProductionRecords from './pages/EditProductionRecords';
 import RubberReport from './pages/RubberReport';
 import ScrapSummary from './pages/ScrapSummary';
 import ParamsRegister from './pages/ParamsRegister';
-import RubberReportsMenu from './pages/RubberReportsMenu';
 import WareHouseShipsHistory from './pages/WareHouseShipsHistory';
 import PartNumCataloge from './pages/PartNumCataloge';
 import PartNumCreation from './pages/PartNumCreation';
@@ -20,6 +19,7 @@ import PartNumCreation from './pages/PartNumCreation';
 function App() {
     return (
         <Router>
+
         <Routes>
             <Route path="/presses_states" element={<PressesStates />} />
             <Route path="/presses_production" element={<PressesProduction />} />
@@ -29,7 +29,6 @@ function App() {
             <Route path="/presses_register_production" element={<PressesRegisterProduction />} />
             <Route path="/reports_menu" element={<ReportsMenu/>} />
             <Route path="/scrap_report" element={<ScrapReport/>} />
-            <Route path='/rubber_menu' element={<RubberReportsMenu/>}/>
             <Route path='/rubber_history' element={<WareHouseShipsHistory/>} />
             <Route path="/rubber_report" element={<RubberReport/>} />
             <Route path='/production_records' element={<ProductionRecordsMenu/>} />
@@ -38,6 +37,7 @@ function App() {
             <Route path='/part_num' element={<PartNumCataloge/>} />
             <Route path='/part_num_creation' element={<PartNumCreation/>} />
         </Routes>
+
         </Router>
     );
 }
