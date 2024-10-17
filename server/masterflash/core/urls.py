@@ -66,7 +66,8 @@ urlpatterns = [
         views.get_mold_by_part_number,
         name="get_mold_by_part_number",
     ),
-
+    
+    path(
         "get_scrap_sumary/<str:date>",
         views.get_scrap_register_summary,
         name="get_scrap_register_summary",
