@@ -211,6 +211,8 @@ def generate_rubber_report(request):
         # Guardar en el historial cada compuesto con sus propias fechas
         for compound in compounds_data:
             Rubber_Query_history.objects.create(
+
+                query_date = datetime.datetime.now(),
                 start_date=compound["startDate"],
                 end_date=compound["endDate"],
                 compound=compound["compound"],
@@ -351,7 +353,7 @@ def generate_rubber_report(request):
                 elements.append(table)
 
                 # Agregar un salto de página
-                elements.append(PageBreak())
+                elements.append(Spacer(1,16))
 
             doc.build(elements)
             buffer.seek(0)

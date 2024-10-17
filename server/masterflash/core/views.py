@@ -9,6 +9,7 @@ from .models import (
     LinePress,
     Part_Number,
     Production_records,
+    Rubber_Query_history,
     StateBarwell,
     StatePress,
     StateTroquelado,
@@ -582,7 +583,6 @@ def search_weight(request):
         "Ito. s/hule": weight,
     }
 
-
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
         gripper_weight = getattr(gripper_record, "weight", None)
@@ -944,9 +944,12 @@ def get_total_weight(request):
         )
         print(records)
 
+        total_weight = round(total_weight, 2)
+
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
 
 
 def get_mold_by_part_number(request, part_number):
@@ -956,3 +959,95 @@ def get_mold_by_part_number(request, part_number):
     except Part_Number.DoesNotExist:
         raise Http404("Part number not found")
     
+
+@csrf_exempt
+def get_scrap_register_summary(request, date):
+    # Convierte la fecha del parámetro
+    try:
+        date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return JsonResponse(
+            {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
+        )
+
+    # Filtra los registros de acuerdo a la fecha
+    scrap_data = Qc_Scrap.objects.filter(date_time__date=date)
+
+    # Extrae los datos que necesitas de cada registro
+    result = list(
+        scrap_data.values(
+            "id",
+            "rubber_weight",
+            "total_pieces",
+            "insert_weight_w_rubber",
+            "date_time",
+            "shift",
+            "line",
+            "auditor_qc",
+            "molder_number",
+            "part_number",
+            "compound",
+            "caliber",
+        )
+    )
+
+    # Retorna la respuesta en formato JSON
+    return JsonResponse(result, safe=False)
+
+
+@csrf_exempt
+def delete_scrap_register(request, id):
+    if request.method == "DELETE":
+        try:
+            scrap_record = Qc_Scrap.objects.get(id=id)
+            scrap_record.delete()
+            return JsonResponse(
+                {"message": "Registro eliminado exitosamente."}, status=200
+            )
+        except Qc_Scrap.DoesNotExist:
+            return JsonResponse({"error": "Registro no encontrado."}, status=404)
+    return JsonResponse({"error": "Método no permitido."}, status=405)
+
+
+@csrf_exempt
+def get_rubber_report_history(request):
+    history = Rubber_Query_history.objects.all()
+
+    data = [
+        {
+            "query_date": h.query_date,
+            "start_date": h.start_date,
+            "end_date": h.end_date,
+            "compound": h.compound,
+            "total_weight": h.total_weight,
+        }
+        for h in history
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_part_nums(request):
+    part_nums = Part_Number.objects.all()
+
+    data = [
+        {
+            "part_number": p.part_number,
+            "client": p.client,
+            "box": p.box,
+            "pieces_x_box": p.pieces_x_box,
+            "rubber_compound": p.rubber_compound,
+            "standard": p.standard,
+            "pallet": p.pallet,
+            "box_x_pallet": p.box_x_pallet,
+            "pieces_x_pallet": p.pieces_x_pallet,
+            "mold": p.mold,
+            "insert": p.insert,
+            "caliber": p.caliber,
+            "gripper": p.gripper,
+        }
+        for p in part_nums
+    ]
+
+    return JsonResponse(data, safe=False)
