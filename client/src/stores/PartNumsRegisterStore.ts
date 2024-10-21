@@ -5,6 +5,7 @@ import {
     LabelsCavitiesFormValues,
     PaintScrapFormValues,
     PalletAssemblyFormValues,
+    PartNumberFormValues,
 } from '../types/PartNumsRegisterTypes';
 
 type FormState = {
@@ -21,6 +22,7 @@ type FormState = {
     updatePaintScrap: (data: PaintScrapFormValues) => void;
     updateLabelsCavities: (data: LabelsCavitiesFormValues) => void;
     updateImagesOthers: (data: ImagesOthersFormValues) => void;
+    updateAllFields: (data:PartNumberFormValues) => void;
 
     setSteps: (step: number) => void;
     calculateProgress: () => void;
@@ -29,7 +31,7 @@ type FormState = {
 
 export const usePartNumForm = create<FormState>((set, get) => ({
     // Estado inicial
-    step: 1,
+    step: 0,
     generalInfo: {},
     palletAssembly: {},
     paintScrap: {},
@@ -43,6 +45,65 @@ export const usePartNumForm = create<FormState>((set, get) => ({
     updatePaintScrap: data => set(state => ({ paintScrap: { ...state.paintScrap, ...data } })),
     updateLabelsCavities: data => set(state => ({ labelsCavities: { ...state.labelsCavities, ...data } })),
     updateImagesOthers: data => set(state => ({ imagesOthers: { ...state.imagesOthers, ...data } })),
+
+    updateAllFields: (data: PartNumberFormValues) => {
+        set({
+            generalInfo: {
+                part_number: data.part_number,
+                client: data.client,
+                box: data.box,
+                pieces_x_box: data.pieces_x_box,
+                rubber_compound: data.rubber_compound,
+                price: data.price,
+                standard: data.standard,
+            },
+            palletAssembly: {
+                pallet: data.pallet,
+                box_x_pallet: data.box_x_pallet,
+                pieces_x_pallet: data.pieces_x_pallet,
+                assembly: data.assembly,
+                accessories: data.accessories,
+                mold: data.mold,
+                instructive: data.instructive,
+                insert: data.insert,
+                gripper: data.gripper,
+            },
+            paintScrap: {
+                caliber: data.caliber,
+                paint: data.paint,
+                std_paint: data.std_paint,
+                painter: data.painter,
+                scrap: data.scrap,
+                box_logo: data.box_logo,
+            },
+            labelsCavities: {
+                cavities: data.cavities,
+                category: data.category,
+                type2: data.type2,
+                measurement: data.measurement,
+                special: data.special,
+                piece_label: data.piece_label,
+                qty_piece_labels: data.qty_piece_labels,
+                box_label: data.box_label,
+                qty_box_labels: data.qty_box_labels,
+                box_label_2: data.box_label_2,
+                qty_box_labels_2: data.qty_box_labels_2,
+                box_label_3: data.box_label_3,
+                qty_box_labels_3: data.qty_box_labels_3,
+            },
+            imagesOthers: {
+                made_in_mexico: data.made_in_mexico,
+                staples: data.staples,
+                image_piece_label: data.image_piece_label,
+                image_box_label: data.image_box_label,
+                image_box_label_2: data.image_box_label_2,
+                image_box_label_3: data.image_box_label_3,
+            },
+        });
+
+        // Calcula el progreso después de actualizar todos los campos
+        get().calculateProgress();
+    },
 
     // Cambia el paso actual
     setSteps: step => {
@@ -70,7 +131,7 @@ export const usePartNumForm = create<FormState>((set, get) => ({
     // Resetea el formulario
     resetForm: () => {
         set({
-            step: 1,
+            step: 0,
             generalInfo: {},
             palletAssembly: {},
             paintScrap: {},

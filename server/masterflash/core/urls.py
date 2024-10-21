@@ -70,7 +70,6 @@ urlpatterns = [
         views.get_scrap_register_summary,
         name="get_scrap_register_summary",
     ),
-    
     path(
         "delete_scrap_register/<int:id>",
         views.delete_scrap_register,
@@ -82,4 +81,14 @@ urlpatterns = [
         name="get_rubber_report_history",
     ),
     path("get_all_part_nums/", views.get_part_nums, name="get_all_part_nums"),
+    path(
+        "part-numbers/names/",
+        views.get_all_part_nums_names,
+        name="get_all_part_nums_names",
+    ),
+    path(
+        "part-numbers/<str:name>/",
+        views.get_part_num_by_name,
+        name="get_part_num_by_name",
+    ),
 ]

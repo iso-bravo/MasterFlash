@@ -7,10 +7,11 @@ import useFormStore from '../stores/ParamsRegisterStore';
 import SecondPartFormStep from '../components/ParamsRegisterComponents/SecondPartFormStep';
 import ThirdFormStep from '../components/ParamsRegisterComponents/ThirdFormStep';
 import ProgressBar from '../components/ProgressBar';
+import { MdArrowBack } from 'react-icons/md';
 
 const ParamsRegister = () => {
     const navigate = useNavigate();
-    const { step, progress } = useFormStore();
+    const { step, setSteps, progress } = useFormStore();
 
     let formStep;
     switch (step) {
@@ -57,6 +58,7 @@ const ParamsRegister = () => {
                     </>
                 ) : (
                     <div className='flex-1'>
+                        <MdArrowBack size={30} onClick={() => setSteps(step - 1)} className='cursor-pointer' />
                         <ProgressBar progress={progress} />
                         <ProgressSummary />
                     </div>

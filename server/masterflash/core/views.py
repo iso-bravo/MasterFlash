@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import date, datetime, time, timedelta
+from django.forms import model_to_dict
 from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -951,14 +952,13 @@ def get_total_weight(request):
         return JsonResponse({"error": str(e)}, status=400)
 
 
-
 def get_mold_by_part_number(request, part_number):
     try:
-        part = Part_Number.objects.get(part_number = part_number)
-        return JsonResponse({'mold':part.mold})
+        part = Part_Number.objects.get(part_number=part_number)
+        return JsonResponse({"mold": part.mold})
     except Part_Number.DoesNotExist:
         raise Http404("Part number not found")
-    
+
 
 @csrf_exempt
 def get_scrap_register_summary(request, date):
@@ -1051,3 +1051,50 @@ def get_part_nums(request):
     ]
 
     return JsonResponse(data, safe=False)
+
+
+# ? Podría ser útil en el futuro
+# @csrf_exempt
+# def get_all_part_nums(request):
+#     part_nums = Part_Number.objects.all()
+#     data = serializers.serialize('json',part_nums)
+#     return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_all_part_nums_names(request):
+    search_query = request.GET.get("search", "")
+    part_nums = Part_Number.objects.filter(part_number__icontains=search_query).values(
+        "part_number"
+    )
+    return JsonResponse(list(part_nums), safe=False)
+
+
+@csrf_exempt
+def get_part_num_by_name(request, name):
+    part_num = Part_Number.objects.filter(part_number=name).first()
+    if part_num:
+        # Excluimos los campos de imagen
+        data = model_to_dict(
+            part_num,
+            exclude=[
+                "image_piece_label",
+                "image_box_label",
+                "image_box_label_2",
+                "image_box_label_3",
+            ],
+        )
+
+        # Añadimos las URLs de las imágenes si existen
+        if part_num.image_piece_label:
+            data["image_piece_label_url"] = part_num.image_piece_label.url
+        if part_num.image_box_label:
+            data["image_box_label_url"] = part_num.image_box_label.url
+        if part_num.image_box_label_2:
+            data["image_box_label_2_url"] = part_num.image_box_label_2.url
+        if part_num.image_box_label_3:
+            data["image_box_label_3_url"] = part_num.image_box_label_3.url
+
+        return JsonResponse(data, safe=False)
+    else:
+        return JsonResponse({"error": "Part number not found"}, status=404)

@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { GeneralInfoFormValues } from '../../types/PartNumsRegisterTypes';
 import { usePartNumForm } from '../../stores/PartNumsRegisterStore';
 
-
 const GeneralInfoForm: React.FC = () => {
     const { generalInfo, updateGeneralInfo, setSteps } = usePartNumForm();
 
@@ -14,13 +13,12 @@ const GeneralInfoForm: React.FC = () => {
         defaultValues: generalInfo,
     });
 
-    const onSubmit = (data:GeneralInfoFormValues) =>{
-        updateGeneralInfo(data)
+    const onSubmit = (data: GeneralInfoFormValues) => {
+        updateGeneralInfo(data);
         setSteps(2);
-    }
+    };
 
     return (
-        
         <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <div>
                 <label className='block mb-2 text-sm font-medium text-gray-900'>Part Number</label>
@@ -79,7 +77,7 @@ const GeneralInfoForm: React.FC = () => {
                 <label className='block mb-2 text-sm font-medium text-gray-900'>Price</label>
                 <input
                     type='number'
-                    step='0.01'
+                    step='0.001'
                     className={`bg-gray-50 border ${
                         errors.price ? 'border-red-500' : 'border-gray-300'
                     } text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
