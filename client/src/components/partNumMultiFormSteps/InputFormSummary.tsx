@@ -1,18 +1,32 @@
+import { toast } from 'react-toastify';
+import api from '../../config/axiosConfig';
 import { usePartNumForm } from '../../stores/PartNumsRegisterStore';
+import { PartNumberFormValues } from '../../types/PartNumsRegisterTypes';
 
 const InputFormSummary = () => {
     const { generalInfo, palletAssembly, paintScrap, labelsCavities, imagesOthers, resetForm } = usePartNumForm();
 
-    const handleRegister = () => {
-        // Aquí puedes realizar la lógica para enviar los datos a la BD
-        console.log({
-            generalInfo,
-            palletAssembly,
-            paintScrap,
-            labelsCavities,
-            imagesOthers,
-        });
-        resetForm(); 
+    const handleRegister = async () => {
+        // Crear un objeto JSON para los datos no relacionados con archivos
+        const formDataJson: PartNumberFormValues = {
+            ...generalInfo,
+            ...palletAssembly,
+            ...paintScrap,
+            ...labelsCavities,
+            ...imagesOthers,
+        };
+
+        console.log(formDataJson);
+
+        try {
+            const response = await api.post('/new/part-number/', formDataJson);
+            toast.success(response.data);
+            console.log(response.data);
+            resetForm();
+        } catch (error) {
+            toast.error('Error al registrar el número de parte');
+            console.error('Error al registrar el número de parte:', error);
+        }
     };
 
     return (

@@ -1098,3 +1098,62 @@ def get_part_num_by_name(request, name):
         return JsonResponse(data, safe=False)
     else:
         return JsonResponse({"error": "Part number not found"}, status=404)
+
+
+@csrf_exempt
+@require_POST
+def post_part_number(request):
+    try:
+        data = json.loads(request.body)
+        print(data)
+
+        if Part_Number.objects.filter(part_number=data.get("part_number")).exists():
+            return JsonResponse({"error": "El número de parte ya existe."}, status=400)
+
+        Part_Number.objects.create(
+            part_number=data.get("part_number"),
+            client=data.get("client"),
+            box=data.get("box"),
+            pieces_x_box=data.get("pieces_x_box"),
+            rubber_compound=data.get("rubber_compound"),
+            price=data.get("price"),
+            standard=data.get("standard"),
+            pallet=data.get("pallet"),
+            box_x_pallet=data.get("box_x_pallet"),
+            pieces_x_pallet=data.get("pieces_x_pallet"),
+            assembly=data.get("assembly"),
+            accessories=data.get("accessories"),
+            mold=data.get("mold"),
+            instructive=data.get("instructive"),
+            insert=data.get("insert"),
+            gripper=data.get("gripper"),
+            caliber=data.get("caliber"),
+            paint=data.get("paint"),
+            std_paint=data.get("std_paint"),
+            painter=data.get("painter"),
+            scrap=data.get("scrap"),
+            box_logo=data.get("box_logo"),
+            cavities=data.get("cavities"),
+            category=data.get("category"),
+            type2=data.get("type2"),
+            measurement=data.get("measurement"),
+            special=data.get("special"),
+            piece_label=data.get("piece_label"),
+            qty_piece_labels=data.get("qty_piece_labels"),
+            box_label=data.get("box_label"),
+            qty_box_labels=data.get("qty_box_labels"),
+            box_label_2=data.get("box_label_2"),
+            qty_box_labels_2=data.get("qty_box_labels_2"),
+            box_label_3=data.get("box_label_3"),
+            qty_box_labels_3=data.get("qty_box_labels_3"),
+            made_in_mexico=data.get("made_in_mexico"),
+            staples=data.get("staples"),
+            image_piece_label=data.get("image_piece_label"),
+            image_box_label=data.get("image_box_label"),
+            image_box_label_2=data.get("image_box_label_2"),
+            image_box_label_3=data.get("image_box_label_3"),
+        )
+
+        return JsonResponse({"message": "Part number created successfully"}, status=201)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)

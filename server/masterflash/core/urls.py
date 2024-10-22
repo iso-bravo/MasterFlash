@@ -91,4 +91,5 @@ urlpatterns = [
         views.get_part_num_by_name,
         name="get_part_num_by_name",
     ),
+    path("new/part-number/", views.post_part_number, name="post_new_part_number"),
 ]
