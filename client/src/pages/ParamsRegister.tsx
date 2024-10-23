@@ -2,15 +2,16 @@ import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import GeneralInfoFromStep from '../components/ParamsRegisterComponents/GeneralInfoFromStep';
-import ProgressBar from '../components/ParamsRegisterComponents/ProgressBar';
 import ProgressSummary from '../components/ParamsRegisterComponents/ProgressSummary';
 import useFormStore from '../stores/ParamsRegisterStore';
 import SecondPartFormStep from '../components/ParamsRegisterComponents/SecondPartFormStep';
 import ThirdFormStep from '../components/ParamsRegisterComponents/ThirdFormStep';
+import ProgressBar from '../components/ProgressBar';
+import { MdArrowBack } from 'react-icons/md';
 
 const ParamsRegister = () => {
     const navigate = useNavigate();
-    const { step } = useFormStore();
+    const { step, setSteps, progress } = useFormStore();
 
     let formStep;
     switch (step) {
@@ -51,13 +52,14 @@ const ParamsRegister = () => {
                     <>
                         <div className='flex-1'>{formStep}</div>
                         <div className='flex-1 md:w-1/3'>
-                            <ProgressBar />
+                            <ProgressBar progress={progress} />
                             <ProgressSummary />
                         </div>
                     </>
                 ) : (
                     <div className='flex-1'>
-                        <ProgressBar />
+                        <MdArrowBack size={30} onClick={() => setSteps(step - 1)} className='cursor-pointer' />
+                        <ProgressBar progress={progress} />
                         <ProgressSummary />
                     </div>
                 )}
