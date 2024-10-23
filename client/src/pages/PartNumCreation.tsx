@@ -14,7 +14,7 @@ import { MdArrowBack } from 'react-icons/md';
 
 const PartNumCreation = () => {
     const navigate = useNavigate();
-    const {setSteps, step, progress } = usePartNumForm();
+    const { setSteps, step, progress } = usePartNumForm();
 
     let formStep;
     switch (step) {
@@ -45,7 +45,7 @@ const PartNumCreation = () => {
     }
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
                 position='top-center'
                 autoClose={false}
@@ -60,9 +60,11 @@ const PartNumCreation = () => {
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/part_num')} />
                 <h1 className='text-xl'>Nuevo Número de parte</h1>
             </header>
-            <section className='flex flex-col gap-6 mt-4'>
+            <section className='flex flex-col gap-6 mt-4 overflow-auto'>
                 <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 flex-1'>
-                    <MdArrowBack size={30} onClick={() => setSteps(step - 1)} className='cursor-pointer' />
+                    {step > 0 && (
+                        <MdArrowBack size={30} onClick={() => setSteps(step - 1)} className='cursor-pointer' />
+                    )}
                     <ProgressBar progress={progress} />
                     {formStep}
                 </div>

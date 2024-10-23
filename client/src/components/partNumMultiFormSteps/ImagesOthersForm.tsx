@@ -19,7 +19,7 @@ const ImagesOthersForm: React.FC = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+        <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 grid grid-cols-1'>
             <div>
                 <label className='block mb-2 text-sm font-medium text-gray-900'>Made in Mexico</label>
                 <input

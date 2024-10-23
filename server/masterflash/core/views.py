@@ -1108,6 +1108,7 @@ def post_part_number(request):
         print(data)
 
         if Part_Number.objects.filter(part_number=data.get("part_number")).exists():
+            print("El número de parte ya existe")
             return JsonResponse({"error": "El número de parte ya existe."}, status=400)
 
         Part_Number.objects.create(
