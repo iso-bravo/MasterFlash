@@ -19,6 +19,7 @@ import PartNumCreation from './pages/PartNumCreation';
 function App() {
     return (
         <Router>
+
         <Routes>
             <Route path="/presses_states" element={<PressesStates />} />
             <Route path="/presses_production" element={<PressesProduction />} />
@@ -36,6 +37,7 @@ function App() {
             <Route path='/part_num' element={<PartNumCataloge/>} />
             <Route path='/part_num_creation' element={<PartNumCreation/>} />
         </Routes>
+
         </Router>
     );
 }
