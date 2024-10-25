@@ -15,29 +15,31 @@ import ParamsRegister from './pages/ParamsRegister';
 import WareHouseShipsHistory from './pages/WareHouseShipsHistory';
 import PartNumCataloge from './pages/PartNumCataloge';
 import PartNumCreation from './pages/PartNumCreation';
+import ConfigMenu from './pages/ConfigMenu';
+import ShiftConfig from './pages/ShiftConfig';
 
 function App() {
     return (
         <Router>
-
-        <Routes>
-            <Route path="/presses_states" element={<PressesStates />} />
-            <Route path="/presses_production" element={<PressesProduction />} />
-            <Route path="/" element={<Quality />} />
-            <Route path="/scrap_register" element={<ScrapRegister />} />
-            <Route path='/scrap_summary' element={<ScrapSummary />} />
-            <Route path="/presses_register_production" element={<PressesRegisterProduction />} />
-            <Route path="/reports_menu" element={<ReportsMenu/>} />
-            <Route path="/scrap_report" element={<ScrapReport/>} />
-            <Route path='/rubber_history' element={<WareHouseShipsHistory/>} />
-            <Route path="/rubber_report" element={<RubberReport/>} />
-            <Route path='/production_records' element={<ProductionRecordsMenu/>} />
-            <Route path='/edit_production_record' element={<EditProductionRecords/>} />
-            <Route path='/params_register' element={<ParamsRegister/>}/>
-            <Route path='/part_num' element={<PartNumCataloge/>} />
-            <Route path='/part_num_creation' element={<PartNumCreation/>} />
-        </Routes>
-
+            <Routes>
+                <Route path='/presses_states' element={<PressesStates />} />
+                <Route path='/presses_production' element={<PressesProduction />} />
+                <Route path='/' element={<Quality />} />
+                <Route path='/scrap_register' element={<ScrapRegister />} />
+                <Route path='/scrap_summary' element={<ScrapSummary />} />
+                <Route path='/presses_register_production' element={<PressesRegisterProduction />} />
+                <Route path='/reports_menu' element={<ReportsMenu />} />
+                <Route path='/scrap_report' element={<ScrapReport />} />
+                <Route path='/rubber_history' element={<WareHouseShipsHistory />} />
+                <Route path='/rubber_report' element={<RubberReport />} />
+                <Route path='/production_records' element={<ProductionRecordsMenu />} />
+                <Route path='/edit_production_record' element={<EditProductionRecords />} />
+                <Route path='/params_register' element={<ParamsRegister />} />
+                <Route path='/part_num' element={<PartNumCataloge />} />
+                <Route path='/part_num_creation' element={<PartNumCreation />} />
+                <Route path='/config' element={<ConfigMenu />} />
+                <Route path='set_shift' element={<ShiftConfig />} />
+            </Routes>
         </Router>
     );
 }
