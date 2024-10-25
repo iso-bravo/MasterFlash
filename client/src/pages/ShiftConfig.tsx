@@ -1,6 +1,8 @@
 import { ToastContainer } from 'react-toastify';
 import Header from '../components/Header';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { useState } from 'react';
+import api from '../config/axiosConfig';
 
 type ShiftConfigFormValues = {
     firstShiftStart: string;
@@ -11,6 +13,15 @@ type ShiftConfigFormValues = {
 
 const ShiftConfig = () => {
     const { register, handleSubmit } = useForm<ShiftConfigFormValues>();
+    const [shifts,setshifts] = useState<ShiftConfigFormValues>();
+
+    const fetchShifts = async() =>{
+        try {
+            api.get('/get_shift_schedule/');
+        } catch (error) {
+            
+        }
+    } 
 
     const onSubmit: SubmitHandler<ShiftConfigFormValues> = data => {
         console.log(data);
