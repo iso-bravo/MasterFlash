@@ -1,17 +1,14 @@
 import Scrap from '../assets/scrap.png';
-import { IoIosArrowBack } from 'react-icons/io';
 import { SiRoundcube } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 
 const ReportsMenu: React.FC = () => {
     const navigate = useNavigate();
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
-            <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
-                <h1 className='text-xl'>Reportes</h1>
-            </header>
+            <Header title='Reportes' />
 
             <section className='flex flex-row items-center justify-evenly h-full'>
                 <div className='flex flex-col items-center justify-center'>

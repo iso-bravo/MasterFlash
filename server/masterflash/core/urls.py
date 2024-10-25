@@ -81,4 +81,19 @@ urlpatterns = [
         name="get_rubber_report_history",
     ),
     path("get_all_part_nums/", views.get_part_nums, name="get_all_part_nums"),
+
+    path(
+        "part-numbers/names/",
+        views.get_all_part_nums_names,
+        name="get_all_part_nums_names",
+    ),
+    path(
+        "part-numbers/<str:name>/",
+        views.get_part_num_by_name,
+        name="get_part_num_by_name",
+    ),
+    path("new/part-number/", views.post_part_number, name="post_new_part_number"),
+    path("get_shift_schedule/", views.get_shift_schedule, name="get_shift_schedule"),
+    path("update_shift_schedule/", views.update_shift_schedule, name="update_shift_schedule"),
+
 ]
