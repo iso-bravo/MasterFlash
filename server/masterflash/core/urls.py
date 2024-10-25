@@ -65,7 +65,6 @@ urlpatterns = [
         views.get_mold_by_part_number,
         name="get_mold_by_part_number",
     ),
-
     path(
         "get_scrap_sumary/<str:date>",
         views.get_scrap_register_summary,
@@ -93,4 +92,6 @@ urlpatterns = [
         name="get_part_num_by_name",
     ),
     path("new/part-number/", views.post_part_number, name="post_new_part_number"),
+    path("get_shift_schedule/", views.get_shift_schedule, name="get_shift_schedule"),
+    path("update_shift_schedule/", views.update_shift_schedule, name="update_shift_schedule"),
 ]

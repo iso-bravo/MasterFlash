@@ -11,6 +11,7 @@ from .models import (
     Part_Number,
     Production_records,
     Rubber_Query_history,
+    ShiftSchedule,
     StateBarwell,
     StatePress,
     StateTroquelado,
@@ -1158,3 +1159,55 @@ def post_part_number(request):
         return JsonResponse({"message": "Part number created successfully"}, status=201)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+def get_shift_schedule(request):
+    try:
+        schedule = ShiftSchedule.objects.first()
+        if not schedule:
+            return JsonResponse({"error": "Shift schedule not found"}, status=404)
+
+        return JsonResponse(
+            {
+                "first_shift_start": schedule.first_shift_start,
+                "first_shift_end": schedule.first_shift_end,
+                "second_shift_start": schedule.second_shift_start,
+                "second_shift_end": schedule.second_shift_end,
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def update_shift_schedule(request):
+    try:
+        data = json.loads(request.body)
+        schedule, created = ShiftSchedule.objects.get_or_create(id=1)
+
+        schedule.first_shift_start = data.get(
+            "first_shift_start", schedule.first_shift_start
+        )
+        schedule.first_shift_end = data.get("first_shift_end", schedule.first_shift_end)
+        schedule.second_shift_start = data.get(
+            "second_shift_start", schedule.second_shift_start
+        )
+        schedule.second_shift_end = data.get(
+            "second_shift_end", schedule.second_shift_end
+        )
+
+        schedule.save()
+
+        return JsonResponse(
+            {
+                "message": "Shift schedule updated successfully",
+                "first_shift_start": schedule.first_shift_start,
+                "first_shift_end": schedule.first_shift_end,
+                "second_shift_start": schedule.second_shift_start,
+                "second_shift_end": schedule.second_shift_end,
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
