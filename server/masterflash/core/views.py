@@ -1168,14 +1168,14 @@ def get_shift_schedule(request):
         if not schedule:
             return JsonResponse({"error": "Shift schedule not found"}, status=404)
 
-            return JsonResponse(
-                {
-                    "first_shift_start": schedule.first_shift_start,
-                    "first_shift_end": schedule.first_shift_end,
-                    "second_shift_start": schedule.second_shift_start,
-                    "second_shift_end": schedule.second_shift_end,
-                }
-            )
+        return JsonResponse(
+            {
+                "first_shift_start": schedule.first_shift_start,
+                "first_shift_end": schedule.first_shift_end,
+                "second_shift_start": schedule.second_shift_start,
+                "second_shift_end": schedule.second_shift_end,
+            }
+        )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -1184,7 +1184,7 @@ def get_shift_schedule(request):
 @require_POST
 def update_shift_schedule(request):
     try:
-        data = request.data
+        data = json.loads(request.body)
         schedule, created = ShiftSchedule.objects.get_or_create(id=1)
 
         schedule.first_shift_start = data.get(

@@ -1,7 +1,7 @@
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import Header from '../components/Header';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
 
 type ShiftConfigFormValues = {
@@ -12,19 +12,42 @@ type ShiftConfigFormValues = {
 };
 
 const ShiftConfig = () => {
-    const { register, handleSubmit } = useForm<ShiftConfigFormValues>();
-    const [shifts,setshifts] = useState<ShiftConfigFormValues>();
+    const { register, handleSubmit, setValue } = useForm<ShiftConfigFormValues>();
+    const [shifts, setShifts] = useState<ShiftConfigFormValues>();
 
-    const fetchShifts = async() =>{
+    const fetchShifts = async () => {
         try {
-            api.get('/get_shift_schedule/');
-        } catch (error) {
-            
-        }
-    } 
+            const response = await api.get('/get_shift_schedule/');
+            setShifts(response.data);
 
-    const onSubmit: SubmitHandler<ShiftConfigFormValues> = data => {
-        console.log(data);
+            // Establecer valores iniciales en el formulario
+            setValue('firstShiftStart', response.data.first_shift_start);
+            setValue('firstShiftEnd', response.data.first_shift_end);
+            setValue('secondShiftStart', response.data.second_shift_start);
+            setValue('secondShiftEnd', response.data.second_shift_end);
+        } catch (error) {
+            console.error('Error fetching shift schedule:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchShifts();
+    }, []);
+
+    const onSubmit: SubmitHandler<ShiftConfigFormValues> = async data => {
+        try {
+            const response = await api.post('/update_shift_schedule/', {
+                first_shift_start: data.firstShiftStart,
+                first_shift_end: data.firstShiftEnd,
+                second_shift_start: data.secondShiftStart,
+                second_shift_end: data.secondShiftEnd,
+            });
+            toast.success(response.data.message);
+            setShifts(data); // Actualizar el estado con los nuevos valores
+        } catch (error) {
+            console.error('Error updating shift schedule:', error);
+            toast.error('Error updating shift schedule');
+        }
     };
 
     return (
@@ -48,6 +71,7 @@ const ShiftConfig = () => {
                             <input
                                 type='time'
                                 id='firstShiftStart'
+                                value={shifts?.firstShiftStart}
                                 {...register('firstShiftStart')}
                                 className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer'
                             />
@@ -62,6 +86,7 @@ const ShiftConfig = () => {
                             <input
                                 type='time'
                                 id='firstShiftEnd'
+                                value={shifts?.firstShiftEnd}
                                 {...register('firstShiftEnd')}
                                 className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer'
                             />
@@ -79,6 +104,7 @@ const ShiftConfig = () => {
                             <input
                                 type='time'
                                 id='secondShiftStart'
+                                value={shifts?.secondShiftStart}
                                 {...register('secondShiftStart')}
                                 className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer'
                             />
@@ -93,6 +119,7 @@ const ShiftConfig = () => {
                             <input
                                 type='time'
                                 id='secondShiftEnd'
+                                value={shifts?.secondShiftEnd}
                                 {...register('secondShiftEnd')}
                                 className='block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer'
                             />
