@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
-import { MdArrowBack } from 'react-icons/md';
 import { toast } from 'react-toastify';
 
 const SecondPartFormStep = () => {
@@ -10,26 +9,26 @@ const SecondPartFormStep = () => {
     const options = Array.from({ length: 9 }, (_, i) => i + 1);
     const sectionTypes: SectionType[] = ['superior', 'inferior'];
 
-    useEffect(() => {
-        const fetchMold = async () => {
-            try {
-                const response = await api.get(`/get-mold/${initParams.partnum}`);
-                const fetchedMold = response.data.mold;
+    const fetchMold = async () => {
+        try {
+            const response = await api.get(`/get-mold/${initParams.partnum}`);
+            const fetchedMold = response.data.mold;
 
-                // Solo actualiza secondParams si el valor de mold ha cambiado
-                if (secondParams.mold !== fetchedMold) {
-                    setSecondParams({ ...secondParams, mold: fetchedMold });
-                }
-            } catch (error) {
-                console.error('Error fetching mold:', error);
+            // Solo actualiza secondParams si el valor de mold ha cambiado
+            if (secondParams.mold !== fetchedMold) {
+                setSecondParams({ ...secondParams, mold: fetchedMold });
             }
-        };
+        } catch (error) {
+            console.error('Error fetching mold:', error);
+        }
+    };
 
+    useEffect(() => {
         // Llama a la función solo si partnum no está vacío
         if (initParams.partnum) {
             fetchMold();
         }
-    }, [initParams.partnum, setSecondParams, secondParams]);
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -96,7 +95,6 @@ const SecondPartFormStep = () => {
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
             <form className='space-y-6' onSubmit={handleSubmit}>
-                <MdArrowBack size={30} onClick={() => setSteps(1)} className='cursor-pointer' />
                 <h5 className='text-xl font-medium text-gray-900'>Segunda parte</h5>
                 <div className='grid grid-cols-2 gap-4'>
                     <div>

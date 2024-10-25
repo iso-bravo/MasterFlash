@@ -1,4 +1,3 @@
-import { MdArrowBack } from 'react-icons/md';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -90,7 +89,6 @@ const ThirdFormStep = () => {
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
             <form onSubmit={handleSubmit} className=' space-y-6'>
-                <MdArrowBack size={30} onClick={() => setSteps(2)} className='cursor-pointer' />
                 <h5 className='text-xl font-medium text-gray-900'>
                     {initParams.icc ? 'Registro ICC' : 'Registro de paredes'}
                 </h5>
