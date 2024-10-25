@@ -1,24 +1,34 @@
 from datetime import date, time,datetime
-import logging
 from django.db.models import Q,Sum
 
-from masterflash.core.models import LinePress, Presses_monthly_goals, ProductionPress, StatePress
+from masterflash.core.models import LinePress, Presses_monthly_goals, ProductionPress, ShiftSchedule, StatePress
 
-def set_shift(current_time:time)->str:
-    if time(5, 0) <= current_time <= time(16, 35):
-        return 'First'
-    elif time(16, 36) <= current_time or current_time <= time(1, 20):
-        return 'Second'
+def set_shift(current_time: time) -> str:
+    # Obtiene el registro de horarios de la base de datos
+    try:
+        schedule = ShiftSchedule.objects.get(
+            id=1
+        )  # Ajusta si usas otro ID o condiciones
+    except ShiftSchedule.DoesNotExist:
+        return "Free"  # En caso de no existir el registro, retornar 'Free'
+
+    first_shift_start = schedule.first_shift_start
+    first_shift_end = schedule.first_shift_end
+    second_shift_start = schedule.second_shift_start
+    second_shift_end = schedule.second_shift_end
+
+    # Comprobación de turno usando los valores de base de datos
+    if first_shift_start <= current_time <= first_shift_end:
+        return "First"
+    elif second_shift_start <= current_time or current_time <= second_shift_end:
+        return "Second"
     else:
-        return 'Free' 
+        return "Free"
 
 
 def sum_pieces(machine, shift, current_date):
-        logger = logging.getLogger(__name__)    
         last_record = ProductionPress.objects.filter(press=machine.name).order_by('-date_time').first()
 
-        #logger.error(f'machine: {machine.name}')
-        #logger.error(f'last_record: {last_record}')
 
         if not last_record:
             return 0
@@ -27,8 +37,6 @@ def sum_pieces(machine, shift, current_date):
         work_order = last_record.work_order
         pieces_sum = 0
         
-        #logger.error(f'last_record: {machine.name}')
-        #logger.error(f'shift: {shift}')
         if shift == 'First':
             records = ProductionPress.objects.filter(
                 press=machine.name,
@@ -50,8 +58,6 @@ def sum_pieces(machine, shift, current_date):
         while current_record and current_record.part_number == part_number and current_record.work_order == work_order:
             pieces_sum += current_record.pieces_ok or 0
             current_record = next(record_iterator, None)
-        #logger.error(f'pieces_sum: {pieces_sum}')
-        #logger.error('------------------------------------------------------')
 
         return pieces_sum
 
