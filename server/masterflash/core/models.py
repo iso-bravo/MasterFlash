@@ -235,3 +235,13 @@ class Rubber_Query_history(models.Model):
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"
+
+
+class ShiftSchedule(models.Model):
+    first_shift_start = models.TimeField(default="05:00")
+    first_shift_end = models.TimeField(default="16:35")
+    second_shift_start = models.TimeField(default="16:36")
+    second_shift_end = models.TimeField(default="01:20")
+
+    def __str__(self):
+        return f"Shift Schedule: first shift from {self.first_shift_start} until {self.first_shift_end}, second shift from {self.second_shift_start} until {self.second_shift_end}"
