@@ -42,7 +42,7 @@ const ShiftConfig = () => {
                 second_shift_start: data.secondShiftStart,
                 second_shift_end: data.secondShiftEnd,
             });
-            toast.success(response.data.message);
+            toast.success("Cambio en turno guardado");
             setShifts(data); // Actualizar el estado con los nuevos valores
         } catch (error) {
             console.error('Error updating shift schedule:', error);
