@@ -82,23 +82,28 @@ const useFormStore = create<FormState>((set, get) => ({
 
     // Calcular el progreso en función de los datos ingresados
     calculateProgress: () => {
-        const { initParams, secondParams, iccParams, thirdParams } = get();
+        const { initParams, secondParams, iccParams, thirdParams} = get();
         let filledSteps = 0;
-        const totalSteps = 3;
+        const totalSteps = 4;
 
+        // Verifica los datos del paso 1
         if (initParams.partnum && initParams.auditor && initParams.turn && initParams.mp && initParams.molder) {
             filledSteps++;
         }
+        // Verifica los datos del paso 2
         if (secondParams.mold && secondParams.cavities && secondParams.metal) {
             filledSteps++;
         }
-        if (iccParams && iccParams.batch && iccParams.julian) {
-            filledSteps++;
-        } else if (thirdParams && thirdParams.batch && thirdParams.ts2) {
+        // Verifica los datos del paso 3 (ya sea iccParams o thirdParams, basado en `icc`)
+        if (
+            (iccParams && iccParams.batch && iccParams.julian) ||
+            (thirdParams && thirdParams.batch && thirdParams.ts2)
+        ) {
             filledSteps++;
         }
 
-        const progress = (filledSteps / totalSteps) * 100;
+        // Calcula el progreso según los pasos completados
+        const progress = Math.min((filledSteps / totalSteps) * 100, 100);
         set({ progress });
     },
 

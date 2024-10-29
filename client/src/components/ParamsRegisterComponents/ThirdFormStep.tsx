@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { IccParamsRegister, ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 
+type ParamsRegister = IccParamsRegister | ThirdParamsRegister;
+
 const ThirdFormStep = () => {
     const { initParams, secondParams, iccParams, thirdParams, setSteps, setThirdParams, setIccParams } = useFormStore();
 
@@ -13,13 +15,13 @@ const ThirdFormStep = () => {
         watch,
         setValue,
         formState: { errors, isValid },
-    } = useForm<IccParamsRegister | ThirdParamsRegister>({
+    } = useForm<ParamsRegister>({
         mode: 'onChange',
         defaultValues: {
             batch: initParams.icc ? iccParams?.batch || '' : thirdParams?.batch || '',
-            julian: iccParams?.julian,
-            ts2: thirdParams?.ts2,
-            cavities_arr: Array(secondParams.cavities).fill([0, 0, 0, 0]),
+            julian: initParams.icc ? iccParams?.julian : undefined,
+            ts2: initParams.icc ? undefined : thirdParams?.ts2,
+            cavities_arr: Array(secondParams.cavities || 1).fill([0, 0, 0, 0]),
         },
     });
 
@@ -33,7 +35,7 @@ const ThirdFormStep = () => {
         }
     }, [cavitiesData]);
 
-    const onSubmit: SubmitHandler<IccParamsRegister | ThirdParamsRegister> = data => {
+    const onSubmit: SubmitHandler<ParamsRegister> = data => {
         if (!data.batch) {
             toast.error('Por favor, completa el campo Batch.');
             return;
@@ -60,7 +62,18 @@ const ThirdFormStep = () => {
             return;
         }
 
-        setSteps(4);
+        // Actualización de estado global
+        try {
+            if (initParams.icc) {
+                setIccParams(data as IccParamsRegister);
+            } else {
+                setThirdParams(data as ThirdParamsRegister);
+            }
+            setSteps(4); // Sólo cambia el paso si no hay errores
+        } catch (error) {
+            console.error('Error setting params: ', error);
+            toast.error('Ocurrió un error al procesar los datos.');
+        }
     };
 
     return (
@@ -95,7 +108,9 @@ const ThirdFormStep = () => {
                                     {...register('julian', { required: initParams.icc })}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
-                                {errors.julian && <span className='text-red-500 text-sm'>Campo requerido</span>}
+                                {(errors as { julian?: number | undefined })?.julian && (
+                                    <span className='text-red-500 text-sm'>Campo requerido</span>
+                                )}
                             </>
                         ) : (
                             <>
@@ -109,7 +124,9 @@ const ThirdFormStep = () => {
                                     {...register('ts2', { required: !initParams.icc })}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
-                                {errors.ts2 && <span className='text-red-500 text-sm'>Campo requerido</span>}
+                                {(errors as { ts2?: number | undefined })?.ts2 && (
+                                    <span className='text-red-500 text-sm'>Campo requerido</span>
+                                )}
                             </>
                         )}
                     </div>

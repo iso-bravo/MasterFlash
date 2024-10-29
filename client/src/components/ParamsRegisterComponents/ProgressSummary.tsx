@@ -33,7 +33,7 @@ const ProgressSummary = () => {
                                     ))}
                                 </ul>
                             ) : (
-                                <span>{value.toString()}</span>
+                                <span>{value !== undefined && value !== null ? value.toString() : 'N/A'}</span>
                             )}
                         </li>
                     ))}
