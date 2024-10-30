@@ -7,14 +7,31 @@ import '../index.css';
 import '../output.css';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
+import ConfirmationPopUp from '../components/ConfirmationPopUp';
 //import Cookies from 'js-cookie';
+// Part number para probar  RF101GS-RD-P
 
 interface InputFields {
     date: string;
     shift: string;
     line: string;
     auditor: string;
-    inputs: string[];
+    molder: string;
+    inputs: {
+        partNumber: string;
+        compound: string;
+        insert: string;
+        gripper: string;
+        metal: string;
+        insertWithoutRubber: string;
+        gripperWithoutRubber: string;
+        rubberWeight: string;
+        insertWithRubber: string;
+        gripperWithRubber: string;
+        recycledInserts: string;
+        totalInserts: string;
+        totalGrippers: string;
+    };
     codes: { [key: string]: string };
 }
 
@@ -24,22 +41,39 @@ const ScrapRegister: React.FC = () => {
         shift: '',
         line: '',
         auditor: '',
-        inputs: Array(11).fill(''),
+        molder: '',
+        inputs: {
+            partNumber: '',
+            compound: '',
+            insert: '',
+            gripper: '0',
+            metal: '',
+            insertWithoutRubber: '',
+            gripperWithoutRubber: '0',
+            rubberWeight: '',
+            insertWithRubber: '',
+            gripperWithRubber: '0',
+            recycledInserts: '',
+            totalInserts: '',
+            totalGrippers: '0',
+        },
         codes: {},
     });
 
     const [machines, setMachines] = useState<string[]>([]);
+    const [showModal, setShowModal] = useState(false);
 
     const inputs = [
         'No. Parte',
-        'Moldeador',
         'Compuesto',
         'Inserto',
         'Gripper',
         'Metal',
+        'Inserto s/hule',
+        'Gripper s/hule',
         'Peso Hule',
         'Inserto c/hule',
-        'Inserto s/hule',
+        'Gripper c/hule',
         'Incertos Reciclados',
         'Total Insertos',
         'Total grippers',
@@ -100,23 +134,110 @@ const ScrapRegister: React.FC = () => {
         fetchMachines();
     }, []);
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-        type: string,
-        index: number | null = null,
-    ) => {
+    const keyMaker = (input: string) => {
+        switch (input) {
+            case 'No. Parte':
+                return 'partNumber';
+            case 'Compuesto':
+                return 'compound';
+            case 'Inserto':
+                return 'insert';
+            case 'Gripper':
+                return 'gripper';
+            case 'Metal':
+                return 'metal';
+            case 'Inserto s/hule':
+                return 'insertWithoutRubber';
+            case 'Gripper s/hule':
+                return 'gripperWithoutRubber';
+            case 'Peso Hule':
+                return 'rubberWeight';
+            case 'Inserto c/hule':
+                return 'insertWithRubber';
+            case 'Gripper c/hule':
+                return 'gripperWithRubber';
+            case 'Incertos Reciclados':
+                return 'recycledInserts';
+            case 'Total Insertos':
+                return 'totalInserts';
+            case 'Total grippers':
+                return 'totalGrippers';
+            default:
+                return '';
+        }
+    };
+
+    const inputMap = Object.fromEntries(inputs.map(input => [inputs.indexOf(input), keyMaker(input)]));
+
+    const handleOpenModal = () => {
+        const requiredFields: { [key: string]: string | undefined } = {
+            'No. Parte necesario': formData.inputs.partNumber,
+            'Fecha necesaria': formData.date,
+            'Prensa necesaria': formData.line,
+            'Turno necesario': formData.shift,
+            'Auditor necesario': formData.auditor,
+            'Moldeador necesario': formData.molder,
+            'Metal necesario': formData.inputs.metal,
+            'Inserto s/hule necesario': formData.inputs.insertWithoutRubber,
+            'Peso Hule necesario': formData.inputs.rubberWeight,
+            'Inserto. c/hule necesario': formData.inputs.insertWithRubber,
+            'Incertos Reciclados necesario': formData.inputs.recycledInserts,
+            'Total Insertos necesario': formData.inputs.totalInserts,
+        };
+
+        if (formData.inputs.gripper) {
+            requiredFields['Total Grippers necesario'] = formData.inputs.totalGrippers;
+        }
+
+        for (const [message, value] of Object.entries(requiredFields)) {
+            if (!value) {
+                toast.error(message);
+                return;
+            }
+        }
+
+        // Validación de fecha
+        const today = new Date();
+        const selectedDate = new Date(formData.date);
+
+        if (selectedDate > today) {
+            toast.error('La fecha no puede ser mayor que la de hoy');
+            return;
+        }
+
+        // Validación de los códigos
+        const hasValidCode = Object.values(formData.codes).some(code => code.trim() !== '');
+        if (!hasValidCode) {
+            toast.error('Debe ingresar al menos un código');
+            return;
+        }
+
+        setShowModal(true);
+    };
+
+    const handleConfirm = async () => {
+        setShowModal(false);
+        await handleRegister();
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, type: string) => {
         const { name, value } = e.target;
 
         if (type === 'input') {
-            if (index !== null) {
-                const updatedInputs = [...formData.inputs];
-                updatedInputs[index] = value;
-                setFormData({ ...formData, inputs: updatedInputs });
-            }
+            setFormData(prevState => ({
+                ...prevState,
+                inputs: {
+                    ...prevState.inputs,
+                    [name]: value,
+                },
+            }));
         } else if (type === 'code') {
-            setFormData({ ...formData, codes: { ...formData.codes, [name]: value } });
+            setFormData(prevState => ({
+                ...prevState,
+                codes: { ...prevState.codes, [name]: value },
+            }));
         } else {
-            setFormData({ ...formData, [name]: value });
+            setFormData(prevState => ({ ...prevState, [name]: value }));
         }
     };
 
@@ -127,50 +248,21 @@ const ScrapRegister: React.FC = () => {
 
     const handleRegister = async () => {
         try {
-            const requiredFields: { [key: string]: string | undefined } = {
-                'No. Parte necesario': formData.inputs[0],
-                'Fecha necesaria': formData.date,
-                'Prensa necesaria': formData.line,
-                'Turno necesario': formData.shift,
-                'Auditor necesario': formData.auditor,
-                'Moldeador necesario': formData.inputs[1],
-                'Metal necesario': formData.inputs[5],
-                'Peso Hule necesario': formData.inputs[6],
-                'Inserto. c/hule necesario': formData.inputs[7],
-                'Inserto s/hule necesario': formData.inputs[8],
-                'Total Insertos necesario': formData.inputs[10],
-            };
-
-            if(formData.inputs[4]){
-                requiredFields['Total Grippers necesario'] = formData.inputs[11]
-            }
-
-            for (const [message, value] of Object.entries(requiredFields)) {
-                if (!value) {
-                    toast.error(message);
-                    return;
-                }
-            }
-
             const formattedDate = formatDate(formData.date);
 
-            const formBody = new URLSearchParams();
-            formBody.append('date', formattedDate);
-            formBody.append('shift', formData.shift);
-            formBody.append('line', formData.line);
-            formBody.append('auditor', formData.auditor);
+            const payload = {
+                date: formattedDate,
+                shift: formData.shift,
+                line: formData.line,
+                auditor: formData.auditor,
+                molder: formData.molder,
+                inputs: formData.inputs,
+                codes: formData.codes,
+            };
 
-            formData.inputs.forEach((input, index) => {
-                formBody.append(`inputs[${index}]`, input);
-            });
-
-            Object.keys(formData.codes).forEach(code => {
-                formBody.append(`codes[${code}]`, formData.codes[code]);
-            });
-
-            await api.post(`/register_scrap/`, formBody.toString(), {
+            await api.post(`/register_scrap/`, payload, {
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
             });
 
@@ -179,7 +271,22 @@ const ScrapRegister: React.FC = () => {
                 shift: '',
                 line: '',
                 auditor: '',
-                inputs: Array(12).fill(''),
+                molder: '',
+                inputs: {
+                    partNumber: '',
+                    compound: '',
+                    insert: '',
+                    gripper: '',
+                    metal: '',
+                    insertWithoutRubber: '',
+                    gripperWithoutRubber: '',
+                    rubberWeight: '',
+                    insertWithRubber: '',
+                    gripperWithRubber: '',
+                    recycledInserts: '',
+                    totalInserts: '',
+                    totalGrippers: '',
+                },
                 codes: {},
             });
 
@@ -192,9 +299,9 @@ const ScrapRegister: React.FC = () => {
 
     const handleSearchPartNumber = async () => {
         try {
-            const partNumber = formData.inputs[0];
+            const partNumber = formData.inputs.partNumber;
 
-            if (partNumber === '' || partNumber == null) {
+            if (!partNumber) {
                 toast.error('Favor de introducir No. Parte');
                 return;
             }
@@ -203,7 +310,6 @@ const ScrapRegister: React.FC = () => {
                 params: { part_number: partNumber },
             });
 
-            console.log(response.data);
             const {
                 Compuesto = '',
                 Inserto = '',
@@ -212,87 +318,101 @@ const ScrapRegister: React.FC = () => {
                 'Inserto s/hule': ItoSHule = '',
             } = response.data || {};
 
-            const updatedInputs = [...formData.inputs];
-            updatedInputs[2] = Compuesto;
-            updatedInputs[3] = Inserto;
-            updatedInputs[4] = Gripper;
-            updatedInputs[5] = Metal;
-            updatedInputs[8] = ItoSHule;
-
-            setFormData({ ...formData, inputs: updatedInputs });
-        } catch (error: any) {
-            if (error.response && error.response.status === 404) {
-                toast.error('No. Parte no existe');
-                const updatedInputs = [...formData.inputs];
-                updatedInputs[2] = '';
-                updatedInputs[3] = '';
-                updatedInputs[4] = '';
-                updatedInputs[5] = '';
-                updatedInputs[8] = '';
-                setFormData({ ...formData, inputs: updatedInputs });
-            } else {
-                console.error('Error fetching part number data:', error);
-            }
+            setFormData(prevState => ({
+                ...prevState,
+                inputs: {
+                    ...prevState.inputs,
+                    compound: Compuesto,
+                    insert: Inserto,
+                    gripper: Gripper,
+                    metal: Metal,
+                    insertWithoutRubber: ItoSHule,
+                },
+            }));
+        } catch (error) {
+            console.error('Error fetching part number data:', error);
+            toast.error('No. Parte no existe');
         }
     };
 
     const handleSearchMetal = async () => {
         try {
-            const metal = formData.inputs[5];
-            const inserto = formData.inputs[3];
+            const metal = formData.inputs.metal;
+            const inserto = formData.inputs.insert;
+            const gripper = formData.inputs.gripper;
 
-            if (metal === '' || metal == null || inserto === '' || inserto == null) {
+            if (!metal || !inserto) {
                 toast.error('Metal y/o Inserto faltantes');
                 return;
             }
 
-            const response = await api.get(`/search_weight`, {
-                params: { metal: metal, inserto: inserto },
-            });
-
-            const { 'Ito. s/hule': ItoSHule } = response.data;
-            const updatedInputs = [...formData.inputs];
-            updatedInputs[8] = ItoSHule;
-
-            setFormData({ ...formData, inputs: updatedInputs });
-            console.log(response.data);
-        } catch (error: any) {
-            if (error.response && error.response.status === 404) {
-                toast.error('Inserto s/hule no encontrado');
-                const updatedInputs = [...formData.inputs];
-                updatedInputs[8] = ' ';
+            if (!gripper) {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto },
+                });
+                const { 'Ito. s/hule': ItoSHule } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                    },
+                }));
             } else {
-                console.error('Error fetching metal data:', error);
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto, gripper },
+                });
+                const { 'Ito. s/hule': ItoSHule, Gripper: GripsHule } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                        gripperWithoutRubber: GripsHule,
+                    },
+                }));
             }
+        } catch (error) {
+            console.error('Error fetching metal data:', error);
+            toast.error('Inserto s/hule no encontrado');
         }
     };
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
-            <ToastContainer />
-            <div className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
+        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] min-h-screen'>
+            <ToastContainer
+                position='top-center'
+                autoClose={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                theme='colored'
+            />
+            <header className='flex items-start gap-3'>
+                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/scrap_summary')} />
                 <h1 className='text-xl'>Registro Scrap</h1>
-            </div>
+            </header>
 
-            <div className='lg:flex justify-end gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2'>
-                <div className='flex flex-row gap-2'>
-                    <h2>Fecha</h2>
+            <section className='lg:flex gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2 mt-8'>
+                <div>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>Fecha</label>
                     <input
                         name='date'
                         type='date'
                         value={formData.date}
                         onChange={e => handleChange(e, 'date')}
-                        className='rounded-sm w-32 h-6'
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     />
                 </div>
-                <div className='flex flex-row gap-2'>
-                    <h2>LIN-</h2>
+                <div>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>MP</label>
                     <select
                         name='line'
                         value={formData.line}
                         onChange={e => handleChange(e, 'line')}
-                        className='bg-white rounded-sm w-24 h-6 px-2 text-sm flex items-center'
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     >
                         <option value='' disabled>
                             {' '}
@@ -304,13 +424,13 @@ const ScrapRegister: React.FC = () => {
                         ))}
                     </select>
                 </div>
-                <div className='flex flex-row gap-2'>
-                    <h2>Turno</h2>
+                <div>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>Turno</label>
                     <select
                         name='shift'
                         value={formData.shift}
                         onChange={e => handleChange(e, 'shift')}
-                        className='bg-white rounded-sm w-16 h-6 px-2'
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     >
                         <option value='' disabled>
                             {' '}
@@ -319,81 +439,113 @@ const ScrapRegister: React.FC = () => {
                         <option value='2'>2</option>
                     </select>
                 </div>
-                <div className='flex flex-row gap-2'>
-                    <h2>Auditor</h2>
+                <div>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>Auditor</label>
                     <input
                         type='number'
                         name='auditor'
                         value={formData.auditor}
                         onChange={e => handleChange(e, 'auditor')}
-                        className='rounded-sm w-20 h-6'
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                     />
                 </div>
-                <button
-                    onClick={handleRegister}
-                    className='px-3 py-2 bg-[#9ADD57] rounded-md md:ml-4 text-lg lg:text-sm hover:bg-[#8ddd3e]'
-                >
-                    <h2>Registrar</h2>
-                </button>
-            </div>
+                <div>
+                    <label className='block mb-2 text-sm font-medium text-gray-900'>Moldeador</label>
+                    <input
+                        type='number'
+                        name='molder'
+                        value={formData.molder}
+                        onChange={e => handleChange(e, 'molder')}
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                    />
+                </div>
+            </section>
 
             <div className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
                 <div>
-                    <div className='grid gap-y-5 md:grid-cols-2 grid-cols-1 lg:grid-cols-1 '>
-                        {inputs.map((input, index) => (
-                            <div key={index} className='flex flex-row items-center lg:grid-cols-3 lg:grid xl:gap-10'>
-                                <label className='w-24'>{input}</label>
-                                {input === 'No. Parte' ? (
-                                    <>
+                    <div className='grid gap-y-5 md:grid-cols-2 gap-8 lg:grid-cols-1 grid-cols-1'>
+                        {inputs.map((input, index) => {
+                            const inputName = inputMap[index] as keyof typeof formData.inputs;
+
+                            return (
+                                <div
+                                    key={index}
+                                    className='flex flex-row items-center gap-2 lg:grid-cols-3 lg:grid xl:gap-10'
+                                >
+                                    <label className='block mb-2 w-full text-sm font-medium text-gray-900'>
+                                        {input}
+                                    </label>
+                                    {input === 'No. Parte' ? (
+                                        <>
+                                            <input
+                                                value={formData.inputs[inputName] || ''}
+                                                onChange={e => handleChange(e, 'input')}
+                                                name={inputMap[index]} // Importante agregar el name para manejar el campo
+                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                            />
+                                            <button
+                                                onClick={handleSearchPartNumber}
+                                                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                                            >
+                                                Buscar
+                                            </button>
+                                        </>
+                                    ) : input === 'Metal' ? (
+                                        <>
+                                            <input
+                                                value={formData.inputs[inputName] || ''}
+                                                onChange={e => handleChange(e, 'input')}
+                                                name={inputMap[index]}
+                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                            />
+                                            <button
+                                                onClick={handleSearchMetal}
+                                                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                                            >
+                                                Buscar
+                                            </button>
+                                        </>
+                                    ) : (
                                         <input
-                                            value={formData.inputs[index]}
-                                            onChange={e => handleChange(e, 'input', index)}
-                                            className='w-40 rounded-sm h-6'
+                                            value={formData.inputs[inputName] || ''}
+                                            onChange={e => handleChange(e, 'input')}
+                                            name={inputMap[index]}
+                                            className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
                                         />
-                                        <button
-                                            onClick={handleSearchPartNumber}
-                                            className='  lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
-                                        >
-                                            Buscar
-                                        </button>
-                                    </>
-                                ) : input === 'Metal' ? (
-                                    <>
-                                        <input
-                                            value={formData.inputs[index]}
-                                            onChange={e => handleChange(e, 'input', index)}
-                                            className='w-40 rounded-sm h-6'
-                                        />
-                                        <button
-                                            onClick={handleSearchMetal}
-                                            className=' lg:text-sm ml-2 px-2 py-1 bg-[#579fdd] rounded-sm text-lg md:text-lg hover:bg-[#448ccc]'
-                                        >
-                                            Buscar
-                                        </button>
-                                    </>
-                                ) : (
-                                    <input
-                                        value={formData.inputs[index]}
-                                        onChange={e => handleChange(e, 'input', index)}
-                                        className='w-40 rounded-sm h-6'
-                                    />
-                                )}
-                            </div>
-                        ))}
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
+                    <div className='justify-center mt-5 items-center'>
+                        <button
+                            onClick={handleOpenModal}
+                            className='focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
+                        >
+                            <h2>Registrar</h2>
+                        </button>
+                    </div>
+                    {formData && (
+                        <ConfirmationPopUp
+                            show={showModal}
+                            onClose={() => setShowModal(false)}
+                            onConfirm={handleConfirm}
+                            summary={formData}
+                        />
+                    )}
                 </div>
 
                 <div>
-                    <div className='mt-5 grid sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-4 gap-x-6 gap-y-5 justify-items-center lg:ml-12'>
+                    <div className='grid grid-cols-4 ml-8 gap-2 '>
                         {codes.map((code, index) => (
-                            <div key={index} className='flex flex-row items-center'>
-                                <label className='w-14'>{code}</label>
+                            <div key={index} className='flex flex-row items-center p-1'>
+                                <label className='block w-14 text-sm font-medium text-gray-900'>{code}</label>
                                 <input
                                     type='number'
                                     name={code}
                                     value={formData.codes[code] || ''}
                                     onChange={e => handleChange(e, 'code')}
-                                    className='w-4/6 rounded-sm h-6'
+                                    className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
                                 />
                             </div>
                         ))}
@@ -405,4 +557,3 @@ const ScrapRegister: React.FC = () => {
 };
 
 export default ScrapRegister;
-
