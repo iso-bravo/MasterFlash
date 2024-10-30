@@ -12,7 +12,7 @@ import OverWritePopUp from '../components/OverWritePopUp';
 interface DataItem {
     id: number;
     press: string;
-    employee_number: number;
+    molder_number: number;
     part_number: string;
     work_order: string;
     caliber: number | null;
@@ -24,6 +24,7 @@ interface DataItem {
     dead_time_cause_2: string;
     pieces_ok: number;
     efficiency: number;
+    proposed_efficiency: number;
     date_time: string;
     shift: string;
     editableField?: keyof DataItem;
@@ -36,16 +37,15 @@ const PressesRegisterProduction: React.FC = () => {
     const [editableData, setEditableData] = useState<DataItem[]>([]);
     const [selectedDate, setSelectedDate] = useState<string>(location.state?.date || '');
     const [selectedShift, setSelectedShift] = useState<string>(location.state?.shift || '');
-    const [showModal,setShowModal] = useState<boolean>(false);
-    const [overwrite,setOverwrite] = useState<boolean>(false);
-
+    const [showModal, setShowModal] = useState<boolean>(false);
+    const [overwrite, setOverwrite] = useState<boolean>(false);
 
     const groupDataItems = (data: DataItem[]): DataItem[] => {
         const groupedData: { [key: string]: DataItem } = {};
 
         data.forEach(item => {
             const partPrefix = item.part_number.split('-')[0];
-            const key = `${item.press}-${item.employee_number}-${partPrefix}`;
+            const key = `${item.press}-${item.molder_number}-${partPrefix}`;
 
             if (groupedData[key]) {
                 groupedData[key].pieces_ok += item.pieces_ok;
@@ -78,6 +78,7 @@ const PressesRegisterProduction: React.FC = () => {
 
             groupedData.forEach(item => {
                 item.efficiency = 0;
+                item.proposed_efficiency = 0;
             });
 
             console.log(groupedData);
@@ -131,9 +132,12 @@ const PressesRegisterProduction: React.FC = () => {
             const workedHrs = Number(value);
             if (workedHrs > 0) {
                 const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
+                const proposed_decimal = 100 * (newData[index].pieces_ok / (parseFloat(newData[index].proposed_standard) * workedHrs));
                 newData[index].efficiency = Number(decimal.toFixed(2));
+                newData[index].proposed_efficiency = Number(proposed_decimal.toFixed(2))
             } else {
                 newData[index].efficiency = 0;
+                newData[index].proposed_efficiency = 0;
             }
         }
 
@@ -146,7 +150,7 @@ const PressesRegisterProduction: React.FC = () => {
             shift: selectedShift,
             records: editableData.map(item => ({
                 press: item.press,
-                employee_number: item.employee_number,
+                molder_number: item.molder_number,
                 part_number: item.part_number,
                 work_order: item.work_order,
                 caliber: item.caliber || '',
@@ -158,6 +162,7 @@ const PressesRegisterProduction: React.FC = () => {
                 dead_time_cause_2: item.dead_time_cause_2 || '',
                 pieces_ok: item.pieces_ok,
                 efficiency: item.efficiency,
+                proposed_efficiency: item.proposed_efficiency,
             })),
             overwrite: overwrite,
         };
@@ -170,7 +175,7 @@ const PressesRegisterProduction: React.FC = () => {
             });
 
             if (response.data.status === 'exists') {
-                setShowModal(true); 
+                setShowModal(true);
             } else {
                 toast.success('Datos guardados exitosamente.');
             }
@@ -192,7 +197,7 @@ const PressesRegisterProduction: React.FC = () => {
                     shift: selectedShift,
                     records: editableData.map(item => ({
                         press: item.press,
-                        employee_number: item.employee_number,
+                        molder_number: item.molder_number,
                         part_number: item.part_number,
                         work_order: item.work_order,
                         caliber: item.caliber || '',
@@ -204,6 +209,7 @@ const PressesRegisterProduction: React.FC = () => {
                         dead_time_cause_2: item.dead_time_cause_2 || '',
                         pieces_ok: item.pieces_ok,
                         efficiency: item.efficiency,
+                        proposed_efficiency: item.proposed_efficiency,
                     })),
                     overwrite: true,
                 },
@@ -231,10 +237,10 @@ const PressesRegisterProduction: React.FC = () => {
         navigate(`/edit_production_record?${queryString}`);
     };
 
-    const calculateTotalProduction = (): number =>{
-        return editableData.reduce((total,item)=>total + item.pieces_ok,0);
-    }
-    
+    const calculateTotalProduction = (): number => {
+        return editableData.reduce((total, item) => total + item.pieces_ok, 0);
+    };
+
     return (
         <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
@@ -355,6 +361,9 @@ const PressesRegisterProduction: React.FC = () => {
                             <th scope='col' className='px-6 py-3'>
                                 Eficiencia
                             </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Eficiencia propuesta
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -363,7 +372,7 @@ const PressesRegisterProduction: React.FC = () => {
                                 <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
                                     {item.press}
                                 </th>
-                                <td className='px-6 py-4'>{item.employee_number}</td>
+                                <td className='px-6 py-4'>{item.molder_number}</td>
                                 <td className='px-6 py-4'>{item.work_order}</td>
                                 <td className='px-6 py-4'>{item.part_number}</td>
                                 <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'cavities')}>
@@ -462,6 +471,7 @@ const PressesRegisterProduction: React.FC = () => {
                                 </td>
                                 <td className='px-6 py-4'>{item.pieces_ok}</td>
                                 <td className='px-6 py-4'>{`${item.efficiency}%`}</td>
+                                <td className='px-6 py-4'>{`${item.proposed_efficiency}%`}</td>
                             </tr>
                         ))}
                     </tbody>

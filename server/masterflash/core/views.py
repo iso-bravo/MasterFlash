@@ -412,7 +412,7 @@ def get_production_press_by_date(request):
     ).values(
         "id",
         "press",
-        "employee_number",
+        "molder_number",
         "part_number",
         "work_order",
         "pieces_ok",
@@ -435,7 +435,7 @@ def get_production_press_by_date(request):
             combined_record = {
                 "id": record["id"],
                 "press": record["press"],
-                "employee_number": record["employee_number"],
+                "molder_number": record["molder_number"],
                 "part_number": record["part_number"],
                 "work_order": record["work_order"],
                 "caliber": part_number_record["caliber"],
