@@ -1,7 +1,7 @@
 import useFormStore from '../../stores/ParamsRegisterStore';
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, useWatch } from 'react-hook-form';
 import { IccParamsRegister, ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 
 type ParamsRegister = IccParamsRegister | ThirdParamsRegister;
@@ -12,7 +12,7 @@ const ThirdFormStep = () => {
     const {
         register,
         handleSubmit,
-        watch,
+        control,
         setValue,
         formState: { errors, isValid },
     } = useForm<ParamsRegister>({
@@ -21,19 +21,26 @@ const ThirdFormStep = () => {
             batch: initParams.icc ? iccParams?.batch || '' : thirdParams?.batch || '',
             julian: initParams.icc ? iccParams?.julian : undefined,
             ts2: initParams.icc ? undefined : thirdParams?.ts2,
-            cavities_arr: Array(secondParams.cavities || 1).fill([0, 0, 0, 0]),
+            cavities_arr: Array(secondParams.cavities).fill([0, 0, 0, 0]),
         },
     });
 
-    const cavitiesData = watch('cavities_arr');
+    const cavities_arr = useWatch({ control, name: 'cavities_arr' });
+
+    const handleCavityChange = (cavityIndex: number, valueIndex: number, value: number) => {
+        const updatedCavitiesArr = cavities_arr.map((cavity, index) =>
+            index === cavityIndex ? cavity.map((val, idx) => (idx === valueIndex ? value : val)) : cavity,
+        );
+        setValue('cavities_arr', updatedCavitiesArr);
+    };
 
     useEffect(() => {
         if (initParams.icc && iccParams) {
-            setIccParams({ ...iccParams, cavities_arr: cavitiesData });
+            setIccParams({ ...iccParams, cavities_arr: cavities_arr });
         } else if (thirdParams) {
-            setThirdParams({ ...thirdParams, cavities_arr: cavitiesData });
+            setThirdParams({ ...thirdParams, cavities_arr: cavities_arr });
         }
-    }, [cavitiesData]);
+    }, [cavities_arr]);
 
     const onSubmit: SubmitHandler<ParamsRegister> = data => {
         if (!data.batch) {
@@ -132,7 +139,7 @@ const ThirdFormStep = () => {
                     </div>
                 </div>
                 <div className='grid grid-cols-1 gap-4'>
-                    {cavitiesData.map((cavity: number[], cavityIndex: number) => (
+                    {cavities_arr.map((cavity: number[], cavityIndex: number) => (
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
                             <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavity {cavityIndex + 1}</h5>
                             <div className='grid grid-cols-4 gap-2'>
@@ -147,10 +154,7 @@ const ThirdFormStep = () => {
                                             min={0}
                                             value={value}
                                             onChange={e =>
-                                                setValue(
-                                                    `cavities_arr.${cavityIndex}.${valueIndex}`,
-                                                    Number(e.target.value),
-                                                )
+                                                handleCavityChange(cavityIndex, valueIndex, Number(e.target.value))
                                             }
                                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                         />

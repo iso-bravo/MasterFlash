@@ -44,7 +44,7 @@ const GeneralInfoFromStep = () => {
 
         // Sincroniza los datos con el store
         setInitParams(data);
-        setSteps(2); 
+        setSteps(2);
     };
 
     return (
@@ -93,7 +93,8 @@ const GeneralInfoFromStep = () => {
                                 {input}
                             </label>
                             <input
-                                type='text'
+                                type={input === 'partnum' ? 'text' : 'number'}
+                                min={0}
                                 id={input}
                                 {...register(input as keyof InitParamsRegister, { required: true })}
                                 className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'

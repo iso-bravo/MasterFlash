@@ -9,19 +9,24 @@ import { MdArrowBack } from 'react-icons/md';
 import Header from '../components/Header';
 
 const ParamsRegister = () => {
-    const { step, setSteps, progress } = useFormStore();
+    const { step, setSteps, progress, initParams, secondParams, thirdParams, iccParams } = useFormStore();
 
     let formStep;
     switch (step) {
         case 1:
             formStep = <GeneralInfoFromStep />;
+            console.log('init params: ', initParams);
             break;
 
         case 2:
             formStep = <SecondPartFormStep />;
+            console.log('init params: ', initParams);
+            console.log('second Part: ', secondParams);
             break;
         case 3:
             formStep = <ThirdFormStep />;
+            console.log('ICC: ', iccParams);
+            console.log('Third part: ', thirdParams);
             break;
 
         case 4:
