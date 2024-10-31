@@ -5,9 +5,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
 import '../index.css';
 import '../output.css';
-import { IoIosArrowBack } from 'react-icons/io';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OverWritePopUp from '../components/OverWritePopUp';
+import Header from '../components/Header';
 
 interface DataItem {
     id: number;
@@ -242,7 +242,7 @@ const PressesRegisterProduction: React.FC = () => {
     };
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
                 position='top-center'
                 autoClose={false}
@@ -259,10 +259,7 @@ const PressesRegisterProduction: React.FC = () => {
                 onConfirm={handleConfirmOverwrite}
                 message='Los datos ya existen. ¿Desea sobrescribirlos?'
             />
-            <header className='flex items-start gap-3 mb-4'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/production_records')} />
-                <h1 className='text-xl'>Registro Producción</h1>
-            </header>
+            <Header title='Registro Producción' goto='/press_production_records_summary' />
 
             <div className='grid grid-cols-3 items-center gap-4'>
                 <div className=' col-start-2 flex justify-center gap-4'>
