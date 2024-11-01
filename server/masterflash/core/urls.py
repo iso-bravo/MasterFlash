@@ -93,5 +93,19 @@ urlpatterns = [
     ),
     path("new/part-number/", views.post_part_number, name="post_new_part_number"),
     path("get_shift_schedule/", views.get_shift_schedule, name="get_shift_schedule"),
-    path("update_shift_schedule/", views.update_shift_schedule, name="update_shift_schedule"),
+    path(
+        "update_shift_schedule/",
+        views.update_shift_schedule,
+        name="update_shift_schedule",
+    ),
+    path(
+        "get_pieces_ok_by_date_range",
+        views.get_pieces_ok_by_date_range,
+        name="get_pieces_ok_by_date_range",
+    ),
+    path(
+        "get_record_by_id/<int:id>",
+        views.get_record_by_id,
+        name="get_production_record_by_id",
+    ),
 ]
