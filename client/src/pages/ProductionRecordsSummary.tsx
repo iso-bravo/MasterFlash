@@ -5,7 +5,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import api from '../config/axiosConfig';
 
 interface ProductionRecord {
-    id:number;
+    id: number;
     press: string;
     employee_number: number | null;
     part_number: string;
@@ -49,6 +49,7 @@ const ProductionRecordsSummary = () => {
                 start_date: firstDate,
                 end_date: endDate,
             });
+            console.log(response.data);
 
             const records: ProductionRecord[] = response.data;
             setTable(records);
@@ -62,6 +63,11 @@ const ProductionRecordsSummary = () => {
             fetchData();
         }
     }, [firstDate, endDate, fetchData]);
+
+    //TODO mantener fechas
+    const handleDetails = (id: number) => {
+        navigate(`/press_production_records_details?id=${id}`);
+    };
 
     return (
         <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -126,7 +132,18 @@ const ProductionRecordsSummary = () => {
                     <tbody>
                         {table.map((item, index) => (
                             <tr key={`${index}-${item.id}`} className='text-xs text-gray-700 uppercase bg-gray-50'>
-                                <th></th>
+                                <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
+                                    {item.date}
+                                </th>
+                                <td className='px-6 py-4'>{item.pieces_ok}</td>
+                                <td className='px-6 py-4'>
+                                    <a
+                                        className='font-medium text-blue-600 dark:text-blue-500 hover:underline cursor-pointer'
+                                        onClick={() => handleDetails(item.id)}
+                                    >
+                                        Detalles
+                                    </a>
+                                </td>
                             </tr>
                         ))}
                     </tbody>

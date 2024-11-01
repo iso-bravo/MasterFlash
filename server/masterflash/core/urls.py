@@ -103,4 +103,9 @@ urlpatterns = [
         views.get_pieces_ok_by_date_range,
         name="get_pieces_ok_by_date_range",
     ),
+    path(
+        "get_record_by_id/<int:id>",
+        views.get_record_by_id,
+        name="get_production_record_by_id",
+    ),
 ]

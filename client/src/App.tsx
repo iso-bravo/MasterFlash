@@ -18,6 +18,7 @@ import PartNumCreation from './pages/PartNumCreation';
 import ConfigMenu from './pages/ConfigMenu';
 import ShiftConfig from './pages/ShiftConfig';
 import ProductionRecordsSummary from './pages/ProductionRecordsSummary';
+import ProductionRecordsDetails from './pages/ProductionRecordsDetails';
 
 function App() {
     return (
@@ -35,7 +36,8 @@ function App() {
                 <Route path='/rubber_report' element={<RubberReport />} />
                 <Route path='/production_records' element={<ProductionRecordsMenu />} />
                 <Route path='/edit_production_record' element={<EditProductionRecords />} />
-                <Route path='/press_production_records_summary' element={<ProductionRecordsSummary/>} />
+                <Route path='/press_production_records_summary' element={<ProductionRecordsSummary />} />
+                <Route path='/press_production_records_details' element={<ProductionRecordsDetails />} />
                 <Route path='/params_register' element={<ParamsRegister />} />
                 <Route path='/part_num' element={<PartNumCataloge />} />
                 <Route path='/part_num_creation' element={<PartNumCreation />} />

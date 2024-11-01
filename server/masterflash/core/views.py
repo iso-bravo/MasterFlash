@@ -1261,3 +1261,17 @@ def get_pieces_ok_by_date_range(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def get_record_by_id(request, id):
+    try:
+        record = Production_records.objects.filter(id=id).values().first()
+
+        if record is None:
+            return JsonResponse({"error": "Record not found"}, status=404)
+
+        return JsonResponse(record, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
