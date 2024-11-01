@@ -20,7 +20,7 @@ const Quality: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className=' flex flex-col lg:p-2 bg-[#f4f4f4] h-full'>
+        <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <div className='flex flex-col items-center px-10 pt-7'>
                 <h1 className='w-3/4 text-xl text-start m-3'>Producción</h1>
                 <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
