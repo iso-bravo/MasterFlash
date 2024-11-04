@@ -34,7 +34,7 @@ const ProductionRecordsDetails = () => {
         const fetchRecord = async () => {
             try {
                 const response = await api.get(`/get_record_by_id/${id}`);
-                const data = response.data
+                const data = response.data;
                 console.log(response);
                 data.efficiency = parseFloat(data.efficiency);
                 data.worked_hrs = parseFloat(data.worked_hrs);
@@ -46,6 +46,11 @@ const ProductionRecordsDetails = () => {
         };
         fetchRecord();
     }, [id]);
+
+    const proposed_efficiency =
+        record?.pieces_ok && record?.proposed_standard && record?.worked_hrs
+            ? (100 * (record.pieces_ok / (record.proposed_standard * record.worked_hrs))).toFixed(2)
+            : 'N/A';
 
     return (
         <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -123,10 +128,7 @@ const ProductionRecordsDetails = () => {
                                 <td className='px-6 py-4 bg-yellow-300'>{record.dead_time_cause_2}</td>
                                 <td className='px-6 py-4'>{record.pieces_ok}</td>
                                 <td className='px-6 py-4'>{record.efficiency}</td>
-                                <td className='px-6 py-4'>
-                                    {/*TODO calculo de eficiencia propuesa */}
-                                    {record.efficiency ? record.efficiency.toFixed(2) : 'N/A'}
-                                </td>
+                                <td className='px-6 py-4'>{proposed_efficiency}</td>
                                 <td className='px-6 py-4'>{record.date}</td>
                                 <td className='px-6 py-4'>{record.shift}</td>
                                 <td className='px-6 py-4'>{record.mod_date}</td>
