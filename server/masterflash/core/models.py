@@ -61,7 +61,7 @@ class ProductionPress(models.Model):
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
     weight = models.FloatField(null=True, blank=True)
-    caliber = models.FloatField(null=True, blank=True)                         
+    caliber = models.FloatField(null=True, blank=True)
 
 
 def upload_path(filename):
@@ -164,7 +164,7 @@ class Qc_Scrap(models.Model):
     total_pieces = models.IntegerField(null=True, blank=True)
     rubber_weight = models.FloatField(null=True, blank=True)
     insert_weight_wout_rubber = models.FloatField(null=True, blank=True)
-    gripper_weight_wout_rubber = models.FloatField(null=True,blank=True)
+    gripper_weight_wout_rubber = models.FloatField(null=True, blank=True)
     insert_weight_w_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_w_rubber = models.FloatField(null=True, blank=True)
     recycled_inserts = models.IntegerField(null=True, blank=True)
@@ -227,7 +227,7 @@ class Production_records(models.Model):
 
 
 class Rubber_Query_history(models.Model):
-    query_date = models.DateTimeField(default=timezone.now)
+    query_date = models.DateTimeField()
     start_date = models.DateField()
     end_date = models.DateField()
     compound = models.CharField(max_length=100)
@@ -235,3 +235,13 @@ class Rubber_Query_history(models.Model):
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"
+
+
+class ShiftSchedule(models.Model):
+    first_shift_start = models.TimeField(default="05:00")
+    first_shift_end = models.TimeField(default="16:35")
+    second_shift_start = models.TimeField(default="16:36")
+    second_shift_end = models.TimeField(default="01:20")
+
+    def __str__(self):
+        return f"Shift Schedule: first shift from {self.first_shift_start} until {self.first_shift_end}, second shift from {self.second_shift_start} until {self.second_shift_end}"

@@ -1,14 +1,18 @@
 import json
 import logging
 from datetime import date, datetime, time, timedelta
-from django.http import HttpResponse, JsonResponse
+from django.forms import model_to_dict
+from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
+from django.utils.dateparse import parse_datetime
 
 from .models import (
     LinePress,
     Part_Number,
     Production_records,
+    Rubber_Query_history,
+    ShiftSchedule,
     StateBarwell,
     StatePress,
     StateTroquelado,
@@ -409,7 +413,7 @@ def get_production_press_by_date(request):
     ).values(
         "id",
         "press",
-        "employee_number",
+        "molder_number",
         "part_number",
         "work_order",
         "pieces_ok",
@@ -432,7 +436,7 @@ def get_production_press_by_date(request):
             combined_record = {
                 "id": record["id"],
                 "press": record["press"],
-                "employee_number": record["employee_number"],
+                "molder_number": record["molder_number"],
                 "part_number": record["part_number"],
                 "work_order": record["work_order"],
                 "caliber": part_number_record["caliber"],
@@ -948,7 +952,16 @@ def get_total_weight(request):
         return JsonResponse({"total_weight": total_weight or 0})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-      
+
+
+def get_mold_by_part_number(request, part_number):
+    try:
+        part = Part_Number.objects.get(part_number=part_number)
+        return JsonResponse({"mold": part.mold})
+    except Part_Number.DoesNotExist:
+        raise Http404("Part number not found")
+
+
 @csrf_exempt
 def get_scrap_register_summary(request, date):
     # Convierte la fecha del parámetro
@@ -996,3 +1009,269 @@ def delete_scrap_register(request, id):
         except Qc_Scrap.DoesNotExist:
             return JsonResponse({"error": "Registro no encontrado."}, status=404)
     return JsonResponse({"error": "Método no permitido."}, status=405)
+
+
+@csrf_exempt
+def get_rubber_report_history(request):
+    history = Rubber_Query_history.objects.all()
+
+    data = [
+        {
+            "query_date": h.query_date,
+            "start_date": h.start_date,
+            "end_date": h.end_date,
+            "compound": h.compound,
+            "total_weight": h.total_weight,
+        }
+        for h in history
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_part_nums(request):
+    part_nums = Part_Number.objects.all()
+
+    data = [
+        {
+            "part_number": p.part_number,
+            "client": p.client,
+            "box": p.box,
+            "pieces_x_box": p.pieces_x_box,
+            "rubber_compound": p.rubber_compound,
+            "standard": p.standard,
+            "pallet": p.pallet,
+            "box_x_pallet": p.box_x_pallet,
+            "pieces_x_pallet": p.pieces_x_pallet,
+            "mold": p.mold,
+            "insert": p.insert,
+            "caliber": p.caliber,
+            "gripper": p.gripper,
+        }
+        for p in part_nums
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+# ? Podría ser útil en el futuro
+# @csrf_exempt
+# def get_all_part_nums(request):
+#     part_nums = Part_Number.objects.all()
+#     data = serializers.serialize('json',part_nums)
+#     return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_all_part_nums_names(request):
+    search_query = request.GET.get("search", "")
+    part_nums = Part_Number.objects.filter(part_number__icontains=search_query).values(
+        "part_number"
+    )
+    return JsonResponse(list(part_nums), safe=False)
+
+
+@csrf_exempt
+def get_part_num_by_name(request, name):
+    part_num = Part_Number.objects.filter(part_number=name).first()
+    if part_num:
+        # Excluimos los campos de imagen
+        data = model_to_dict(
+            part_num,
+            exclude=[
+                "image_piece_label",
+                "image_box_label",
+                "image_box_label_2",
+                "image_box_label_3",
+            ],
+        )
+
+        # Añadimos las URLs de las imágenes si existen
+        if part_num.image_piece_label:
+            data["image_piece_label_url"] = part_num.image_piece_label.url
+        if part_num.image_box_label:
+            data["image_box_label_url"] = part_num.image_box_label.url
+        if part_num.image_box_label_2:
+            data["image_box_label_2_url"] = part_num.image_box_label_2.url
+        if part_num.image_box_label_3:
+            data["image_box_label_3_url"] = part_num.image_box_label_3.url
+
+        return JsonResponse(data, safe=False)
+    else:
+        return JsonResponse({"error": "Part number not found"}, status=404)
+
+
+@csrf_exempt
+@require_POST
+def post_part_number(request):
+    try:
+        data = json.loads(request.body)
+        print(data)
+
+        if Part_Number.objects.filter(part_number=data.get("part_number")).exists():
+            print("El número de parte ya existe")
+            return JsonResponse({"error": "El número de parte ya existe."}, status=400)
+
+        Part_Number.objects.create(
+            part_number=data.get("part_number"),
+            client=data.get("client"),
+            box=data.get("box"),
+            pieces_x_box=data.get("pieces_x_box"),
+            rubber_compound=data.get("rubber_compound"),
+            price=data.get("price"),
+            standard=data.get("standard"),
+            pallet=data.get("pallet"),
+            box_x_pallet=data.get("box_x_pallet"),
+            pieces_x_pallet=data.get("pieces_x_pallet"),
+            assembly=data.get("assembly"),
+            accessories=data.get("accessories"),
+            mold=data.get("mold"),
+            instructive=data.get("instructive"),
+            insert=data.get("insert"),
+            gripper=data.get("gripper"),
+            caliber=data.get("caliber"),
+            paint=data.get("paint"),
+            std_paint=data.get("std_paint"),
+            painter=data.get("painter"),
+            scrap=data.get("scrap"),
+            box_logo=data.get("box_logo"),
+            cavities=data.get("cavities"),
+            category=data.get("category"),
+            type2=data.get("type2"),
+            measurement=data.get("measurement"),
+            special=data.get("special"),
+            piece_label=data.get("piece_label"),
+            qty_piece_labels=data.get("qty_piece_labels"),
+            box_label=data.get("box_label"),
+            qty_box_labels=data.get("qty_box_labels"),
+            box_label_2=data.get("box_label_2"),
+            qty_box_labels_2=data.get("qty_box_labels_2"),
+            box_label_3=data.get("box_label_3"),
+            qty_box_labels_3=data.get("qty_box_labels_3"),
+            made_in_mexico=data.get("made_in_mexico"),
+            staples=data.get("staples"),
+            image_piece_label=data.get("image_piece_label"),
+            image_box_label=data.get("image_box_label"),
+            image_box_label_2=data.get("image_box_label_2"),
+            image_box_label_3=data.get("image_box_label_3"),
+        )
+
+        return JsonResponse({"message": "Part number created successfully"}, status=201)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+def get_shift_schedule(request):
+    try:
+        schedule = ShiftSchedule.objects.first()
+        if not schedule:
+            return JsonResponse({"error": "Shift schedule not found"}, status=404)
+
+        return JsonResponse(
+            {
+                "first_shift_start": schedule.first_shift_start,
+                "first_shift_end": schedule.first_shift_end,
+                "second_shift_start": schedule.second_shift_start,
+                "second_shift_end": schedule.second_shift_end,
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def update_shift_schedule(request):
+    try:
+        data = json.loads(request.body)
+        schedule, created = ShiftSchedule.objects.get_or_create(id=1)
+
+        schedule.first_shift_start = data.get(
+            "first_shift_start", schedule.first_shift_start
+        )
+        schedule.first_shift_end = data.get("first_shift_end", schedule.first_shift_end)
+        schedule.second_shift_start = data.get(
+            "second_shift_start", schedule.second_shift_start
+        )
+        schedule.second_shift_end = data.get(
+            "second_shift_end", schedule.second_shift_end
+        )
+
+        schedule.save()
+
+        return JsonResponse(
+            {
+                "message": "Shift schedule updated successfully",
+                "first_shift_start": schedule.first_shift_start,
+                "first_shift_end": schedule.first_shift_end,
+                "second_shift_start": schedule.second_shift_start,
+                "second_shift_end": schedule.second_shift_end,
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def get_pieces_ok_by_date_range(request):
+    try:
+        data = json.loads(request.body)
+        start_date = parse_datetime(data.get("start_date"))
+        end_date = parse_datetime(data.get("end_date"))
+
+        if not start_date or not end_date:
+            return JsonResponse(
+                {"error": "start_date and end_date are required"}, status=400
+            )
+
+        records = Production_records.objects.filter(date__range=(start_date, end_date))
+
+        # Serializa los datos
+        response_data = [
+            {
+                "id": record.id,
+                "press": record.press,
+                "employee_number": record.employee_number,
+                "part_number": record.part_number,
+                "work_order": record.work_order,
+                "caliber": record.caliber,
+                "worked_hrs": float(record.worked_hrs)
+                if record.worked_hrs is not None
+                else None,
+                "dead_time_cause_1": record.dead_time_cause_1,
+                "cavities": record.cavities,
+                "standard": record.standard,
+                "proposed_standard": record.proposed_standard,
+                "dead_time_cause_2": record.dead_time_cause_2,
+                "pieces_ok": record.pieces_ok,
+                "efficiency": float(record.efficiency),
+                "date": record.date,
+                "shift": record.shift,
+                "mod_date": record.mod_date,
+            }
+            for record in records
+        ]
+
+        return JsonResponse(response_data, safe=False)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def get_record_by_id(request, id):
+    try:
+        record = Production_records.objects.filter(id=id).values().first()
+
+        if record is None:
+            return JsonResponse({"error": "Record not found"}, status=404)
+
+        return JsonResponse(record, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
