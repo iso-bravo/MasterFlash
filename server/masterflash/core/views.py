@@ -1222,6 +1222,7 @@ def get_pieces_ok_by_date_range(request):
         start_date = parse_datetime(data.get("start_date"))
         end_date = parse_datetime(data.get("end_date"))
 
+
         if not start_date or not end_date:
             return JsonResponse(
                 {"error": "start_date and end_date are required"}, status=400
