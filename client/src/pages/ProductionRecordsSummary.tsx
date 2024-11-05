@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import { useCallback, useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import api from '../config/axiosConfig';
+import useDateStore from '../stores/ProductionRecordsStore';
 
 interface ProductionRecord {
     id: number;
@@ -26,8 +27,7 @@ interface ProductionRecord {
 
 const ProductionRecordsSummary = () => {
     const [table, setTable] = useState<ProductionRecord[]>([]);
-    const [firstDate, setFirstDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
+    const { firstDate, endDate, setFirstDate, setEndDate } = useDateStore();
 
     const navigate = useNavigate();
 
@@ -64,7 +64,6 @@ const ProductionRecordsSummary = () => {
         }
     }, [firstDate, endDate, fetchData]);
 
-    //TODO mantener fechas
     const handleDetails = (id: number) => {
         navigate(`/press_production_records_details?id=${id}`);
     };
