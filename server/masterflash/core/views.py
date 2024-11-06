@@ -372,6 +372,8 @@ def register_data_production(request):
     partNumber = data.get("part_number")
     molderNumber = data.get("molder_number")
     workOrder = data.get("work_order")
+    relay = data.get("is_relay")
+    print(relay)
 
     piecesOk = data.get("pieces_ok") or 0
     piecesRework = data.get("pieces_rework") or 0

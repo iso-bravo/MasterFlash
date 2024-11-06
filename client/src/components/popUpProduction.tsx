@@ -64,7 +64,7 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
     }, [workOrder, partNumber, setValue]);
 
     useEffect(() => {
-        if (!relay) setValue('relayNumber', ''); 
+        if (!relay) setValue('relayNumber', '');
     }, [relay, setValue]);
 
     const onSubmit = async (data: FormValues) => {
@@ -112,23 +112,6 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
                             <span className='ms-3 text-sm font-medium text-gray-900'>Activado</span>
                         </label>
                     </div>
-                    <div
-                        className={`flex flex-col justify-center items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5 
-                ${relay ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                transition-all duration-500 ease-in-out`}
-                    >
-                        <label htmlFor='relayNumberInput' className='text-xl w-11/12 md:w-1/2'>
-                            Número del Relevo
-                        </label>
-                        <input
-                            id='relayNumberInput'
-                            type='number'
-                            {...register('relayNumber')}
-                            className='bg-white rounded-md w-full md:w-64 px-2'
-                            placeholder='Ingrese número del relevo'
-                            min='0'
-                        />
-                    </div>
                     {[
                         { label: 'Orden de Trabajo', name: 'workOrder', placeholder: machineData.work_order },
                         { label: 'Número de Parte', name: 'partNumber', placeholder: machineData.part_number },
@@ -169,6 +152,23 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
                             />
                         </div>
                     ))}
+                    <div
+                        className={`flex flex-col justify-center items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5 
+                ${relay ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                transition-all duration-500 ease-in-out`}
+                    >
+                        <label htmlFor='relayNumberInput' className='text-xl w-11/12 md:w-1/2'>
+                            Número del Relevo
+                        </label>
+                        <input
+                            id='relayNumberInput'
+                            type='number'
+                            {...register('relayNumber')}
+                            className='bg-white rounded-md w-full md:w-64 px-2'
+                            placeholder='Ingrese número del relevo'
+                            min='0'
+                        />
+                    </div>
 
                     <button
                         type='submit'

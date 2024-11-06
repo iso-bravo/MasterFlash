@@ -21,6 +21,7 @@ interface MachineData {
     work_order: string;
     total_ok: string;
     molder_number: string;
+    is_relay: boolean;
 }
 
 const PressesProduction: React.FC = () => {
@@ -129,8 +130,12 @@ const PressesProduction: React.FC = () => {
         newPartNumber: string,
         newWork_order: string,
         newMolderNumber: string,
+        relayNumber?: string,
     ) => {
         if (!selectedMachine) return;
+
+        const isRelay = !!relayNumber;
+        const molderNumberToSave = relayNumber || newMolderNumber || selectedMachine.molder_number;
 
         // Actualiza los campos si están vacíos con los valores anteriores
         const updatedMachine: MachineData = {
@@ -140,12 +145,14 @@ const PressesProduction: React.FC = () => {
             pieces_rework: newPiecesRework === '' ? '0' : newPiecesRework || selectedMachine.pieces_rework,
             part_number: newPartNumber || selectedMachine.part_number,
             work_order: newWork_order || selectedMachine.work_order,
-            molder_number: newMolderNumber || selectedMachine.molder_number,
+            molder_number: molderNumberToSave,
+            is_relay: isRelay,
         };
 
         setMachines(prevMachines =>
             prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
         );
+
         try {
             console.log('Updated Machine Data:', updatedMachine);
             await api.post('/register_data_production/', updatedMachine, {
