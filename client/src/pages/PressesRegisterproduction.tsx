@@ -27,6 +27,7 @@ interface DataItem {
     proposed_efficiency: number;
     date_time: string;
     shift: string;
+    relay:boolean
     editableField?: keyof DataItem;
 }
 
@@ -262,15 +263,14 @@ const PressesRegisterProduction: React.FC = () => {
             />
             <Header title='Registro Producción' goto='/press_production_records_summary' />
 
-            <div className='grid grid-cols-3 items-center gap-4'>
-                <div className=' col-start-2 flex justify-center gap-4'>
-                    <div>
-                        <label htmlFor='shifts select' className='block mb-2 text-sm font-medium text-gray-900'>
+            <nav className='grid grid-cols-3 items-center gap-4'>
+                <ul className=' col-start-2 flex justify-center gap-4'>
+                    <li>
+                        <label htmlFor='shifts' className='block mb-2 text-sm font-medium text-gray-900'>
                             Turno
                         </label>
                         <select
                             name='shifts select'
-                            defaultValue=''
                             id='shifts'
                             value={selectedShift}
                             onChange={handleShiftChange}
@@ -283,23 +283,24 @@ const PressesRegisterProduction: React.FC = () => {
                             <option value='Second'>Second</option>
                             <option value='Free'>Free</option>
                         </select>
-                    </div>
-                    <div>
+                    </li>
+                    <li>
                         <label htmlFor='date' className='block mb-2 text-sm font-medium text-gray-900'>
                             Fecha
                         </label>
                         <input
+                            id='date'
                             name='date'
                             type='date'
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             onChange={handleDateChange}
                             value={selectedDate}
                         />
-                    </div>
-                    <div className='flex justify-end p-2'>
+                    </li>
+                    <li className='flex justify-end p-2'>
                         <span className='text-lg font-medium'>Total Producción: {calculateTotalProduction()}</span>
-                    </div>
-                </div>
+                    </li>
+                </ul>
                 <div className='flex justify-end p-2 gap-4'>
                     <button
                         onClick={handleSave}
@@ -314,9 +315,9 @@ const PressesRegisterProduction: React.FC = () => {
                         Editar
                     </button>
                 </div>
-            </div>
+            </nav>
 
-            <div className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
+            <main className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
                 <table className='w-full text-sm text-left text-gray-500'>
                     <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
                         <tr>
@@ -366,7 +367,10 @@ const PressesRegisterProduction: React.FC = () => {
                     </thead>
                     <tbody>
                         {editableData.map((item, index) => (
-                            <tr key={`${index}-${item.id}`} className='odd:bg-white even:bg-gray-50 border-b'>
+                            <tr
+                                key={`${index}-${item.id}`}
+                                className={`${item.relay ? 'bg-blue-100' : 'odd:bg-white even:bg-gray-50'} border-b`}
+                            >
                                 <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
                                     {item.press}
                                 </th>
@@ -472,7 +476,7 @@ const PressesRegisterProduction: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-            </div>
+            </main>
         </div>
     );
 };

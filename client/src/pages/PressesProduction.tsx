@@ -23,7 +23,7 @@ interface MachineData {
     total_ok: string;
     molder_number: string;
     is_relay: boolean;
-    previous_molder_number: string | null
+    previous_molder_number: string | null;
 }
 
 const PressesProduction: React.FC = () => {
@@ -49,18 +49,16 @@ const PressesProduction: React.FC = () => {
                 console.log('Data received:', data);
 
                 if (data.machines_data) {
-                    setMachines(data.machines_data);
+                    const updatedMachines = data.machines_data.map((machine:MachineData) => ({
+                        ...machine,
+                        molder_number:
+                            machine.previous_molder_number !== '----'
+                                ? machine.previous_molder_number
+                                : machine.molder_number,
+                    }));
+                    setMachines(updatedMachines);
                     setTotalPiecesProduced(data.total_piecesProduced);
                     setProductionTotal(data.actual_produced);
-                } else if (data.previous_molder_number) {
-                    // Encuentra la máquina correspondiente y actualiza el número de moldeador
-                    setMachines(prevMachines =>
-                        prevMachines.map(machine =>
-                            machine.name === data.machine_name
-                                ? { ...machine, molder_number: data.previous_molder_number }
-                                : machine,
-                        ),
-                    );
                 }
             } catch (error) {
                 console.error('Error parsing JSON:', error, 'Data received:', event.data);

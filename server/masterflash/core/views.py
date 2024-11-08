@@ -435,6 +435,7 @@ def get_production_press_by_date(request):
         "work_order",
         "pieces_ok",
         "date_time",
+        "relay"
     )
 
     print("ProductionPress records found:", production_press_records)
@@ -461,6 +462,7 @@ def get_production_press_by_date(request):
                 "standard": part_number_record["standard"],
                 "pieces_ok": record["pieces_ok"],
                 "hour": record["date_time"].strftime("%H:%M:%S"),
+                "relay": record["relay"]
             }
             result.append(combined_record)
     print("Final result:", result)
