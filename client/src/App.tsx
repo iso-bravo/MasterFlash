@@ -19,6 +19,7 @@ import ConfigMenu from './pages/ConfigMenu';
 import ShiftConfig from './pages/ShiftConfig';
 import ProductionRecordsSummary from './pages/ProductionRecordsSummary';
 import ProductionRecordsDetails from './pages/ProductionRecordsDetails';
+import ScrapRegisterTest from './pages/ScrapRegisterTest';
 
 function App() {
     return (
@@ -28,6 +29,7 @@ function App() {
                 <Route path='/presses_production' element={<PressesProduction />} />
                 <Route path='/' element={<Quality />} />
                 <Route path='/scrap_register' element={<ScrapRegister />} />
+                <Route path='/scrap_register_test' element={<ScrapRegisterTest />} />
                 <Route path='/scrap_summary' element={<ScrapSummary />} />
                 <Route path='/presses_register_production' element={<PressesRegisterProduction />} />
                 <Route path='/reports_menu' element={<ReportsMenu />} />

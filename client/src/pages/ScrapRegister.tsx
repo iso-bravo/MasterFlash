@@ -461,6 +461,15 @@ const ScrapRegister: React.FC = () => {
                 </div>
             </section>
 
+            <div className=' flex flex-row justify-end'>
+                <button
+                    onClick={() => navigate('/scrap_register_test')}
+                    className='py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100'
+                >
+                    Modo de pruebas
+                </button>
+            </div>
+
             <div className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
                 <div>
                     <div className='grid gap-y-5 md:grid-cols-2 gap-8 lg:grid-cols-1 grid-cols-1'>
