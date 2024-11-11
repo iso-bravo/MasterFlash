@@ -6,6 +6,10 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.utils.dateparse import parse_datetime
+from django.conf import settings
+
+
+import redis
 
 from .models import (
     LinePress,
@@ -372,6 +376,16 @@ def register_data_production(request):
     partNumber = data.get("part_number")
     molderNumber = data.get("molder_number")
     workOrder = data.get("work_order")
+    previousMolderNumber = data.get("previous_molder_number")
+    relay = data.get("is_relay")
+
+    if relay and previousMolderNumber:
+        redis_client = redis.StrictRedis(
+            host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
+        )
+        redis_client.set(
+            f"previous_molder_number_{data.get('name')}", previousMolderNumber
+        )
 
     piecesOk = data.get("pieces_ok") or 0
     piecesRework = data.get("pieces_rework") or 0
@@ -394,7 +408,10 @@ def register_data_production(request):
         molder_number=molderNumber,
         press=data.get("name"),
         shift=shift,
+        relay = relay
     )
+
+
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
 
 
@@ -418,6 +435,7 @@ def get_production_press_by_date(request):
         "work_order",
         "pieces_ok",
         "date_time",
+        "relay"
     )
 
     print("ProductionPress records found:", production_press_records)
@@ -444,6 +462,7 @@ def get_production_press_by_date(request):
                 "standard": part_number_record["standard"],
                 "pieces_ok": record["pieces_ok"],
                 "hour": record["date_time"].strftime("%H:%M:%S"),
+                "relay": record["relay"]
             }
             result.append(combined_record)
     print("Final result:", result)

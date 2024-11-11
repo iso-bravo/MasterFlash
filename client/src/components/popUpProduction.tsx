@@ -1,4 +1,5 @@
-import React, { ChangeEvent, useRef, useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Toaster } from 'react-hot-toast';
 import { IoClose } from 'react-icons/io5';
 
@@ -22,75 +23,61 @@ interface PopupProps {
         newPartNumber: string,
         newWork_order: string,
         newMolderNumber: string,
+        relayNumber?: string,
     ) => Promise<void>;
 }
 
+interface FormValues {
+    employeeNumber: string;
+    piecesOK: string;
+    piecesRework: string;
+    partNumber: string;
+    workOrder: string;
+    molderNumber: string;
+    relay: boolean;
+    relayNumber?: string;
+}
+
 const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
-    const [employeeNumber, setEmployeeNumber] = useState('');
-    const [partNumber, setPartNumber] = useState('');
-    const [piecesOK, setPiecesOK] = useState('');
-    const [piecesRework, setPiecesRework] = useState('');
-    const [workOrder, setWorkOrder] = useState('');
-    const [molderNumber, setMolderNumber] = useState('');
+    const { register, handleSubmit, setValue, watch } = useForm({
+        defaultValues: {
+            employeeNumber: '',
+            partNumber: '',
+            piecesOK: '',
+            piecesRework: '',
+            workOrder: '',
+            molderNumber: '',
+            relay: false,
+            relayNumber: '',
+        },
+    });
 
-    // Refs for input elements
-    const workOrderRef = useRef<HTMLInputElement>(null);
-    const partNumberRef = useRef<HTMLInputElement>(null);
-    const employeeNumberRef = useRef<HTMLInputElement>(null);
-    const molderNumberRef = useRef<HTMLInputElement>(null);
-    const piecesOKRef = useRef<HTMLInputElement>(null);
-    const piecesReworkRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (workOrderRef.current) {
-            workOrderRef.current.focus();
-        }
-    }, []);
+    const relay = watch('relay');
+    const workOrder = watch('workOrder');
+    const partNumber = watch('partNumber');
 
     useEffect(() => {
         if (workOrder || partNumber) {
-            setPiecesOK('0');
-            setPiecesRework('0');
+            setValue('piecesOK', '0');
+            setValue('piecesRework', '0');
         }
-    }, [workOrder, partNumber]);
+    }, [workOrder, partNumber, setValue]);
 
-    const handleEmployeeNumber = (event: ChangeEvent<HTMLInputElement>) => {
-        setEmployeeNumber(event.target.value);
-    };
+    useEffect(() => {
+        if (!relay) setValue('relayNumber', '');
+    }, [relay, setValue]);
 
-    const handlePartNumber = (event: ChangeEvent<HTMLInputElement>) => {
-        setPartNumber(event.target.value);
-    };
-
-    const handlePiecesOk = (event: ChangeEvent<HTMLInputElement>) => {
-        setPiecesOK(event.target.value);
-    };
-
-    const handlePiecesRework = (event: ChangeEvent<HTMLInputElement>) => {
-        setPiecesRework(event.target.value);
-    };
-
-    const handleworkOrder = (event: ChangeEvent<HTMLInputElement>) => {
-        setWorkOrder(event.target.value);
-    };
-
-    const handMolderNumber = (event: ChangeEvent<HTMLInputElement>) => {
-        setMolderNumber(event.target.value);
-    };
-
-    const handleKeyDown = (
-        event: React.KeyboardEvent<HTMLInputElement>,
-        nextRef: React.RefObject<HTMLInputElement> | null,
-    ) => {
-        if (event.key === 'Enter' && nextRef && nextRef.current) {
-            event.preventDefault();
-            nextRef.current.focus();
-        }
-    };
-
-    const handleSave = async () => {
+    const onSubmit = async (data: FormValues) => {
         try {
-            await onSave(employeeNumber, piecesOK, piecesRework, partNumber, workOrder, molderNumber);
+            await onSave(
+                data.employeeNumber,
+                data.piecesOK,
+                data.piecesRework,
+                data.partNumber,
+                data.workOrder,
+                data.molderNumber,
+                data.relayNumber,
+            );
             onClose();
         } catch (error) {
             console.error('Error al guardar:', error);
@@ -104,112 +91,92 @@ const Popup: React.FC<PopupProps> = ({ machineData, onClose, onSave }) => {
                 <div className='flex justify-end'>
                     <IoClose size={40} className='cursor-pointer' onClick={onClose} />
                 </div>
-                <div className='flex flex-col items-center justify-center gap-y-6'>
-                    <h1 className='text-2xl lg:text-2xl xl:text-3xl font-semibold'>{machineData.name}</h1>
-
-                    <div className='flex flex-col gap-y-4 text-center sm:text-start'>
-                        <div className='flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
-                            <label htmlFor='workOrderInput' className='text-xl w-11/12 md:w-1/2'>
-                                Orden de Trabajo
-                            </label>
-                            <input
-                                type='text'
-                                id='workOrderInput'
-                                value={workOrder}
-                                onChange={handleworkOrder}
-                                ref={workOrderRef}
-                                onKeyDown={e => handleKeyDown(e, partNumberRef)}
-                                className='bg-white rounded-md w-full md:w-64 px-2'
-                                placeholder={`${machineData.work_order}`}
-                            />
+                <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-y-4 text-center sm:text-start'>
+                    {/* ?Preguntar orientación */}
+                    <section className='flex flex-col justify-evenly items-center'>
+                        <h1 className='text-2xl lg:text-2xl xl:text-3xl font-semibold'>{machineData.name}</h1>
+                        <div>
+                            <span>Piezas producidas: </span>
+                            <span className='text-xl w-11/12 md:w-1/2'>{machineData.pieces_ok}</span>
                         </div>
-                        <div className='flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
-                            <label htmlFor='partNumberInput' className='text-xl w-11/12 md:w-1/2'>
-                                Número de parte
-                            </label>
-                            <input
-                                type='text'
-                                id='partNumberInput'
-                                value={partNumber}
-                                onChange={handlePartNumber}
-                                ref={partNumberRef}
-                                onKeyDown={e => handleKeyDown(e, employeeNumberRef)}
-                                className='bg-white rounded-md w-full md:w-64 px-2'
-                                placeholder={`${machineData.part_number}`}
-                            />
+                        <div>
+                            <span>Piezas retrabajo: </span>
+                            <span className='text-xl w-11/12 md:w-1/2'>{machineData.pieces_rework}</span>
                         </div>
-                        <div className='flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
-                            <label htmlFor='employeeNumberInput' className='text-xl w-11/12 md:w-1/2'>
-                                Empacador
-                            </label>
-                            <input
-                                type='number'
-                                id='employeeNumberInput'
-                                value={employeeNumber}
-                                onChange={handleEmployeeNumber}
-                                ref={employeeNumberRef}
-                                onKeyDown={e => handleKeyDown(e, molderNumberRef)}
-                                className='bg-white rounded-md w-full md:w-64 px-2'
-                                placeholder={`${machineData.employee_number}`}
-                            />
-                        </div>
-                        <div className='flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
-                            <label htmlFor='molderNumberInput' className='text-xl w-11/12 md:w-1/2'>
-                                Moldeador
-                            </label>
-                            <input
-                                type='number'
-                                id='molderNumberInput'
-                                value={molderNumber}
-                                onChange={handMolderNumber}
-                                ref={molderNumberRef}
-                                onKeyDown={e => handleKeyDown(e, piecesOKRef)}
-                                className='bg-white rounded-md w-full md:w-64 px-2'
-                                placeholder={`${machineData.molder_number}`}
-                            />
-                        </div>
-                        <div className='flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
-                            <label htmlFor='piecesOKInput' className='text-xl w-11/12 md:w-1/2'>
-                                Piezas Producidas
-                            </label>
-                            <input
-                                type='number'
-                                id='piecesOKInput'
-                                value={piecesOK}
-                                onChange={handlePiecesOk}
-                                ref={piecesOKRef}
-                                onKeyDown={e => handleKeyDown(e, piecesReworkRef)}
-                                placeholder={`${0}`}
-                                className='bg-white rounded-md w-full md:w-64 px-2'
-                                min='0'
-                            />
-                        </div>
-                        <span className='text-xl w-11/12 md:w-1/2'>{machineData.pieces_ok}</span>
-                        <div className='flex flex-col sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
-                            <label htmlFor='piecesReworkInput' className='text-xl w-11/12 md:w-1/2'>
-                                Piezas Retrabajo
-                            </label>
-                            <input
-                                type='number'
-                                id='piecesReworkInput'
-                                value={piecesRework}
-                                onChange={handlePiecesRework}
-                                ref={piecesReworkRef}
-                                onKeyDown={e => handleKeyDown(e, null)}
-                                placeholder={`${0}`}
-                                className='bg-white rounded-md w-full md:w-64 px-2'
-                                min='0'
-                            />
-                        </div>
-                        <span className='text-xl w-11/12 md:w-1/2'>{machineData.pieces_rework}</span>
+                    </section>
+                    <div className='flex flex-col justify-center items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
+                        <label className='text-xl w-11/12 md:w-1/2'>Relevo</label>
+                        <label className='inline-flex items-center cursor-pointer'>
+                            <input type='checkbox' className='sr-only peer' {...register('relay')} />
+                            <div className="relative w-11 h-6 bg-gray-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            <span className='ms-3 text-sm font-medium text-gray-900'>Activado</span>
+                        </label>
                     </div>
+                    {[
+                        { label: 'Orden de Trabajo', name: 'workOrder', placeholder: machineData.work_order },
+                        { label: 'Número de Parte', name: 'partNumber', placeholder: machineData.part_number },
+                        {
+                            label: 'Empacador',
+                            name: 'employeeNumber',
+                            placeholder: machineData.employee_number,
+                            type: 'number',
+                        },
+                        {
+                            label: 'Moldeador',
+                            name: 'molderNumber',
+                            placeholder: machineData.molder_number,
+                            type: 'number',
+                        },
+                        {
+                            label: 'Piezas Producidas',
+                            name: 'piecesOK',
+                            placeholder: machineData.pieces_ok,
+                            type: 'number',
+                        },
+                        { label: 'Piezas Retrabajo', name: 'piecesRework', placeholder: '0', type: 'number' },
+                    ].map(({ label, name, placeholder, type = 'text' }, idx) => (
+                        <div
+                            key={idx}
+                            className='flex flex-col justify-center items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5'
+                        >
+                            <label htmlFor={`${name}Input`} className='text-xl w-11/12 md:w-1/2'>
+                                {label}
+                            </label>
+                            <input
+                                id={`${name}Input`}
+                                type={type}
+                                {...register(name as keyof FormValues)}
+                                className='bg-white rounded-md w-full md:w-64 px-2'
+                                placeholder={placeholder}
+                                min={type === 'number' ? '0' : undefined}
+                            />
+                        </div>
+                    ))}
+                    <div
+                        className={`flex flex-col justify-center items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5 
+                ${relay ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                transition-all duration-500 ease-in-out`}
+                    >
+                        <label htmlFor='relayNumberInput' className='text-xl w-11/12 md:w-1/2'>
+                            Número del Relevo
+                        </label>
+                        <input
+                            id='relayNumberInput'
+                            type='number'
+                            {...register('relayNumber')}
+                            className='bg-white rounded-md w-full md:w-64 px-2'
+                            placeholder='Ingrese número del relevo'
+                            min='0'
+                        />
+                    </div>
+
                     <button
-                        onClick={handleSave}
+                        type='submit'
                         className='bg-[#73e33c] px-6 py-2 text-xl rounded-md hover:bg-[#78e741] focus:outline-none focus:ring focus:ring-[#3fd555]'
                     >
                         Guardar
                     </button>
-                </div>
+                </form>
             </div>
         </div>
     );

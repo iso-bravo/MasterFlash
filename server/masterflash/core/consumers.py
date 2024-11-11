@@ -16,8 +16,13 @@ class ProductionConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({"type": "disconnected", "message": "Consumidor desconectado"}))
 
     def receive(self, text_data):
-        self.send(text_data=json.dumps({"type": "received", "message": "Received message: " + text_data}))
+        self.send(
+            text_data=json.dumps(
+                {"type": "received", "message": "Received message: " + text_data}
+            )
+        )
         self.send_production_update()
+        
 
     def send_production_update(self):
         production_data = send_production_data()

@@ -56,6 +56,7 @@ class ProductionPress(models.Model):
     work_order = models.CharField(max_length=50, blank=True)
     shift = models.CharField(default="", max_length=50)
     molder_number = models.IntegerField(default=None, null=True, blank=True)
+    relay = models.BooleanField(default=False)
 
 
 class Insert(models.Model):

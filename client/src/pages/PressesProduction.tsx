@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import MonthlyGoalModal from '../components/MonthlyGoalModal';
 import { toast, ToastContainer } from 'react-toastify';
 import { getErrorMessage } from '../utils/utils';
+import { PartNumberFormValues } from '../types/PartNumsRegisterTypes';
 
 interface MachineData {
     name: string;
@@ -21,6 +22,8 @@ interface MachineData {
     work_order: string;
     total_ok: string;
     molder_number: string;
+    is_relay: boolean;
+    previous_molder_number: string | null;
 }
 
 const PressesProduction: React.FC = () => {
@@ -44,14 +47,18 @@ const PressesProduction: React.FC = () => {
             try {
                 const data = JSON.parse(event.data);
                 console.log('Data received:', data);
-                if (data['type']) {
-                    console.log(data['type']);
-                } else if (Array.isArray(data.machines_data)) {
-                    setMachines(data.machines_data);
+
+                if (data.machines_data) {
+                    const updatedMachines = data.machines_data.map((machine:MachineData) => ({
+                        ...machine,
+                        molder_number:
+                            machine.previous_molder_number !== '----'
+                                ? machine.previous_molder_number
+                                : machine.molder_number,
+                    }));
+                    setMachines(updatedMachines);
                     setTotalPiecesProduced(data.total_piecesProduced);
                     setProductionTotal(data.actual_produced);
-                } else {
-                    console.error('machines_data is not an array:', data.machines_data);
                 }
             } catch (error) {
                 console.error('Error parsing JSON:', error, 'Data received:', event.data);
@@ -129,8 +136,13 @@ const PressesProduction: React.FC = () => {
         newPartNumber: string,
         newWork_order: string,
         newMolderNumber: string,
+        relayNumber?: string,
     ) => {
         if (!selectedMachine) return;
+
+        const isRelay = !!relayNumber;
+        const previousMolderNumber = isRelay ? selectedMachine.molder_number : null;
+        const molderNumberToSave = relayNumber || newMolderNumber || selectedMachine.molder_number;
 
         // Actualiza los campos si están vacíos con los valores anteriores
         const updatedMachine: MachineData = {
@@ -140,12 +152,15 @@ const PressesProduction: React.FC = () => {
             pieces_rework: newPiecesRework === '' ? '0' : newPiecesRework || selectedMachine.pieces_rework,
             part_number: newPartNumber || selectedMachine.part_number,
             work_order: newWork_order || selectedMachine.work_order,
-            molder_number: newMolderNumber || selectedMachine.molder_number,
+            molder_number: molderNumberToSave,
+            is_relay: isRelay,
+            previous_molder_number: previousMolderNumber,
         };
 
         setMachines(prevMachines =>
             prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
         );
+
         try {
             console.log('Updated Machine Data:', updatedMachine);
             await api.post('/register_data_production/', updatedMachine, {
