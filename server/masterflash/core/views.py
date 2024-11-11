@@ -741,6 +741,126 @@ def register_scrap(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
 
+@csrf_exempt
+@require_POST
+def register_scrap_test(request):
+    try:
+        print("entro")
+        data = json.loads(request.body.decode("utf-8"))
+
+        total_pieces = 0
+
+        def empty_to_none(value):
+            return None if value == "" else value
+
+        def gr_to_lbs(gr):
+            return gr * 0.00220462
+
+        # Extracción de datos
+        date = empty_to_none(data.get("date"))
+        shift = empty_to_none(data.get("shift"))
+        line = empty_to_none(data.get("line"))
+        auditor = empty_to_none(data.get("auditor"))
+        molder = empty_to_none(data.get("molder"))
+
+        inputs = data.get("inputs", {})
+        codes = data.get("codes", {})
+
+        part_number = empty_to_none(inputs.get("partNumber"))
+        compound = empty_to_none(inputs.get("compound"))
+        insert = empty_to_none(inputs.get("insert"))
+        gripper = empty_to_none(inputs.get("gripper"))
+        metal = empty_to_none(inputs.get("metal"))
+        insert_without_rubber = empty_to_none(inputs.get("insertWithoutRubber"))
+        gripper_without_rubber = empty_to_none(inputs.get("gripperWithoutRubber"))
+        rubber_weight = empty_to_none(inputs.get("rubberWeight"))
+        insert_with_rubber = empty_to_none(inputs.get("insertWithRubber"))
+        gripper_with_rubber = empty_to_none(inputs.get("gripperWithRubber"))
+        recycled_inserts = empty_to_none(inputs.get("recycledInserts"))
+        total_inserts = empty_to_none(inputs.get("totalInserts"))
+        total_grippers = empty_to_none(inputs.get("totalGrippers"))
+
+        # Si no hay fecha, se establece la actual
+        current_time_str = datetime.now().strftime("%H:%M:%S.%f")
+        date = f"{data.get('date')} {current_time_str}" if date else datetime.now()
+
+        scrap_entry = Qc_Scrap(
+            date_time=date,
+            shift=shift,
+            line=line,
+            auditor_qc=auditor,
+            molder_number=molder,
+            part_number=part_number,
+            gripper=gripper,
+            caliber=metal,
+            rubber_weight=rubber_weight,
+            insert_weight_w_rubber=insert_with_rubber,
+            gripper_weight_w_rubber=gripper_with_rubber,
+            insert_weight_wout_rubber=insert_without_rubber,
+            gripper_weight_wout_rubber=gripper_without_rubber,
+            recycled_inserts=recycled_inserts,
+            compound=compound,
+            insert=insert,
+            inserts_total=total_inserts,
+            grippers_total=total_grippers,
+        )
+
+        # Procesar códigos
+        for code, value in codes.items():
+            if value is None or value == "":
+                setattr(scrap_entry, code, None)
+            else:
+                setattr(scrap_entry, code, int(value))
+                total_pieces += int(value)
+
+        # Cálculos de peso
+        total_bodies_weight = int(rubber_weight) if rubber_weight else 0
+        total_inserts_weight = (
+            int(insert_without_rubber) * int(total_inserts)
+            if insert_without_rubber and total_inserts
+            else 0
+        )
+        total_grippers_weight = (
+            float(gripper_without_rubber) * float(total_grippers)
+            if gripper_without_rubber and total_grippers
+            else 0
+        )
+        total_rubber_weight_in_insert = (
+            int(insert_with_rubber) - total_inserts_weight if insert_with_rubber else 0
+        )
+        total_rubber_weight_in_gripper = (
+            float(gripper_with_rubber) - total_grippers_weight
+            if gripper_with_rubber
+            else 0
+        )
+
+        total_rubber_weight = total_bodies_weight + total_rubber_weight_in_insert
+
+        scrap_entry.total_pieces = total_pieces
+        scrap_entry.total_bodies_weight = total_bodies_weight
+        scrap_entry.total_inserts_weight = total_inserts_weight
+        scrap_entry.total_rubber_weight_in_insert = total_rubber_weight_in_insert
+        scrap_entry.total_rubber_weight_in_gripper = total_rubber_weight_in_gripper
+        scrap_entry.total_rubber_weight = total_rubber_weight
+        scrap_entry.total_bodies_weight_lbs = gr_to_lbs(total_bodies_weight)
+        scrap_entry.total_inserts_weight_lbs = gr_to_lbs(total_inserts_weight)
+        scrap_entry.total_grippers_weight = total_grippers_weight
+        scrap_entry.total_grippers_weight_lbs = gr_to_lbs(total_grippers_weight)
+        scrap_entry.total_rubber_weight_in_insert_lbs = gr_to_lbs(
+            total_rubber_weight_in_insert
+        )
+        scrap_entry.total_rubber_weight_in_gripper_lbs = gr_to_lbs(
+            total_rubber_weight_in_gripper
+        )
+        scrap_entry.total_rubber_weight_lbs = gr_to_lbs(total_rubber_weight)
+
+        scrap_entry.save()
+
+        return JsonResponse({"message": "Registro exitoso"}, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
 def register(request):
     print("Aqui")
     return JsonResponse({"message": "Registro exitoso"}, status=200)

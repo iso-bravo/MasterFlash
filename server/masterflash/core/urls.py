@@ -35,6 +35,7 @@ urlpatterns = [
     ),
     path("search_weight/", views.search_weight, name="search_weight"),
     path("register_scrap/", views.register_scrap, name="register_scrap"),
+    path("register_scrap_test/", views.register_scrap_test, name="register_scrap_test"),
     path("register/", views.register, name="register"),
     path(
         "get_production_press_by_date/",

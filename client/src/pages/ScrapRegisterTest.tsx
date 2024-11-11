@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import api from '../config/axiosConfig';
+import { ToastContainer, toast } from 'react-toastify';
+import ConfirmationPopUp from '../components/ConfirmationPopUp';
 
 interface InputFields {
     date: string;
@@ -13,7 +15,7 @@ interface InputFields {
         partNumber: string;
         compound: string;
         insert: string;
-        gripper?: string;
+        gripper: string;
         metal: string;
         insertWithoutRubber: string;
         gripperWithoutRubber: string;
@@ -22,7 +24,7 @@ interface InputFields {
         gripperWithRubber: string;
         recycledInserts: string;
         totalInserts: string;
-        totalGrippers?: string;
+        totalGrippers: string;
     };
     codes: { [key: string]: string };
 }
@@ -31,10 +33,31 @@ const ScrapRegisterTest = () => {
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors },
-    } = useForm<InputFields>();
+    } = useForm<InputFields>({
+        defaultValues: {
+            inputs: {
+                partNumber: '',
+                compound: '',
+                insert: '',
+                gripper: ' ',
+                metal: '',
+                insertWithoutRubber: '',
+                gripperWithoutRubber: '0',
+                rubberWeight: '',
+                insertWithRubber: '',
+                gripperWithRubber: '0',
+                recycledInserts: '',
+                totalInserts: '',
+                totalGrippers: '0',
+            },
+            codes: {},
+        },
+    });
     const [machines, setMachines] = useState<string[]>([]);
     const [showModal, setShowModal] = useState(false);
+    const [formData, setFormData] = useState<InputFields | null>(null);
 
     const inputs = [
         'No. Parte',
@@ -108,8 +131,6 @@ const ScrapRegisterTest = () => {
         'SR',
     ];
 
-    
-
     useEffect(() => {
         const fetchMachines = async () => {
             try {
@@ -125,13 +146,50 @@ const ScrapRegisterTest = () => {
     }, []);
 
     const onSubmit: SubmitHandler<InputFields> = data => {
-        console.log(data);
-        // Aquí puedes enviar los datos a la API
+        const hasAtLeastOneCode = Object.values(data.codes).some(value => value && value.trim() !== '');
+        if (!hasAtLeastOneCode) {
+            toast.error('Al menos un código debe tener un número.');
+            return;
+        }
+        setFormData(data);
+        setShowModal(true);
+    };
+
+    const confirmSubmission = async () => {
+        if (formData) {
+            try {
+                await api.post(`/register_scrap_test/`, formData);
+                setShowModal(false);
+                toast.success('Registro exitoso');
+                reset()
+            } catch (error) {
+                toast.error(`Error al enviar los datos: ${error}`);
+                console.error('Error al enviar los datos:', error);
+            }
+        }
     };
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] min-h-screen'>
+            <ToastContainer
+                position='top-center'
+                autoClose={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                theme='colored'
+            />
             <Header title='Registro Scrap TEST' goto='/scrap_register' />
+            {formData && (
+                <ConfirmationPopUp
+                    show={showModal}
+                    onClose={() => setShowModal(false)}
+                    onConfirm={confirmSubmission}
+                    summary={formData}
+                />
+            )}
             <form onSubmit={handleSubmit(onSubmit)}>
                 <section className='lg:flex gap-4 items-center grid md:grid-cols-5 md:grid-flow-row sm:grid-flow-col sm:grid-rows-2 mt-8'>
                     <div>
@@ -193,40 +251,50 @@ const ScrapRegisterTest = () => {
                         {errors.molder && <span>{errors.molder.message}</span>}
                     </div>
                 </section>
-                <section className='grid gap-y-5 md:grid-cols-2 gap-8 lg:grid-cols-1 grid-cols-1'>
-                    {inputKeys.map((inputField, index) => (
-                        <div key={index} className='flex flex-row items-center gap-2 lg:grid-cols-3 lg:grid xl:gap-10'>
-                            <label>{inputs[index]}</label>
-                            <input
-                                type='text'
-                                {...register(`inputs.${inputField}` as const, {
-                                    required: `${inputs[index]} es requerido`,
-                                })}
-                            />
-                            {errors.inputs?.[inputField] && <span>{errors.inputs[inputField]?.message}</span>}
+                <article className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
+                    <section className='grid gap-y-5 md:grid-cols-2 gap-8 lg:grid-cols-1 grid-cols-1'>
+                        {inputKeys.map((inputField, index) => (
+                            <div
+                                key={index}
+                                className='flex flex-row items-center gap-2 lg:grid-cols-3 lg:grid xl:gap-10'
+                            >
+                                <label>{inputs[index]}</label>
+                                <input
+                                    type='text'
+                                    {...register(`inputs.${inputField}` as const, {
+                                        required: `${inputs[index]} es requerido`,
+                                    })}
+                                    className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                />
+                                {errors.inputs?.[inputField] && <span>{errors.inputs[inputField]?.message}</span>}
+                            </div>
+                        ))}
+
+                        <div className='justify-center mt-5 items-center'>
+                            <button
+                                // onClick={handleOpenModal}
+                                className='focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
+                            >
+                                <h2>Registrar</h2>
+                            </button>
                         </div>
-                    ))}
-                </section>
-                <div className='justify-center mt-5 items-center'>
-                    <button
-                        // onClick={handleOpenModal}
-                        className='focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
-                    >
-                        <h2>Registrar</h2>
-                    </button>
-                </div>
-                <section className='grid grid-cols-4 ml-8 gap-2 '>
-                    {codes.map((code, index) => (
-                        <div key={index} className='flex flex-row items-center p-1'>
-                            <label>{code}</label>
-                            <input
-                                type='text'
-                                {...register(`codes.${code}`, { required: `El código ${code} es requerido` })}
-                            />
-                            {errors.codes?.[code] && <span>{errors.codes[code]?.message}</span>}
-                        </div>
-                    ))}
-                </section>
+                    </section>
+                    <div>
+                        <section className='grid grid-cols-4 ml-8 gap-2 '>
+                            {codes.map((code, index) => (
+                                <div key={index} className='flex flex-row items-center p-1'>
+                                    <label className='block w-14 text-sm font-medium text-gray-900'>{code}</label>
+                                    <input
+                                        type='text'
+                                        {...register(`codes.${code}`)}
+                                        className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                    />
+                                    {errors.codes?.[code] && <span>{errors.codes[code]?.message}</span>}
+                                </div>
+                            ))}
+                        </section>
+                    </div>
+                </article>
             </form>
         </div>
     );
