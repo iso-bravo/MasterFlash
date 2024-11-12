@@ -233,10 +233,22 @@ class Rubber_Query_history(models.Model):
     end_date = models.DateField()
     compound = models.CharField(max_length=100)
     total_weight = models.FloatField()
+    comments = models.CharField(max_length=50)
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"
 
+
+class Insert_Query_history(models.Model):
+    query_date = models.DateTimeField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    compound = models.CharField(max_length=100)
+    total_weight = models.FloatField()
+    comments = models.CharField(max_length=50)
+
+    def __str__(self) -> str:
+        return f"{self.query_date} - {self.compound}"
 
 class ShiftSchedule(models.Model):
     first_shift_start = models.TimeField(default="05:00")

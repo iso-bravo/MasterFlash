@@ -1161,6 +1161,7 @@ def get_rubber_report_history(request):
             "end_date": h.end_date,
             "compound": h.compound,
             "total_weight": h.total_weight,
+            "comments": h.comments
         }
         for h in history
     ]

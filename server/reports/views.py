@@ -201,53 +201,38 @@ def generate_inserts_report(request):
 @require_POST
 def generate_rubber_report(request):
     try:
-        # Decodificación del JSON y manejo de excepciones
-        data = json.loads(request.body.decode("utf-8"))
-        print(f"Datos recibidos: {data}")
+        # Procesar los datos recibidos
+        compounds_data = json.loads(request.body.decode("utf-8"))
+        print(f"Datos recibidos: {compounds_data}")
 
-        compounds_data = data
-        special_compounds = ["MF E BLK 70", "MF E BLK", "MF E GRY", "MF E DGRY 4606"]
-
-        # Guardar en el historial cada compuesto con sus propias fechas
+        # Guardar en el historial cada compuesto con sus propias fechas y comentarios
         for compound in compounds_data:
             Rubber_Query_history.objects.create(
-
-                query_date = datetime.datetime.now(),
+                query_date=datetime.datetime.now(),
                 start_date=compound["startDate"],
                 end_date=compound["endDate"],
                 compound=compound["compound"],
                 total_weight=compound["totalWeight"],
+                comments=compound.get("comments", ""),
             )
 
         def create_report(selected_compounds_data, report_name):
             print(f"Creando reporte para: {report_name}")
-            filters = [
-                Q(
+            filters = Q()
+            for item in selected_compounds_data:
+                filters |= Q(
                     compound=item["compound"],
                     date_time__date__range=[item["startDate"], item["endDate"]],
                 )
-                for item in selected_compounds_data
-            ]
 
-            # Combinación de filtros
-            if len(filters) > 1:
-                combined_filter = filters[0]
-                for f in filters[1:]:
-                    combined_filter |= f
-            elif filters:
-                combined_filter = filters[0]
-            else:
-                return None, f"Error: No se encontraron registros para {report_name}."
-
-            data = Qc_Scrap.objects.filter(combined_filter).values(
+            data = Qc_Scrap.objects.filter(filters).values(
                 "compound", "total_bodies_weight_lbs"
             )
-
             if not data.exists():
                 return None, f"Error: No se encontraron registros para {report_name}."
 
-            grouped_data = {}
-            total_weight = 0
+            # Agrupar datos
+            grouped_data, total_weight = {}, 0
             for item in selected_compounds_data:
                 compound = item["compound"]
                 weight = sum(
@@ -259,24 +244,26 @@ def generate_rubber_report(request):
                     "weight": weight,
                     "start_date": item["startDate"],
                     "end_date": item["endDate"],
+                    "comments": item.get("comments", ""),
                 }
                 total_weight += weight
 
+            # Generar el PDF
             buffer = io.BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=letter)
-            elements = []
-            styles = getSampleStyleSheet()
+            elements, styles = [], getSampleStyleSheet()
 
-            full_date = datetime.datetime.now()
-            date = full_date.strftime("%x")
-
-            title = Paragraph(
-                f"{date} - Reporte de Mermas: {report_name}", styles["Heading1"]
+            date = datetime.datetime.now().strftime("%x")
+            elements.append(
+                Paragraph(
+                    f"{date} - Reporte de Mermas: {report_name}", styles["Heading1"]
+                )
             )
-            elements.append(title)
             elements.append(Spacer(1, 12))
 
-            data_table = [["Fecha Inicio", "Fecha Fin", "Compuesto", "Lbs"]]
+            data_table = [
+                ["Fecha Inicio", "Fecha Fin", "Compuesto", "Lbs", "Comentarios"]
+            ]
             for compound, info in grouped_data.items():
                 data_table.append(
                     [
@@ -284,10 +271,11 @@ def generate_rubber_report(request):
                         Paragraph(info["end_date"], styles["Normal"]),
                         Paragraph(compound, styles["Normal"]),
                         Paragraph(f"{info['weight']:.2f}", styles["Normal"]),
+                        Paragraph(info["comments"], styles["Normal"]),
                     ]
                 )
 
-            table = Table(data_table, colWidths=[100, 100, 200, 100])
+            table = Table(data_table, colWidths=[80, 80, 140, 80, 120])
             table.setStyle(
                 TableStyle(
                     [
@@ -296,97 +284,28 @@ def generate_rubber_report(request):
                     ]
                 )
             )
-            elements.append(table)
-            elements.append(Spacer(1, 12))
-            elements.append(
-                Paragraph(f"Total Weight: {total_weight:.2f} Lbs", styles["Normal"])
+            elements.extend(
+                [
+                    table,
+                    Spacer(1, 12),
+                    Paragraph(
+                        f"Total Weight: {total_weight:.2f} Lbs", styles["Normal"]
+                    ),
+                ]
             )
 
             doc.build(elements)
             buffer.seek(0)
             return buffer, None
 
-        def create_report_for_special_compounds(compounds_data):
-            buffer = io.BytesIO()
-            doc = SimpleDocTemplate(buffer, pagesize=letter)
-            elements = []
-            styles = getSampleStyleSheet()
-
-            full_date = datetime.datetime.now()
-            date = full_date.strftime("%x")
-
-            title = Paragraph(
-                "Reporte de Compuestos Especiales", styles["Heading1"]
-            )
-            elements.append(title)
-            elements.append(Spacer(1, 12))
-
-            for compound_data in compounds_data:
-                # Título de la sección para cada compuesto
-                elements.append(
-                    Paragraph(
-                        f"{date} - Compuesto: {compound_data['compound']}", styles["Heading2"]
-                    )
-                )
-
-                # Datos del compuesto
-                data_table = [["Fecha Inicio", "Fecha Fin", "Compuesto", "Lbs"]]
-                data_table.append(
-                    [
-                        Paragraph(compound_data["startDate"], styles["Normal"]),
-                        Paragraph(compound_data["endDate"], styles["Normal"]),
-                        Paragraph(compound_data["compound"], styles["Normal"]),
-                        Paragraph(
-                            f"{compound_data['totalWeight']:.2f}", styles["Normal"]
-                        ),
-                    ]
-                )
-                table = Table(data_table, colWidths=[100, 100, 200, 100])
-                table.setStyle(
-                    TableStyle(
-                        [
-                            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                            ("GRID", (0, 0), (-1, -1), 1, colors.black),
-                        ]
-                    )
-                )
-                elements.append(table)
-
-                # Agregar un salto de página
-                elements.append(Spacer(1,16))
-
-            doc.build(elements)
-            buffer.seek(0)
-            return buffer
-
-        normal_buffer, normal_error = create_report(
-            [
-                comp
-                for comp in compounds_data
-                if comp["compound"] not in special_compounds
-            ],
-            "Reporte General",
-        )
-        special_buffer = create_report_for_special_compounds(
-            [comp for comp in compounds_data if comp["compound"] in special_compounds],
-        )
-
-        print(f"Error Reporte General: {normal_error}")
-
-        pdfs = []
+        normal_buffer, normal_error = create_report(compounds_data, "Reporte General")
         if normal_buffer:
             normal_base64 = base64.b64encode(normal_buffer.getvalue()).decode("utf-8")
-            pdfs.append({"name": "reporte_general.pdf", "data": normal_base64})
-        if special_buffer:
-            special_base64 = base64.b64encode(special_buffer.getvalue()).decode("utf-8")
-            pdfs.append({"name": "reporte_especial.pdf", "data": special_base64})
+            return JsonResponse(
+                {"pdfs": [{"name": "reporte_general.pdf", "data": normal_base64}]}
+            )
 
-        if pdfs:
-            return JsonResponse({"pdfs": pdfs})
-
-        # Si no hay PDFs generados, retornar un error general
         return JsonResponse({"error": "No se generaron reportes."}, status=400)
-
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:

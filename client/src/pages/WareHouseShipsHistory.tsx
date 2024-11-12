@@ -10,6 +10,7 @@ interface reportHistory {
     end_date: string;
     compound: string;
     total_weight: number;
+    comments: string | null
 }
 
 const WareHouseShipsHistory = () => {
@@ -151,6 +152,9 @@ const WareHouseShipsHistory = () => {
                             <th scope='col' className='px-6 py-3'>
                                 Peso Total (lbs)
                             </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Comentarios
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -161,6 +165,7 @@ const WareHouseShipsHistory = () => {
                                 <td className='px-6 py-3'>{item.end_date}</td>
                                 <td className='px-6 py-3'>{item.compound}</td>
                                 <td className='px-6 py-3'>{item.total_weight}</td>
+                                <td className='px-6 py-3'>{item.comments}</td>
                             </tr>
                         ))}
                     </tbody>
