@@ -8,7 +8,7 @@ import { toast, ToastContainer } from 'react-toastify';
 interface TableData {
     id: number;
     press: string;
-    employee_number: number;
+    molder_number: number;
     part_number: string;
     work_order: string;
     hour: string;
@@ -269,7 +269,7 @@ const EditProductionRecords = () => {
                                                     )}
                                                 </td>
                                                 <td className='px-6 py-4'>{item.hour}</td>
-                                                <td className='px-6 py-4'>{item.employee_number}</td>
+                                                <td className='px-6 py-4'>{item.molder_number}</td>
                                             </tr>
                                         ))}
                                 </React.Fragment>
