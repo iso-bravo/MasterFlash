@@ -20,7 +20,7 @@ const Quality: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className=' flex flex-col lg:p-2 bg-[#f4f4f4] h-full'>
+        <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <div className='flex flex-col items-center px-10 pt-7'>
                 <h1 className='w-3/4 text-xl text-start m-3'>Producción</h1>
                 <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
@@ -120,7 +120,7 @@ const Quality: React.FC = () => {
                         </div>
                         <h2 className=' text-center'>Dash.</h2>
                     </div>
-                    <div className='flex flex-col w-14 items-center cursor-pointer'>
+                    <div className='flex flex-col w-14 items-center cursor-pointer' onClick={() => navigate('/config')}>
                         <div className=' bg-[#2459A9] p-2 rounded-sm'>
                             <IoSettingsSharp color='white' size={40} />
                         </div>
@@ -138,7 +138,7 @@ const Quality: React.FC = () => {
                         </div>
                         <h2 className=' text-center'>Prog. Prod.</h2>
                     </div>
-                    <div className='flex flex-col items-center cursor-pointer'>
+                    <div className='flex flex-col items-center cursor-pointer' onClick={() => navigate('/part_num')}>
                         <div className=' bg-[#B75182] p-2 rounded-sm'>
                             <MdNumbers color='white' size={35} />
                         </div>

@@ -78,11 +78,15 @@ WSGI_APPLICATION = 'masterflash.wsgi.application'
 
 ASGI_APPLICATION  = 'masterflash.asgi.application'
 
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }
@@ -128,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
