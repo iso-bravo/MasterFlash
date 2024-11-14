@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { IoIosArrowBack } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import api from '../config/axiosConfig';
+import Header from '../components/Header';
 
 interface InputFields {
     start_date: string;
@@ -106,8 +105,6 @@ const ScrapReport: React.FC = () => {
         }
     };
 
-    const navigate = useNavigate();
-
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
@@ -120,10 +117,7 @@ const ScrapReport: React.FC = () => {
                 draggable
                 theme='colored'
             />
-            <header className='flex items-start gap- 3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/reports_menu')} />
-                <h1 className='text-xl'>Reportes</h1>
-            </header>
+            <Header title='Nuevo reporte' goto='/inserts_history' />
 
             <form
                 onSubmit={handleSubmit}
