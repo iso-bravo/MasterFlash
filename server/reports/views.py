@@ -12,9 +12,8 @@ from reportlab.platypus import (
     TableStyle,
     Paragraph,
     Spacer,
-    PageBreak,
 )
-from masterflash.core.models import Qc_Scrap, Rubber_Query_history
+from masterflash.core.models import Insert_Query_history, Qc_Scrap, Rubber_Query_history
 from django.db.models import Q
 import base64
 import io
@@ -48,13 +47,9 @@ def generate_inserts_report(request):
             "inserts_total",
         )
 
-    elif report == "Gripper":
-        # Aquí agregas la lógica para Grippers si es necesario
-        pass
     elif report == "0.025":
         filters["caliber"] = report
 
-        print(filters)
         # Omitir registros residenciales si el reporte es 0.025
         data = (
             Qc_Scrap.objects.filter(**filters)
@@ -74,7 +69,6 @@ def generate_inserts_report(request):
         if insert:
             filters["insert"] = insert
 
-        print(filters)
         data = Qc_Scrap.objects.filter(**filters).values(
             "compound",
             "total_rubber_weight_in_insert_lbs",
@@ -84,16 +78,8 @@ def generate_inserts_report(request):
             "inserts_total",
         )
 
-    if isinstance(data, dict) or not data:
-        print(
-            f"Error: No se encontraron registros o el formato de `data` no es correcto. Datos: {data}"
-        )
-        return HttpResponse(
-            "Error: No se encontraron registros o el formato de `data` no es correcto.",
-            status=400,
-        )
-
-    print("Registros filtrados:", data)
+    if not data:
+        return HttpResponse("Error: No se encontraron registros", status=400)
 
     try:
         total_rubber_weight_in_insert_lbs_sum = sum(
@@ -111,21 +97,30 @@ def generate_inserts_report(request):
 
         total_sum = total_rubber_weight_in_insert_lbs_sum + total_inserts_weight_lbs
 
-        grouped_data = {
-            field["compound"]: [
-                sum(
-                    d["total_rubber_weight_in_insert"]
-                    for d in data
-                    if d["compound"] == field["compound"]
-                ),
-                sum(
-                    d["total_rubber_weight_in_insert_lbs"]
-                    for d in data
-                    if d["compound"] == field["compound"]
-                ),
-            ]
-            for field in data
-        }
+        data = list(data)
+        print("data in list: ", data)
+
+        grouped_data = {}
+        for field in data:
+            compound = field["compound"]
+            if compound not in grouped_data:
+                grouped_data[compound] = [0, 0]
+
+            grouped_data[compound][0] += field["total_rubber_weight_in_insert"]
+            grouped_data[compound][1] += field["total_rubber_weight_in_insert_lbs"]
+
+        print("Grouped data: ", grouped_data)
+
+        Insert_Query_history.objects.create(
+            query_date=datetime.datetime.now(),
+            start_date=start_date,
+            end_date=end_date,
+            insert=report,
+            total_insert=inserts_total_sum,
+            total_rubber=total_rubber_weight_in_insert_lbs_sum,
+            total_metal=total_inserts_weight_lbs,
+            total_sum=total_sum,
+        )
 
         # Crear el PDF
         buffer = io.BytesIO()
@@ -147,7 +142,8 @@ def generate_inserts_report(request):
         # Crear la tabla de datos
         data_table = [["Compound", "Total", "Lbs"]]
         for compound, values in grouped_data.items():
-            total_rubber_weight_in_insert, total_rubber_weight_in_insert_lbs = values
+            total_rubber_weight_in_insert = values[0]
+            total_rubber_weight_in_insert_lbs = values[1]
             data_table.append(
                 [
                     compound,
@@ -194,6 +190,9 @@ def generate_inserts_report(request):
     except Exception as e:
         print(
             f"Error al generar el reporte de fecha desde {start_date} hasta {end_date} con reporte {report}, Excepción: {e}"
+        )
+        return HttpResponse(
+            "Error interno del servidor al generar el reporte", status=500
         )
 
 

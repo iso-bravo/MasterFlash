@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { IoIosArrowBack } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import api from '../config/axiosConfig';
 import CompoundSelector from '../components/CompoundSelector';
 import CompoundsTable from '../components/CompoundsTable';
+import Header from '../components/Header';
 
 interface compoundData {
     compound: string;
@@ -22,7 +21,6 @@ interface PdfData {
 const RubberReport = () => {
     const [tableData, setTableData] = useState<Array<compoundData>>([]);
     const [pdfUrls, setPdfUrls] = useState<Array<string>>([]);
-    const navigate = useNavigate();
 
     const handleAddCompound = (compoundData: compoundData) => {
         setTableData(prevData => [...prevData, compoundData]);
@@ -84,10 +82,7 @@ const RubberReport = () => {
                 draggable
                 theme='colored'
             />
-            <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/rubber_history')} />
-                <h1 className='text-xl'>Reportes</h1>
-            </header>
+            <Header title='Reportes' goto='/rubber_history' />
             <div className='mt-5'>
                 <div className='mb-8'>
                     <CompoundSelector onAddCompound={handleAddCompound} />

@@ -1,6 +1,5 @@
 # type: ignore
 from django.db import models
-from django.utils import timezone
 
 
 class LinePress(models.Model):
@@ -233,7 +232,7 @@ class Rubber_Query_history(models.Model):
     end_date = models.DateField()
     compound = models.CharField(max_length=100)
     total_weight = models.FloatField()
-    comments = models.CharField(max_length=50)
+    comments = models.CharField(max_length=50, null=True)
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"
@@ -243,12 +242,16 @@ class Insert_Query_history(models.Model):
     query_date = models.DateTimeField()
     start_date = models.DateField()
     end_date = models.DateField()
-    compound = models.CharField(max_length=100)
-    total_weight = models.FloatField()
-    comments = models.CharField(max_length=50)
+    insert = models.CharField(max_length=50, null=True)
+    total_insert = models.FloatField(default=0)
+    total_rubber = models.FloatField(default=0)
+    total_metal = models.FloatField(default=0)
+    total_sum = models.FloatField(default=0)
+
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"
+
 
 class ShiftSchedule(models.Model):
     first_shift_start = models.TimeField(default="05:00")

@@ -12,6 +12,7 @@ from django.conf import settings
 import redis
 
 from .models import (
+    Insert_Query_history,
     LinePress,
     Part_Number,
     Production_records,
@@ -1162,6 +1163,26 @@ def get_rubber_report_history(request):
             "compound": h.compound,
             "total_weight": h.total_weight,
             "comments": h.comments
+        }
+        for h in history
+    ]
+
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def get_inserts_report_history(request):
+    history = Insert_Query_history.objects.all()
+
+    data = [
+        {
+            "query_date": h.query_date,
+            "start_date": h.start_date,
+            "end_date": h.end_date,
+            "insert" : h.insert,
+            "total_insert": h.total_insert,
+            "total_rubber": h.total_rubber,
+            "total_metal":h.total_metal,
+            "total_sum": h.total_sum
         }
         for h in history
     ]
