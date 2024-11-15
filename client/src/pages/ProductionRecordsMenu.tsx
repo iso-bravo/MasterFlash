@@ -8,7 +8,7 @@ const ProductionRecordsMenu = () => {
     const navigate = useNavigate();
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-7 md:py-4 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <header className='flex items-start gap-3'>
                 <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
                 <h1 className='text-xl'>Registro Producción</h1>
@@ -16,7 +16,7 @@ const ProductionRecordsMenu = () => {
             <section className='flex flex-row justify-evenly items-center h-full w-full'>
                 <div
                     className='flex flex-col w-14 items-center cursor-pointer'
-                    onClick={() => navigate('/presses_register_production')}
+                    onClick={() => navigate('/press_production_records_summary')}
                 >
                     <div className=' bg-[#C67C38] p-2 rounded-sm'>
                         <VscGitPullRequestCreate color='white' size={40} className='' />

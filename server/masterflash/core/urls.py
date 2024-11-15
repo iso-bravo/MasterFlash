@@ -35,6 +35,7 @@ urlpatterns = [
     ),
     path("search_weight/", views.search_weight, name="search_weight"),
     path("register_scrap/", views.register_scrap, name="register_scrap"),
+    path("register_scrap_test/", views.register_scrap_test, name="register_scrap_test"),
     path("register/", views.register, name="register"),
     path(
         "get_production_press_by_date/",
@@ -80,8 +81,12 @@ urlpatterns = [
         views.get_rubber_report_history,
         name="get_rubber_report_history",
     ),
+    path(
+        "get_inserts_report_history/",
+        views.get_inserts_report_history,
+        name="get_inserts_report_history",
+    ),
     path("get_all_part_nums/", views.get_part_nums, name="get_all_part_nums"),
-
     path(
         "part-numbers/names/",
         views.get_all_part_nums_names,
@@ -94,6 +99,19 @@ urlpatterns = [
     ),
     path("new/part-number/", views.post_part_number, name="post_new_part_number"),
     path("get_shift_schedule/", views.get_shift_schedule, name="get_shift_schedule"),
-    path("update_shift_schedule/", views.update_shift_schedule, name="update_shift_schedule"),
-
+    path(
+        "update_shift_schedule/",
+        views.update_shift_schedule,
+        name="update_shift_schedule",
+    ),
+    path(
+        "get_pieces_ok_by_date_range",
+        views.get_pieces_ok_by_date_range,
+        name="get_pieces_ok_by_date_range",
+    ),
+    path(
+        "get_record_by_id/<int:id>",
+        views.get_record_by_id,
+        name="get_production_record_by_id",
+    ),
 ]
