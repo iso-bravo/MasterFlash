@@ -2,26 +2,27 @@ import useFormStore from '../../stores/ParamsRegisterStore';
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useForm, SubmitHandler, useWatch } from 'react-hook-form';
-import { IccParamsRegister, ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
-
-type ParamsRegister = IccParamsRegister | ThirdParamsRegister;
+import { ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 
 const ThirdFormStep = () => {
-    const { initParams, secondParams, iccParams, thirdParams, setSteps, setThirdParams, setIccParams } = useFormStore();
+    const { initParams, secondParams, thirdParams, setSteps, setThirdParams } = useFormStore();
 
     const {
         register,
         handleSubmit,
         control,
         setValue,
-        formState: { errors, isValid },
-    } = useForm<ParamsRegister>({
+        formState: { errors },
+    } = useForm<ThirdParamsRegister>({
         mode: 'onChange',
         defaultValues: {
-            batch: initParams.icc ? iccParams?.batch || '' : thirdParams?.batch || '',
-            julian: initParams.icc ? iccParams?.julian : undefined,
-            ts2: initParams.icc ? undefined : thirdParams?.ts2,
-            cavities_arr: Array(secondParams.cavities).fill([0, 0, 0, 0]),
+            batch: thirdParams?.batch || '',
+            julian: initParams.icc ? thirdParams.julian : undefined,
+            ts2: !initParams.icc ? thirdParams.ts2 : undefined,
+            cavities_arr:
+                thirdParams.cavities_arr.length > 0
+                    ? thirdParams.cavities_arr
+                    : Array(secondParams.cavities).fill([0, 0, 0, 0]),
         },
     });
 
@@ -35,48 +36,44 @@ const ThirdFormStep = () => {
     };
 
     useEffect(() => {
-        if (initParams.icc && iccParams) {
-            setIccParams({ ...iccParams, cavities_arr: cavities_arr });
-        } else if (thirdParams) {
-            setThirdParams({ ...thirdParams, cavities_arr: cavities_arr });
-        }
+        setValue(
+            'cavities_arr',
+            thirdParams.cavities_arr.length > 0
+                ? thirdParams.cavities_arr
+                : Array(secondParams.cavities).fill([0, 0, 0, 0]),
+        );
+    }, [thirdParams.cavities_arr, secondParams.cavities]);
+
+    useEffect(() => {
+        setThirdParams({ ...thirdParams, cavities_arr });
     }, [cavities_arr]);
 
-    const onSubmit: SubmitHandler<ParamsRegister> = data => {
+    const onSubmit: SubmitHandler<ThirdParamsRegister> = data => {
         if (!data.batch) {
             toast.error('Por favor, completa el campo Batch.');
             return;
         }
 
-        if (initParams.icc) {
-            if (!(data as IccParamsRegister).julian) {
-                toast.error('Por favor, completa el campo Julian.');
-                return;
-            }
-        } else {
-            if (!(data as ThirdParamsRegister).ts2) {
-                toast.error('Por favor, completa el campo TS2.');
-                return;
-            }
+        if (initParams.icc && !data.julian) {
+            toast.error('Por favor, completa el campo Julian.');
+            return;
         }
 
-        const areCavitiesValid = data.cavities_arr.every((cavity: number[]) =>
-            cavity.every((value: number) => value !== 0),
-        );
+        if (!initParams.icc && !data.ts2) {
+            toast.error('Por favor, completa el campo TS2.');
+            return;
+        }
+
+        const areCavitiesValid = data.cavities_arr.every(cavity => cavity.every(value => value !== 0));
 
         if (!areCavitiesValid) {
             toast.error('Por favor, completa todos los valores de las cavidades.');
             return;
         }
 
-        // Actualización de estado global
         try {
-            if (initParams.icc) {
-                setIccParams(data as IccParamsRegister);
-            } else {
-                setThirdParams(data as ThirdParamsRegister);
-            }
-            setSteps(4); // Sólo cambia el paso si no hay errores
+            setThirdParams(data);
+            setSteps(4);
         } catch (error) {
             console.error('Error setting params: ', error);
             toast.error('Ocurrió un error al procesar los datos.');
@@ -112,12 +109,10 @@ const ThirdFormStep = () => {
                                     type='number'
                                     step='0.01'
                                     id='julian'
-                                    {...register('julian', { required: initParams.icc })}
+                                    {...register('julian', { required: true })}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
-                                {(errors as { julian?: number | undefined })?.julian && (
-                                    <span className='text-red-500 text-sm'>Campo requerido</span>
-                                )}
+                                {errors.julian && <span className='text-red-500 text-sm'>Campo requerido</span>}
                             </>
                         ) : (
                             <>
@@ -128,37 +123,31 @@ const ThirdFormStep = () => {
                                     type='number'
                                     step='0.01'
                                     id='ts2'
-                                    {...register('ts2', { required: !initParams.icc })}
+                                    {...register('ts2', { required: true })}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
-                                {(errors as { ts2?: number | undefined })?.ts2 && (
-                                    <span className='text-red-500 text-sm'>Campo requerido</span>
-                                )}
+                                {errors.ts2 && <span className='text-red-500 text-sm'>Campo requerido</span>}
                             </>
                         )}
                     </div>
                 </div>
                 <div className='grid grid-cols-1 gap-4'>
-                    {cavities_arr.map((cavity: number[], cavityIndex: number) => (
+                    {cavities_arr.map((cavity, cavityIndex) => (
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
                             <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavity {cavityIndex + 1}</h5>
                             <div className='grid grid-cols-4 gap-2'>
-                                {cavity.map((value: number, valueIndex: number) => (
-                                    <div key={valueIndex}>
-                                        <label className='block mb-1 text-sm font-medium text-gray-900'>
-                                            Value {valueIndex + 1}
-                                        </label>
-                                        <input
-                                            type='number'
-                                            step='0.01'
-                                            min={0}
-                                            value={value}
-                                            onChange={e =>
-                                                handleCavityChange(cavityIndex, valueIndex, Number(e.target.value))
-                                            }
-                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                                        />
-                                    </div>
+                                {cavity.map((value, valueIndex) => (
+                                    <input
+                                        key={valueIndex}
+                                        type='number'
+                                        step='0.01'
+                                        min={0}
+                                        value={value}
+                                        onChange={e =>
+                                            handleCavityChange(cavityIndex, valueIndex, Number(e.target.value))
+                                        }
+                                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -166,12 +155,9 @@ const ThirdFormStep = () => {
                 </div>
                 <button
                     type='submit'
-                    className={`w-full text-white ${
-                        isValid ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-300 cursor-not-allowed'
-                    } focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center`}
-                    disabled={!isValid}
+                    className='w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
                 >
-                    Siguiente
+                    Continuar
                 </button>
             </form>
         </div>

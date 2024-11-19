@@ -85,7 +85,7 @@ const GeneralInfoFromStep = () => {
                             <option value='1'>1</option>
                             <option value='2'>2</option>
                         </select>
-                        {errors.turn && <span className='text-red-500 text-sm'>Campo obligatorio</span>}
+                        {errors.shift && <span className='text-red-500 text-sm'>Campo obligatorio</span>}
                     </div>
                     {['partnum', 'auditor', 'molder'].map(input => (
                         <div key={input}>

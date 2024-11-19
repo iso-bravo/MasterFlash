@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
-import { toast } from 'react-toastify';
 import { useForm } from 'react-hook-form';
 
 const SecondPartFormStep = () => {
     const { initParams, secondParams, setSecondParams, setSteps } = useFormStore();
     const options = Array.from({ length: 9 }, (_, i) => i + 1);
     const sectionTypes: SectionType[] = ['superior', 'inferior'];
+
     const {
         register,
         handleSubmit,
@@ -18,49 +18,32 @@ const SecondPartFormStep = () => {
         defaultValues: secondParams,
     });
 
-    const fetchMold = async () => {
-        try {
-            const response = await api.get(`/get-mold/${initParams.partnum}`);
-            const fetchedMold = response.data.mold;
-
-            // Solo actualiza secondParams si el valor de mold ha cambiado
-            if (secondParams.mold !== fetchedMold) {
-                setSecondParams({ ...secondParams, mold: fetchedMold });
-            }
-        } catch (error) {
-            console.error('Error fetching mold:', error);
-        }
-    };
-
     useEffect(() => {
-        // Llama a la función solo si partnum no está vacío
+        const fetchMold = async () => {
+            try {
+                const response = await api.get(`/get-mold/${initParams.partnum}`);
+                const fetchedMold = response.data.mold;
+
+                if (fetchedMold) {
+                    setSecondParams({ ...secondParams, mold: fetchedMold });
+                }
+            } catch (error) {
+                console.error('Error fetching mold:', error);
+            }
+        };
+
         if (initParams.partnum) {
             fetchMold();
         }
-    }, []);
+    }, [initParams.partnum, setSecondParams]);
 
     const onSubmit = (data: SecondParamsRegister) => {
-        const requiredFields = ['cavities', 'metal', 'body', 'strips', 'full_cycle', 'cycle_time', 'pressure'];
-        const sectionFields = ['screen', 'mold2', 'platen'];
+        const updatedData = { ...data, mold: secondParams.mold };
+        console.log('Datos enviados:', updatedData);
 
-        const isSimpleFieldsValid = requiredFields.every(field => data[field as keyof SecondParamsRegister]);
-        const isSectionFieldsValid = sectionFields.every(field => {
-            const sectionData = data[field as keyof SecondParamsRegister];
-            return sectionData && typeof sectionData === 'object'
-                ? sectionTypes.every(section => (sectionData as Record<SectionType, number>)[section])
-                : false;
-        });
-
-        if (!isSimpleFieldsValid || !isSectionFieldsValid) {
-            toast.error('Por favor, completa todos los campos obligatorios.');
-            return;
-        }
-
-        setSecondParams(data)
-
+        setSecondParams(updatedData);
         setSteps(3);
     };
-
 
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
@@ -139,7 +122,6 @@ const SecondPartFormStep = () => {
                                                 })}
                                                 className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5'
                                             />
-                                            {/* Verifica si el error para el campo específico existe */}
                                             {errors[type as 'screen' | 'mold2' | 'platen']?.[
                                                 section as 'superior' | 'inferior'
                                             ] && <span className='text-red-500 text-sm'>Campo requerido</span>}
@@ -168,6 +150,7 @@ const SecondPartFormStep = () => {
                         isValid ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-300 cursor-not-allowed'
                     } focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center`}
                     disabled={!isValid}
+                    aria-disabled={!isValid}
                 >
                     Siguiente
                 </button>
