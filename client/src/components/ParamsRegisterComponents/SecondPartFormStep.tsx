@@ -2,13 +2,21 @@ import { useEffect } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
-import { MdArrowBack } from 'react-icons/md';
-import { toast } from 'react-toastify';
+import { useForm } from 'react-hook-form';
 
 const SecondPartFormStep = () => {
     const { initParams, secondParams, setSecondParams, setSteps } = useFormStore();
     const options = Array.from({ length: 9 }, (_, i) => i + 1);
     const sectionTypes: SectionType[] = ['superior', 'inferior'];
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isValid },
+    } = useForm<SecondParamsRegister>({
+        mode: 'onChange',
+        defaultValues: secondParams,
+    });
 
     useEffect(() => {
         const fetchMold = async () => {
@@ -16,8 +24,7 @@ const SecondPartFormStep = () => {
                 const response = await api.get(`/get-mold/${initParams.partnum}`);
                 const fetchedMold = response.data.mold;
 
-                // Solo actualiza secondParams si el valor de mold ha cambiado
-                if (secondParams.mold !== fetchedMold) {
+                if (fetchedMold) {
                     setSecondParams({ ...secondParams, mold: fetchedMold });
                 }
             } catch (error) {
@@ -25,78 +32,22 @@ const SecondPartFormStep = () => {
             }
         };
 
-        // Llama a la función solo si partnum no está vacío
         if (initParams.partnum) {
             fetchMold();
         }
-    }, [initParams.partnum, setSecondParams, secondParams]);
+    }, [initParams.partnum, setSecondParams]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    const onSubmit = (data: SecondParamsRegister) => {
+        const updatedData = { ...data, mold: secondParams.mold };
+        console.log('Datos enviados:', updatedData);
 
-        // Evitar números negativos
-        const numericValue = Math.max(0, parseFloat(value));
-
-        if (name.includes('-')) {
-            const [field, section] = name.split('-');
-
-            setSecondParams({
-                ...secondParams,
-                [field]: {
-                    ...(secondParams[field as keyof SecondParamsRegister] as Record<SectionType, number>),
-                    [section]: numericValue,
-                },
-            });
-        } else {
-            setSecondParams({
-                ...secondParams,
-                [name]: name === 'metal' || name === 'cavities' ? numericValue : value,
-            });
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Definir los campos requeridos
-        const requiredFields = ['cavities', 'metal', 'body', 'strips', 'full_cycle', 'cycle_time', 'pressure'];
-        const sectionFields = ['screen', 'mold2', 'platen'];
-
-        // Validar campos sencillos
-        const isSimpleFieldsValid = requiredFields.every(field => secondParams[field as keyof SecondParamsRegister]);
-
-        // Validar los campos que tienen secciones (superior/inferior)
-        const isSectionFieldsValid = sectionFields.every(field => {
-            const sectionData = secondParams[field as keyof SecondParamsRegister];
-            return sectionData && typeof sectionData === 'object'
-                ? sectionTypes.every(section => (sectionData as Record<SectionType, number>)[section])
-                : false;
-        });
-
-        if (!isSimpleFieldsValid || !isSectionFieldsValid) {
-            toast.error('Por favor, completa todos los campos obligatorios.');
-            return;
-        }
-
-        // Si todos los campos están completos, cambiar al siguiente paso
+        setSecondParams(updatedData);
         setSteps(3);
     };
 
-    const isFormValid =
-        ['cavities', 'metal', 'body', 'strips', 'full_cycle', 'cycle_time', 'pressure'].every(
-            field => secondParams[field as keyof SecondParamsRegister],
-        ) &&
-        ['screen', 'mold2', 'platen'].every(field => {
-            const sectionData = secondParams[field as keyof SecondParamsRegister];
-            return sectionData && typeof sectionData === 'object'
-                ? sectionTypes.every(section => (sectionData as Record<SectionType, number>)[section])
-                : false;
-        });
-
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
-            <form className='space-y-6' onSubmit={handleSubmit}>
-                <MdArrowBack size={30} onClick={() => setSteps(1)} className='cursor-pointer' />
+            <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
                 <h5 className='text-xl font-medium text-gray-900'>Segunda parte</h5>
                 <div className='grid grid-cols-2 gap-4'>
                     <div>
@@ -104,10 +55,7 @@ const SecondPartFormStep = () => {
                             Cavidades
                         </label>
                         <select
-                            name='cavities'
-                            id='cavities'
-                            value={secondParams.cavities}
-                            onChange={handleChange}
+                            {...register('cavities', { required: true })}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         >
                             {options.map(number => (
@@ -116,16 +64,15 @@ const SecondPartFormStep = () => {
                                 </option>
                             ))}
                         </select>
+                        {errors.cavities && <span className='text-red-500 text-sm'>Campo requerido</span>}
                     </div>
                     <div>
                         <label htmlFor='metal' className='block mb-2 text-sm font-medium text-gray-900'>
                             Metal
                         </label>
                         <select
-                            name='metal'
+                            {...register('metal', { required: true })}
                             id='metal'
-                            value={secondParams.metal}
-                            onChange={handleChange}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         >
                             <option value='' disabled>
@@ -135,65 +82,53 @@ const SecondPartFormStep = () => {
                             <option value='0.032'>0.032</option>
                             <option value='0.040'>0.040</option>
                         </select>
+                        {errors.metal && <span className='text-red-500 text-sm'>Campo requerido</span>}
                     </div>
-                    {['body', 'strips', 'full_cycle', 'cycle_time'].map(input => {
-                        const value = secondParams[input as keyof SecondParamsRegister];
-
-                        const isStringOrNumber = typeof value === 'string' || typeof value === 'number';
-
-                        return (
-                            <div key={input}>
-                                <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
-                                    {input}
-                                </label>
-                                <input
-                                    type='number'
-                                    id={input}
-                                    name={input}
-                                    step='0.01'
-                                    min={0}
-                                    value={isStringOrNumber ? value : ''}
-                                    onChange={handleChange}
-                                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                                />
-                            </div>
-                        );
-                    })}
+                    {['body', 'strips', 'full_cycle', 'cycle_time'].map(input => (
+                        <div key={input}>
+                            <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
+                                {input}
+                            </label>
+                            <input
+                                type='number'
+                                {...register(input as keyof SecondParamsRegister, { required: true, min: 0 })}
+                                step='0.01'
+                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                            />
+                            {errors[input as keyof SecondParamsRegister] && (
+                                <span className='text-red-500 text-sm'>Campo requerido</span>
+                            )}
+                        </div>
+                    ))}
                     <div className='col-span-2'>
                         <div className='flex justify-between'>
-                            {['screen', 'mold2', 'platen'].map(type => {
-                                const sectionData = secondParams[type as keyof SecondParamsRegister];
-                                if (typeof sectionData === 'object') {
-                                    return (
-                                        <div key={type} className='text-center flex-1 p-1'>
-                                            <label className='block mb-2 text-sm font-medium text-gray-900'>
-                                                {type}
+                            {['screen', 'mold2', 'platen'].map(type => (
+                                <div key={type} className='text-center flex-1 p-1'>
+                                    <label className='block mb-2 text-sm font-medium text-gray-900'>{type}</label>
+                                    {sectionTypes.map(section => (
+                                        <div key={section} className='mb-2'>
+                                            <label
+                                                htmlFor={`${type}-${section.toLowerCase()}`}
+                                                className='block mb-1 text-xs text-gray-700'
+                                            >
+                                                {section}
                                             </label>
-                                            {sectionTypes.map(section => (
-                                                <div key={section} className='mb-2'>
-                                                    <label
-                                                        htmlFor={`${type}-${section.toLowerCase()}`}
-                                                        className='block mb-1 text-xs text-gray-700'
-                                                    >
-                                                        {section}
-                                                    </label>
-                                                    <input
-                                                        type='number'
-                                                        step='0.01'
-                                                        id={`${type}-${section.toLowerCase()}`}
-                                                        name={`${type}-${section.toLowerCase()}`}
-                                                        min={0}
-                                                        value={sectionData[section as SectionType] ?? 0}
-                                                        onChange={handleChange}
-                                                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5'
-                                                    />
-                                                </div>
-                                            ))}
+                                            <input
+                                                type='number'
+                                                step='0.01'
+                                                {...register(`${type as 'screen' | 'mold2' | 'platen'}.${section}`, {
+                                                    required: true,
+                                                    min: 0,
+                                                })}
+                                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5'
+                                            />
+                                            {errors[type as 'screen' | 'mold2' | 'platen']?.[
+                                                section as 'superior' | 'inferior'
+                                            ] && <span className='text-red-500 text-sm'>Campo requerido</span>}
                                         </div>
-                                    );
-                                }
-                                return null;
-                            })}
+                                    ))}
+                                </div>
+                            ))}
                         </div>
                     </div>
                     <div>
@@ -202,22 +137,20 @@ const SecondPartFormStep = () => {
                         </label>
                         <input
                             type='number'
-                            name='pressure'
-                            id='pressure'
+                            {...register('pressure', { required: true, min: 0 })}
                             step='0.01'
-                            min={0}
-                            value={secondParams.pressure || ''}
-                            onChange={handleChange}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         />
+                        {errors.pressure && <span className='text-red-500 text-sm'>Campo requerido</span>}
                     </div>
                 </div>
                 <button
                     type='submit'
                     className={`w-full text-white ${
-                        isFormValid ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-300 cursor-not-allowed'
+                        isValid ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-300 cursor-not-allowed'
                     } focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center`}
-                    disabled={!isFormValid}
+                    disabled={!isValid}
+                    aria-disabled={!isValid}
                 >
                     Siguiente
                 </button>

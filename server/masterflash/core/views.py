@@ -25,6 +25,7 @@ from .models import (
     Qc_Scrap,
     Insert,
     Presses_monthly_goals,
+    Params,
 )
 from .utils import set_shift, sum_pieces
 from django.db.models import Q, Sum
@@ -409,9 +410,8 @@ def register_data_production(request):
         molder_number=molderNumber,
         press=data.get("name"),
         shift=shift,
-        relay = relay
+        relay=relay,
     )
-
 
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
 
@@ -436,7 +436,7 @@ def get_production_press_by_date(request):
         "work_order",
         "pieces_ok",
         "date_time",
-        "relay"
+        "relay",
     )
 
     print("ProductionPress records found:", production_press_records)
@@ -463,7 +463,7 @@ def get_production_press_by_date(request):
                 "standard": part_number_record["standard"],
                 "pieces_ok": record["pieces_ok"],
                 "hour": record["date_time"].strftime("%H:%M:%S"),
-                "relay": record["relay"]
+                "relay": record["relay"],
             }
             result.append(combined_record)
     print("Final result:", result)
@@ -881,6 +881,7 @@ def register_scrap_test(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
+
 def register(request):
     print("Aqui")
     return JsonResponse({"message": "Registro exitoso"}, status=200)
@@ -1162,12 +1163,13 @@ def get_rubber_report_history(request):
             "end_date": h.end_date,
             "compound": h.compound,
             "total_weight": h.total_weight,
-            "comments": h.comments
+            "comments": h.comments,
         }
         for h in history
     ]
 
     return JsonResponse(data, safe=False)
+
 
 @csrf_exempt
 def get_inserts_report_history(request):
@@ -1178,11 +1180,11 @@ def get_inserts_report_history(request):
             "query_date": h.query_date,
             "start_date": h.start_date,
             "end_date": h.end_date,
-            "insert" : h.insert,
+            "insert": h.insert,
             "total_insert": h.total_insert,
             "total_rubber": h.total_rubber,
-            "total_metal":h.total_metal,
-            "total_sum": h.total_sum
+            "total_metal": h.total_metal,
+            "total_sum": h.total_sum,
         }
         for h in history
     ]
@@ -1383,7 +1385,6 @@ def get_pieces_ok_by_date_range(request):
         start_date = parse_datetime(data.get("start_date"))
         end_date = parse_datetime(data.get("end_date"))
 
-
         if not start_date or not end_date:
             return JsonResponse(
                 {"error": "start_date and end_date are required"}, status=400
@@ -1435,5 +1436,59 @@ def get_record_by_id(request, id):
 
         return JsonResponse(record, status=200)
 
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def save_params(request):
+    try:
+        # Obtener los datos del cuerpo de la solicitud
+        data = json.loads(request.body)
+
+        # Crear un nuevo registro de params utilizando los datos
+        param_instance = Params(
+            partnum=data.get("partnum"),
+            auditor=data.get("auditor"),
+            shift=data.get("shift"),
+            mp=data.get("mp"),
+            molder=data.get("molder"),
+            icc=data.get("icc"),
+            mold=data.get("mold"),
+            cavities=data.get("cavities"),
+            metal=data.get("metal"),
+            body=data.get("body"),
+            strips=data.get("strips"),
+            full_cycle=data.get("full_cycle"),
+            cycle_time=data.get(
+                "cycle_time", 0
+            ),  # Valor por defecto si no se proporciona
+            screen_superior=data.get("screen_superior", 0),
+            screen_inferior=data.get("screen_inferior", 0),
+            mold_superior=data.get("mold_superior", 0),
+            mold_inferior=data.get("mold_inferior", 0),
+            platen_superior=data.get("platen_superior", 0),
+            platen_inferior=data.get("platen_inferior", 0),
+            pressure=data.get("pressure"),
+            waste_pct=data.get("waste_pct"),
+            batch=data.get("batch"),
+            julian=data.get("julian", None),
+            ts2=data.get("ts2", None),
+            cavities_arr=data.get(
+                "cavities_arr", []
+            ),  # En caso de que no venga, usar un arreglo vacío
+        )
+
+        # Guardar el registro en la base de datos
+        param_instance.save()
+
+        # Responder con un mensaje de éxito
+        return JsonResponse(
+            {"message": "Parámetros guardados correctamente"}, status=201
+        )
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Error en los datos enviados"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

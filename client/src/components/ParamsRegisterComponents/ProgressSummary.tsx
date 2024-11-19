@@ -1,21 +1,17 @@
 import useFormStore from '../../stores/ParamsRegisterStore';
-import {
-    IccParamsRegister,
-    InitParamsRegister,
-    SecondParamsRegister,
-    ThirdParamsRegister,
-} from '../../types/ParamsRegisterTypes';
-import api from '../../config/axiosConfig'; // Asegúrate de que la configuración de Axios esté correcta.
+import { InitParamsRegister, SecondParamsRegister, ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
+import api from '../../config/axiosConfig';
+import { toast } from 'react-toastify'; // Para notificaciones visuales.
 
 const ProgressSummary = () => {
-    const { step, initParams, secondParams, iccParams, thirdParams } = useFormStore();
+    const { step, initParams, secondParams, thirdParams } = useFormStore();
 
-    const renderParams = <
-        T extends InitParamsRegister | SecondParamsRegister | IccParamsRegister | ThirdParamsRegister,
-    >(
-        params: T,
+    const renderParams = <T extends InitParamsRegister | SecondParamsRegister | ThirdParamsRegister>(
+        params: T | undefined,
         title: string,
     ) => {
+        if (!params) return null;
+
         return (
             <div className='mb-4'>
                 <h3 className='font-bold text-lg'>{title}</h3>
@@ -23,7 +19,15 @@ const ProgressSummary = () => {
                     {Object.entries(params).map(([key, value]) => (
                         <li key={key} className='mb-2'>
                             <span className='font-semibold capitalize'>{key}: </span>
-                            {typeof value === 'object' && value !== null ? (
+                            {Array.isArray(value) ? (
+                                <ul className='pl-4'>
+                                    {value.map((subValue, index) => (
+                                        <li key={index}>
+                                            <span>{JSON.stringify(subValue)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : typeof value === 'object' && value !== null ? (
                                 <ul className='pl-4'>
                                     {Object.entries(value).map(([subKey, subValue]) => (
                                         <li key={subKey}>
@@ -33,7 +37,7 @@ const ProgressSummary = () => {
                                     ))}
                                 </ul>
                             ) : (
-                                <span>{value.toString()}</span>
+                                <span>{value !== undefined && value !== null ? value.toString() : 'N/A'}</span>
                             )}
                         </li>
                     ))}
@@ -44,62 +48,53 @@ const ProgressSummary = () => {
 
     const handleSubmit = async () => {
         try {
-            // Enviar todos los parámetros a la base de datos
             const response = await api.post('/save-params', {
                 initParams,
                 secondParams,
-                iccParams,
                 thirdParams,
             });
+            toast.success('Datos enviados correctamente.');
             console.log('Datos enviados correctamente:', response.data);
-            // Puedes mostrar una notificación de éxito o redirigir
         } catch (error) {
             console.error('Error enviando los datos:', error);
-            // Manejar el error
+            toast.error('Ocurrió un error al enviar los datos.');
         }
     };
 
-    let content;
-    switch (step) {
-        case 1:
-            content = renderParams(initParams, 'Initial Parameters');
-            break;
-        case 2:
-            content = renderParams(secondParams, 'Second Parameters');
-            break;
-        case 3:
-            content = initParams.icc
-                ? iccParams && renderParams(iccParams, 'ICC Parameters')
-                : thirdParams && renderParams(thirdParams, 'Third Parameters');
-            break;
-        case 4:
-            content = (
-                <>
-                    {renderParams(initParams, 'Initial Parameters')}
-                    {renderParams(secondParams, 'Second Parameters')}
-                    {initParams.icc
-                        ? iccParams && renderParams(iccParams, 'ICC Parameters')
-                        : thirdParams && renderParams(thirdParams, 'Third Parameters')}
-                    <button
-                        onClick={handleSubmit}
-                        className='mt-4 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
-                    >
-                        Enviar
-                    </button>
-                </>
-            );
-            break;
-        default:
-            content = <div>No data available</div>;
-            break;
-    }
+    const renderContent = () => {
+        switch (step) {
+            case 1:
+                return renderParams(initParams, 'Initial Parameters');
+            case 2:
+                return renderParams(secondParams, 'Second Parameters');
+            case 3:
+                return renderParams(
+                    initParams.icc ? thirdParams : thirdParams, // Ajusta si necesitas diferenciar ICC.
+                    initParams.icc ? 'ICC Parameters' : 'Third Parameters',
+                );
+            case 4:
+                return (
+                    <>
+                        {renderParams(initParams, 'Initial Parameters')}
+                        {renderParams(secondParams, 'Second Parameters')}
+                        {renderParams(
+                            initParams.icc ? thirdParams : thirdParams,
+                            initParams.icc ? 'ICC Parameters' : 'Third Parameters',
+                        )}
+                        <button
+                            onClick={handleSubmit}
+                            className='mt-4 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
+                        >
+                            Enviar
+                        </button>
+                    </>
+                );
+            default:
+                return <div>No data available</div>;
+        }
+    };
 
-    return (
-        <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
-
-            {content}
-        </div>
-    );
+    return <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>{renderContent()}</div>;
 };
 
 export default ProgressSummary;

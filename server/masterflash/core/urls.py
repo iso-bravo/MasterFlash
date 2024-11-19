@@ -114,4 +114,5 @@ urlpatterns = [
         views.get_record_by_id,
         name="get_production_record_by_id",
     ),
+    path("save-params", views.save_params, name="save_params"),
 ]

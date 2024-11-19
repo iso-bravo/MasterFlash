@@ -1,5 +1,3 @@
-import { IoIosArrowBack } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { usePartNumForm } from '../stores/PartNumsRegisterStore';
 import GeneralInfoForm from '../components/partNumMultiFormSteps/GeneralInfoForm';
@@ -11,9 +9,9 @@ import InputFormSummary from '../components/partNumMultiFormSteps/InputFormSumma
 import ProgressBar from '../components/ProgressBar';
 import SelectPartNumForm from '../components/partNumMultiFormSteps/SelectPartNumForm';
 import { MdArrowBack } from 'react-icons/md';
+import Header from '../components/Header';
 
 const PartNumCreation = () => {
-    const navigate = useNavigate();
     const { setSteps, step, progress } = usePartNumForm();
 
     let formStep;
@@ -56,10 +54,7 @@ const PartNumCreation = () => {
                 draggable
                 theme='colored'
             />
-            <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/part_num')} />
-                <h1 className='text-xl'>Nuevo Número de parte</h1>
-            </header>
+            <Header title='Nuevo Número de parte' goto='/part_num' />
             <section className='flex flex-col gap-6 mt-4 overflow-auto'>
                 <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 flex-1'>
                     {step > 0 && (
