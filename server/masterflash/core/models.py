@@ -269,13 +269,12 @@ class Params(models.Model):
     mp = models.CharField(max_length=100)
     molder = models.IntegerField()
     icc = models.BooleanField()
-
     mold = models.CharField(max_length=100)
     cavities = models.IntegerField()
     metal = models.CharField(max_length=50, null=True)
-    body = models.IntegerField()
-    strips = models.IntegerField()
-    full_cycle = models.IntegerField()
+    body = models.FloatField()
+    strips = models.FloatField()
+    full_cycle = models.FloatField()
     cycle_time = models.FloatField(default=0)
     screen_superior = models.FloatField(default=0)
     screen_inferior = models.FloatField(default=0)
@@ -286,8 +285,8 @@ class Params(models.Model):
     pressure = models.FloatField()
     waste_pct = models.FloatField()
     batch = models.CharField(max_length=100)
-    julian = models.IntegerField(null=True, blank=True)
-    ts2 = models.IntegerField(null=True, blank=True)
+    julian = models.FloatField(null=True, blank=True)
+    ts2 = models.FloatField(null=True, blank=True)
     cavities_arr = models.JSONField()
 
     def __str__(self):

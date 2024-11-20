@@ -1440,48 +1440,59 @@ def get_record_by_id(request, id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+logger = logging.getLogger("__name__")
+
+
 @csrf_exempt
 @require_POST
 def save_params(request):
     try:
         # Obtener los datos del cuerpo de la solicitud
+        logger.info("Recibiendo solicitud...")
         data = json.loads(request.body)
+        logger.info(f"Datos recibidos: {data}")
 
-        # Crear un nuevo registro de params utilizando los datos
+        # Validar que los datos requeridos estén presentes
+        init_params = data.get("initParams", {})
+        second_params = data.get("secondParams", {})
+        third_params = data.get("thirdParams", {})
+        logger.info(
+            f"initParams: {init_params}, secondParams: {second_params}, thirdParams: {third_params}"
+        )
+
+        if not init_params or not second_params:
+            return JsonResponse({"error": "Faltan parámetros obligatorios"}, status=400)
+
         param_instance = Params(
-            partnum=data.get("partnum"),
-            auditor=data.get("auditor"),
-            shift=data.get("shift"),
-            mp=data.get("mp"),
-            molder=data.get("molder"),
-            icc=data.get("icc"),
-            mold=data.get("mold"),
-            cavities=data.get("cavities"),
-            metal=data.get("metal"),
-            body=data.get("body"),
-            strips=data.get("strips"),
-            full_cycle=data.get("full_cycle"),
-            cycle_time=data.get(
-                "cycle_time", 0
-            ),  # Valor por defecto si no se proporciona
-            screen_superior=data.get("screen_superior", 0),
-            screen_inferior=data.get("screen_inferior", 0),
-            mold_superior=data.get("mold_superior", 0),
-            mold_inferior=data.get("mold_inferior", 0),
-            platen_superior=data.get("platen_superior", 0),
-            platen_inferior=data.get("platen_inferior", 0),
-            pressure=data.get("pressure"),
-            waste_pct=data.get("waste_pct"),
-            batch=data.get("batch"),
-            julian=data.get("julian", None),
-            ts2=data.get("ts2", None),
-            cavities_arr=data.get(
-                "cavities_arr", []
-            ),  # En caso de que no venga, usar un arreglo vacío
+            partnum=init_params.get("partnum"),
+            auditor=init_params.get("auditor"),
+            shift=init_params.get("shift", ""),
+            mp=init_params.get("mp"),
+            molder=init_params.get("molder"),
+            icc=init_params.get("icc"),
+            mold=second_params.get("mold"),
+            cavities=second_params.get("cavities"),
+            metal=second_params.get("metal"),
+            body=second_params.get("body"),
+            strips=second_params.get("strips"),
+            full_cycle=second_params.get("full_cycle"),
+            cycle_time=second_params.get("cycle_time", 0),
+            screen_superior=second_params.get("screen", {}).get("superior", 0),
+            screen_inferior=second_params.get("screen", {}).get("inferior", 0),
+            mold_superior=second_params.get("mold2", {}).get("superior", 0),
+            mold_inferior=second_params.get("mold2", {}).get("inferior", 0),
+            platen_superior=second_params.get("platen", {}).get("superior", 0),
+            platen_inferior=second_params.get("platen", {}).get("inferior", 0),
+            pressure=second_params.get("pressure"),
+            waste_pct=second_params.get("waste_pct"),
+            batch=third_params.get("batch"),
+            julian=third_params.get("julian", None),
+            cavities_arr=third_params.get("cavities_arr", []),
         )
 
         # Guardar el registro en la base de datos
         param_instance.save()
+        logger.info("Parámetros guardados correctamente.")
 
         # Responder con un mensaje de éxito
         return JsonResponse(
@@ -1489,6 +1500,10 @@ def save_params(request):
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Error en los datos enviados"}, status=400)
+        logger.exception("Error en el formato de los datos enviados.")
+        return JsonResponse(
+            {"error": "Error en el formato de los datos enviados"}, status=400
+        )
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        logger.exception("Error interno.")
+        return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
