@@ -39,11 +39,12 @@ const SecondPartFormStep = () => {
 
     const onSubmit = (data: SecondParamsRegister) => {
         const updatedData = { ...data, mold: secondParams.mold };
-        console.log('Datos enviados:', updatedData);
+        console.log('Datos guardados en setSecondParams:', updatedData);
 
         setSecondParams(updatedData);
         setSteps(3);
     };
+
 
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>

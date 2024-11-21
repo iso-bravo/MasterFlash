@@ -63,7 +63,25 @@ const useFormStore = create<FormState>((set, get) => ({
         get().calculateProgress();
     },
     setSecondParams: params => {
-        set({ secondParams: params });
+        set(state => {
+            if (!get().thirdParams.cavities_arr) {
+                const updatedCavitiesArr = Array(params.cavities)
+                    .fill(null)
+                    .map((_, i) => state.thirdParams.cavities_arr[i] || [0, 0, 0, 0]);
+
+                return {
+                    secondParams: params,
+                    thirdParams: {
+                        ...state.thirdParams,
+                        cavities_arr: updatedCavitiesArr,
+                    },
+                };
+            } else {
+                return {
+                    secondParams: params,
+                };
+            }
+        });
         get().calculateProgress();
     },
     setThirdParams: params => {

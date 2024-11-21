@@ -16,7 +16,7 @@ const GeneralInfoFromStep = () => {
         formState: { errors, isValid },
     } = useForm<InitParamsRegister>({
         defaultValues: initParams,
-        mode: 'onChange', // Para validar al cambiar
+        mode: 'onChange', 
     });
 
     useEffect(() => {
@@ -34,7 +34,7 @@ const GeneralInfoFromStep = () => {
 
     const onSubmit = (data: InitParamsRegister) => {
         // Validar si todos los campos requeridos están completos
-        const requiredFields = ['mp', 'turn', 'partnum', 'auditor', 'molder'];
+        const requiredFields = ['mp', 'shift', 'partnum', 'auditor', 'molder'];
         const isFormComplete = requiredFields.every(field => data[field as keyof InitParamsRegister]);
 
         if (!isFormComplete) {
@@ -78,7 +78,7 @@ const GeneralInfoFromStep = () => {
                         </label>
                         <select
                             id='turno'
-                            {...register('turn', { required: true })}
+                            {...register('shift', { required: true })}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         >
                             <option value=''>Elige un turno</option>
