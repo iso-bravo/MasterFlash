@@ -1,22 +1,15 @@
 import { create } from 'zustand';
-import type {
-    InitParamsRegister,
-    SecondParamsRegister,
-    IccParamsRegister,
-    ThirdParamsRegister,
-} from '../types/ParamsRegisterTypes';
+import type { InitParamsRegister, SecondParamsRegister, ThirdParamsRegister } from '../types/ParamsRegisterTypes';
 
 interface FormState {
     step: number;
     progress: number;
     initParams: InitParamsRegister;
     secondParams: SecondParamsRegister;
-    iccParams: IccParamsRegister | null;
-    thirdParams: ThirdParamsRegister | null;
+    thirdParams: ThirdParamsRegister;
     setSteps: (step: number) => void;
     setInitParams: (params: InitParamsRegister) => void;
     setSecondParams: (params: SecondParamsRegister) => void;
-    setIccParams: (params: IccParamsRegister) => void;
     setThirdParams: (params: ThirdParamsRegister) => void;
     calculateProgress: () => void;
     resetForm: () => void;
@@ -29,7 +22,7 @@ const useFormStore = create<FormState>((set, get) => ({
     initParams: {
         partnum: '',
         auditor: 0,
-        turn: '',
+        shift: '',
         mp: '',
         molder: 0,
         icc: false,
@@ -48,8 +41,10 @@ const useFormStore = create<FormState>((set, get) => ({
         pressure: 0,
         waste_pct: 0,
     },
-    iccParams: null,
-    thirdParams: null,
+    thirdParams: {
+        batch: '',
+        cavities_arr: [],
+    },
 
     // Funciones para actualizar los datos
     setSteps: step => {
@@ -58,21 +53,35 @@ const useFormStore = create<FormState>((set, get) => ({
         get().calculateProgress();
     },
     setInitParams: params => {
-        set({ initParams: params });
-        // Verificar si usar IccParams o ThirdParams basado en 'icc'
-        if (params.icc) {
-            set({ thirdParams: null, iccParams: { batch: '', julian: 0, cavities_arr: [] } });
-        } else {
-            set({ iccParams: null, thirdParams: { batch: '', ts2: 0, cavities_arr: [] } });
-        }
+        set(state => ({
+            initParams: params,
+            thirdParams: {
+                ...state.thirdParams,
+                ...(params.icc ? { julian: 0, ts2: undefined } : { ts2: 0, julian: undefined }),
+            },
+        }));
         get().calculateProgress();
     },
     setSecondParams: params => {
-        set({ secondParams: params });
-        get().calculateProgress();
-    },
-    setIccParams: params => {
-        set({ iccParams: params });
+        set(state => {
+            if (!get().thirdParams.cavities_arr) {
+                const updatedCavitiesArr = Array(params.cavities)
+                    .fill(null)
+                    .map((_, i) => state.thirdParams.cavities_arr[i] || [0, 0, 0, 0]);
+
+                return {
+                    secondParams: params,
+                    thirdParams: {
+                        ...state.thirdParams,
+                        cavities_arr: updatedCavitiesArr,
+                    },
+                };
+            } else {
+                return {
+                    secondParams: params,
+                };
+            }
+        });
         get().calculateProgress();
     },
     setThirdParams: params => {
@@ -82,23 +91,14 @@ const useFormStore = create<FormState>((set, get) => ({
 
     // Calcular el progreso en función de los datos ingresados
     calculateProgress: () => {
-        const { initParams, secondParams, iccParams, thirdParams } = get();
-        let filledSteps = 0;
-        const totalSteps = 3;
+        const { initParams, secondParams, thirdParams } = get();
+        const steps = [
+            !!(initParams.partnum && initParams.auditor && initParams.shift && initParams.mp && initParams.molder),
+            !!(secondParams.mold && secondParams.cavities && secondParams.metal),
+            !!(thirdParams && thirdParams.batch && (thirdParams.julian || thirdParams?.ts2)),
+        ];
 
-        if (initParams.partnum && initParams.auditor && initParams.turn && initParams.mp && initParams.molder) {
-            filledSteps++;
-        }
-        if (secondParams.mold && secondParams.cavities && secondParams.metal) {
-            filledSteps++;
-        }
-        if (iccParams && iccParams.batch && iccParams.julian) {
-            filledSteps++;
-        } else if (thirdParams && thirdParams.batch && thirdParams.ts2) {
-            filledSteps++;
-        }
-
-        const progress = (filledSteps / totalSteps) * 100;
+        const progress = (steps.filter(Boolean).length / steps.length) * 100;
         set({ progress });
     },
 
@@ -111,7 +111,7 @@ const useFormStore = create<FormState>((set, get) => ({
             initParams: {
                 partnum: '',
                 auditor: 0,
-                turn: '',
+                shift: '',
                 mp: '',
                 molder: 0,
                 icc: false,
@@ -130,8 +130,10 @@ const useFormStore = create<FormState>((set, get) => ({
                 pressure: 0,
                 waste_pct: 0,
             },
-            iccParams: null,
-            thirdParams: null,
+            thirdParams: {
+                batch: '',
+                cavities_arr: [],
+            },
         }),
 }));
 
