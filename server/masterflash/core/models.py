@@ -1,6 +1,5 @@
 # type: ignore
 from django.db import models
-from django.utils import timezone
 
 
 class LinePress(models.Model):
@@ -56,6 +55,7 @@ class ProductionPress(models.Model):
     work_order = models.CharField(max_length=50, blank=True)
     shift = models.CharField(default="", max_length=50)
     molder_number = models.IntegerField(default=None, null=True, blank=True)
+    relay = models.BooleanField(default=False)
 
 
 class Insert(models.Model):
@@ -232,6 +232,21 @@ class Rubber_Query_history(models.Model):
     end_date = models.DateField()
     compound = models.CharField(max_length=100)
     total_weight = models.FloatField()
+    comments = models.CharField(max_length=50, null=True)
+
+    def __str__(self) -> str:
+        return f"{self.query_date} - {self.compound}"
+
+
+class Insert_Query_history(models.Model):
+    query_date = models.DateTimeField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    insert = models.CharField(max_length=50, null=True)
+    total_insert = models.FloatField(default=0)
+    total_rubber = models.FloatField(default=0)
+    total_metal = models.FloatField(default=0)
+    total_sum = models.FloatField(default=0)
 
     def __str__(self) -> str:
         return f"{self.query_date} - {self.compound}"
@@ -245,3 +260,34 @@ class ShiftSchedule(models.Model):
 
     def __str__(self):
         return f"Shift Schedule: first shift from {self.first_shift_start} until {self.first_shift_end}, second shift from {self.second_shift_start} until {self.second_shift_end}"
+
+
+class Params(models.Model):
+    partnum = models.CharField(max_length=100)
+    auditor = models.IntegerField()
+    shift = models.CharField(max_length=50, null=True, blank=True)
+    mp = models.CharField(max_length=100)
+    molder = models.IntegerField()
+    icc = models.BooleanField()
+    mold = models.CharField(max_length=100)
+    cavities = models.IntegerField()
+    metal = models.CharField(max_length=50, null=True)
+    body = models.FloatField()
+    strips = models.FloatField()
+    full_cycle = models.FloatField()
+    cycle_time = models.FloatField(default=0)
+    screen_superior = models.FloatField(default=0)
+    screen_inferior = models.FloatField(default=0)
+    mold_superior = models.FloatField(default=0)
+    mold_inferior = models.FloatField(default=0)
+    platen_superior = models.FloatField(default=0)
+    platen_inferior = models.FloatField(default=0)
+    pressure = models.FloatField()
+    waste_pct = models.FloatField()
+    batch = models.CharField(max_length=100)
+    julian = models.FloatField(null=True, blank=True)
+    ts2 = models.FloatField(null=True, blank=True)
+    cavities_arr = models.JSONField()
+
+    def __str__(self):
+        return f"Params for {self.partnum} - {self.mold}"
