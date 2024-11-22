@@ -134,7 +134,7 @@ const ThirdFormStep = () => {
                 <div className='grid grid-cols-1 gap-4'>
                     {cavities_arr.map((cavity, cavityIndex) => (
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
-                            <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavity {cavityIndex + 1}</h5>
+                            <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavidad {cavityIndex + 1}</h5>
                             <div className='grid grid-cols-4 gap-2'>
                                 {cavity.map((value, valueIndex) => (
                                     <input

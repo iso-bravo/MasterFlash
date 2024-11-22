@@ -9,15 +9,24 @@ const GeneralInfoFromStep = () => {
     const { initParams, setInitParams, setSteps } = useFormStore();
 
     const [machines, setMachines] = useState<string[]>();
+    const [partNumberValid, setPartNumberValid] = useState<boolean | null>(null);
 
     const {
         register,
         handleSubmit,
         formState: { errors, isValid },
+        setError,
+        clearErrors,
     } = useForm<InitParamsRegister>({
         defaultValues: initParams,
-        mode: 'onChange', 
+        mode: 'onChange',
     });
+
+    const fieldLabels: { [key: string]: string } = {
+        partnum: 'Número de partes',
+        auditor: 'Auditor',
+        molder: 'Moldeador',
+    };
 
     useEffect(() => {
         const fetchMachines = async () => {
@@ -31,6 +40,20 @@ const GeneralInfoFromStep = () => {
 
         fetchMachines();
     }, []);
+
+    const validatePartNumber = async (partnum: string) => {
+        if (!partnum) return; 
+
+        try {
+            const response = await api.get(`/validate_part_number/${partnum}/`);
+            console.log(response.data)
+            setPartNumberValid(true); 
+            clearErrors('partnum'); 
+        } catch (error) {
+            setPartNumberValid(false); 
+            setError('partnum', { type: 'manual', message: 'Número de parte no válido' }); 
+        }
+    };
 
     const onSubmit = (data: InitParamsRegister) => {
         // Validar si todos los campos requeridos están completos
@@ -90,17 +113,28 @@ const GeneralInfoFromStep = () => {
                     {['partnum', 'auditor', 'molder'].map(input => (
                         <div key={input}>
                             <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
-                                {input}
+                                {fieldLabels[input]}
                             </label>
                             <input
                                 type={input === 'partnum' ? 'text' : 'number'}
                                 min={0}
                                 id={input}
-                                {...register(input as keyof InitParamsRegister, { required: true })}
+                                {...register(input as keyof InitParamsRegister, {
+                                    required: true,
+                                    onChange: input === 'partnum' ? e => validatePartNumber(e.target.value) : undefined,
+                                })}
                                 className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             />
+                            {input === 'partnum' && partNumberValid === true && (
+                                <span className='text-green-500 text-sm'>✔ Número de parte válido</span>
+                            )}
+                            {input === 'partnum' && partNumberValid === false && (
+                                <span className='text-red-500 text-sm'>Número de parte no válido</span>
+                            )}
                             {errors[input as keyof InitParamsRegister] && (
-                                <span className='text-red-500 text-sm'>Campo obligatorio</span>
+                                <span className='text-red-500 text-sm'>
+                                    {errors[input as keyof InitParamsRegister]?.message || 'Campo obligatorio'}
+                                </span>
                             )}
                         </div>
                     ))}
