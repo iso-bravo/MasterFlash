@@ -1104,6 +1104,17 @@ def get_mold_by_part_number(request, part_number):
 
 
 @csrf_exempt
+def validate_part_number(request, part_number):
+    try:
+        part = Part_Number.objects.get(part_number=part_number)
+        return JsonResponse({"exists": True, "part_number": part.part_number})
+    except Part_Number.DoesNotExist:
+        return JsonResponse(
+            {"exists": False, "error": "Part number not found"}, status=404
+        )
+
+
+@csrf_exempt
 def get_scrap_register_summary(request, date):
     # Convierte la fecha del parámetro
     try:
