@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import api from '../config/axiosConfig';
 import { FaPlus } from 'react-icons/fa';
 import { IoSearch } from 'react-icons/io5';
+import EditPartNumModal from '../components/EditPartNumModal';
 
 interface PartNum {
+    id: number;
     part_number: string | null;
     box: string | null;
     client: string | null;
@@ -27,6 +29,8 @@ const PartNumCataloge = () => {
     const [filteredPartNums, setFilteredPartNums] = useState<PartNum[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPartNum, setSelectedPartNum] = useState<PartNum | null>(null);
 
     const fetchPartNums = async () => {
         try {
@@ -43,13 +47,33 @@ const PartNumCataloge = () => {
         fetchPartNums();
     }, []);
 
-    useEffect(()=>{
-        const filtered = partNums.filter(item=>
-            item.part_number?.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
+    useEffect(() => {
+        const filtered = partNums.filter(item =>
+            item.part_number?.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()),
         );
-        setFilteredPartNums(filtered)
+        setFilteredPartNums(filtered);
+    }, [searchTerm, partNums]);
 
-    },[searchTerm,partNums])
+    const handleEditClick = (partNum: PartNum) => {
+        setSelectedPartNum(partNum);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedPartNum(null);
+    };
+
+    const handleSavePartNum = async (updatedPartNum: PartNum) => {
+        try {
+            await api.patch(`/part_numbers/${updatedPartNum.id}/update/`, updatedPartNum);
+            setPartNums(prev => prev.map(p => (p.id === updatedPartNum.id ? updatedPartNum : p)));
+        } catch (error) {
+            console.error('Error actualizando número de parte:', error);
+        } finally {
+            handleCloseModal();
+        }
+    };
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -130,6 +154,9 @@ const PartNumCataloge = () => {
                                 <th scope='col' className='px-6 py-3'>
                                     Gripper
                                 </th>
+                                <th scope='col' className='px-6 py-3'>
+                                    <span className='sr-only'>Edit</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -148,12 +175,26 @@ const PartNumCataloge = () => {
                                     <th className='px-6 py-3'>{item.insert}</th>
                                     <th className='px-6 py-3'>{item.caliber}</th>
                                     <th className='px-6 py-3'>{item.gripper}</th>
+                                    <td className='px-6 py-4 text-right'>
+                                        <button
+                                            onClick={() => handleEditClick(item)}
+                                            className='text-blue-600 hover:underline'
+                                        >
+                                            Editar
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 )}
             </section>
+            <EditPartNumModal
+                partNum={selectedPartNum}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onSave={handleSavePartNum}
+            />
         </div>
     );
 };

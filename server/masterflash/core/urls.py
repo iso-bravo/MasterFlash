@@ -120,4 +120,9 @@ urlpatterns = [
         views.validate_part_number,
         name="validate_part_number",
     ),
+    path(
+        "part_numbers/<int:pk>/update/",
+        views.update_part_number,
+        name="update_part_number",
+    ),
 ]
