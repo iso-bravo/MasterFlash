@@ -18,6 +18,16 @@ const SecondPartFormStep = () => {
         defaultValues: secondParams,
     });
 
+    const fieldLabels: { [key: string]: string } = {
+        body: 'Cuerpo',
+        strips: 'Cintas',
+        full_cycle: 'Ciclo completo',
+        cycle_time: 'Ciclo completo',
+        screen: 'Pantalla',
+        mold2: 'Molde',
+        platen: 'Placa',
+    };
+
     useEffect(() => {
         const fetchMold = async () => {
             try {
@@ -39,7 +49,7 @@ const SecondPartFormStep = () => {
 
     const onSubmit = (data: SecondParamsRegister) => {
         const updatedData = { ...data, mold: secondParams.mold };
-        console.log('Datos enviados:', updatedData);
+        console.log('Datos guardados en setSecondParams:', updatedData);
 
         setSecondParams(updatedData);
         setSteps(3);
@@ -87,7 +97,7 @@ const SecondPartFormStep = () => {
                     {['body', 'strips', 'full_cycle', 'cycle_time'].map(input => (
                         <div key={input}>
                             <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
-                                {input}
+                                {fieldLabels[input]}
                             </label>
                             <input
                                 type='number'
@@ -104,7 +114,7 @@ const SecondPartFormStep = () => {
                         <div className='flex justify-between'>
                             {['screen', 'mold2', 'platen'].map(type => (
                                 <div key={type} className='text-center flex-1 p-1'>
-                                    <label className='block mb-2 text-sm font-medium text-gray-900'>{type}</label>
+                                    <label className='block mb-2 text-sm font-medium text-gray-900'>{fieldLabels[type]}</label>
                                     {sectionTypes.map(section => (
                                         <div key={section} className='mb-2'>
                                             <label

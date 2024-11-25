@@ -16,37 +16,34 @@ const ThirdFormStep = () => {
     } = useForm<ThirdParamsRegister>({
         mode: 'onChange',
         defaultValues: {
-            batch: thirdParams?.batch || '',
+            batch: thirdParams.batch || '',
             julian: initParams.icc ? thirdParams.julian : undefined,
             ts2: !initParams.icc ? thirdParams.ts2 : undefined,
-            cavities_arr:
-                thirdParams.cavities_arr.length > 0
-                    ? thirdParams.cavities_arr
-                    : Array(secondParams.cavities).fill([0, 0, 0, 0]),
+            cavities_arr: thirdParams.cavities_arr.length
+                ? thirdParams.cavities_arr
+                : Array.from({ length: secondParams.cavities }, () => [0, 0, 0, 0]),
         },
     });
 
     const cavities_arr = useWatch({ control, name: 'cavities_arr' });
 
-    const handleCavityChange = (cavityIndex: number, valueIndex: number, value: number) => {
-        const updatedCavitiesArr = cavities_arr.map((cavity, index) =>
-            index === cavityIndex ? cavity.map((val, idx) => (idx === valueIndex ? value : val)) : cavity,
-        );
-        setValue('cavities_arr', updatedCavitiesArr);
-    };
-
     useEffect(() => {
-        setValue(
-            'cavities_arr',
-            thirdParams.cavities_arr.length > 0
-                ? thirdParams.cavities_arr
-                : Array(secondParams.cavities).fill([0, 0, 0, 0]),
+        const expectedLength = secondParams.cavities;
+        const updatedCavitiesArr = Array.from(
+            { length: expectedLength },
+            (_, idx) => cavities_arr[idx] || [0, 0, 0, 0],
         );
-    }, [thirdParams.cavities_arr, secondParams.cavities]);
 
-    useEffect(() => {
-        setThirdParams({ ...thirdParams, cavities_arr });
-    }, [cavities_arr]);
+        // Solo actualiza si es necesario
+        if (JSON.stringify(cavities_arr) !== JSON.stringify(updatedCavitiesArr)) {
+            setValue('cavities_arr', updatedCavitiesArr);
+        }
+
+        // Sincroniza con el estado global
+        if (JSON.stringify(thirdParams.cavities_arr) !== JSON.stringify(cavities_arr)) {
+            setThirdParams({ ...thirdParams, cavities_arr });
+        }
+    }, [secondParams.cavities, cavities_arr, setValue, thirdParams, setThirdParams]);
 
     const onSubmit: SubmitHandler<ThirdParamsRegister> = data => {
         if (!data.batch) {
@@ -64,10 +61,12 @@ const ThirdFormStep = () => {
             return;
         }
 
-        const areCavitiesValid = data.cavities_arr.every(cavity => cavity.every(value => value !== 0));
+        const areCavitiesValid = data.cavities_arr.every(
+            cavity => cavity.length === 4 && cavity.every(value => value > 0),
+        );
 
         if (!areCavitiesValid) {
-            toast.error('Por favor, completa todos los valores de las cavidades.');
+            toast.error('Revisa las cavidades: todos los valores deben ser diferentes de 0.');
             return;
         }
 
@@ -78,6 +77,7 @@ const ThirdFormStep = () => {
             console.error('Error setting params: ', error);
             toast.error('Ocurrió un error al procesar los datos.');
         }
+
     };
 
     return (
@@ -134,7 +134,7 @@ const ThirdFormStep = () => {
                 <div className='grid grid-cols-1 gap-4'>
                     {cavities_arr.map((cavity, cavityIndex) => (
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
-                            <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavity {cavityIndex + 1}</h5>
+                            <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavidad {cavityIndex + 1}</h5>
                             <div className='grid grid-cols-4 gap-2'>
                                 {cavity.map((value, valueIndex) => (
                                     <input
@@ -143,9 +143,10 @@ const ThirdFormStep = () => {
                                         step='0.01'
                                         min={0}
                                         value={value}
-                                        onChange={e =>
-                                            handleCavityChange(cavityIndex, valueIndex, Number(e.target.value))
-                                        }
+                                        {...register(`cavities_arr.${cavityIndex}.${valueIndex}`, {
+                                            required: true,
+                                            min: 0.01,
+                                        })}
                                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                     />
                                 ))}

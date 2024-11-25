@@ -1,10 +1,10 @@
 import useFormStore from '../../stores/ParamsRegisterStore';
 import { InitParamsRegister, SecondParamsRegister, ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 import api from '../../config/axiosConfig';
-import { toast } from 'react-toastify'; // Para notificaciones visuales.
+import { toast } from 'react-toastify';
 
 const ProgressSummary = () => {
-    const { step, initParams, secondParams, thirdParams } = useFormStore();
+    const { step, initParams, secondParams, thirdParams, resetForm } = useFormStore();
 
     const renderParams = <T extends InitParamsRegister | SecondParamsRegister | ThirdParamsRegister>(
         params: T | undefined,
@@ -55,6 +55,7 @@ const ProgressSummary = () => {
             });
             toast.success('Datos enviados correctamente.');
             console.log('Datos enviados correctamente:', response.data);
+            resetForm();
         } catch (error) {
             console.error('Error enviando los datos:', error);
             toast.error('Ocurrió un error al enviar los datos.');
@@ -64,23 +65,17 @@ const ProgressSummary = () => {
     const renderContent = () => {
         switch (step) {
             case 1:
-                return renderParams(initParams, 'Initial Parameters');
+                return renderParams(initParams, 'Datos de la máquina');
             case 2:
-                return renderParams(secondParams, 'Second Parameters');
+                return renderParams(secondParams, 'Parametros del molde');
             case 3:
-                return renderParams(
-                    initParams.icc ? thirdParams : thirdParams, // Ajusta si necesitas diferenciar ICC.
-                    initParams.icc ? 'ICC Parameters' : 'Third Parameters',
-                );
+                return renderParams(thirdParams, 'Parametros de calidad');
             case 4:
                 return (
                     <>
-                        {renderParams(initParams, 'Initial Parameters')}
-                        {renderParams(secondParams, 'Second Parameters')}
-                        {renderParams(
-                            initParams.icc ? thirdParams : thirdParams,
-                            initParams.icc ? 'ICC Parameters' : 'Third Parameters',
-                        )}
+                        {renderParams(initParams, 'Datos de la máquina')}
+                        {renderParams(secondParams, 'Parametros del molde')}
+                        {renderParams(thirdParams, 'Parametros de calidad')}
                         <button
                             onClick={handleSubmit}
                             className='mt-4 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'

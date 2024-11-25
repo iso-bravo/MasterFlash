@@ -1104,6 +1104,17 @@ def get_mold_by_part_number(request, part_number):
 
 
 @csrf_exempt
+def validate_part_number(request, part_number):
+    try:
+        part = Part_Number.objects.get(part_number=part_number)
+        return JsonResponse({"exists": True, "part_number": part.part_number})
+    except Part_Number.DoesNotExist:
+        return JsonResponse(
+            {"exists": False, "error": "Part number not found"}, status=404
+        )
+
+
+@csrf_exempt
 def get_scrap_register_summary(request, date):
     # Convierte la fecha del parámetro
     try:
@@ -1198,6 +1209,7 @@ def get_part_nums(request):
 
     data = [
         {
+            "id": p.id,
             "part_number": p.part_number,
             "client": p.client,
             "box": p.box,
@@ -1507,3 +1519,26 @@ def save_params(request):
     except Exception as e:
         logger.exception("Error interno.")
         return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["PATCH"])
+def update_part_number(request, pk):
+    try:
+        part_number = Part_Number.objects.get(pk=pk)
+    except Part_Number.DoesNotExist:
+        return JsonResponse({"error": "Part number not found"}, status=404)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    # Actualización de los campos que se proporcionan
+    for key, value in data.items():
+        if hasattr(part_number, key):  # Verifica que el campo exista en el modelo
+            setattr(part_number, key, value)
+
+    part_number.save()
+
+    return JsonResponse({"message": "Part number updated successfully"}, status=200)

@@ -21,25 +21,25 @@ const useFormStore = create<FormState>((set, get) => ({
     progress: 0,
     initParams: {
         partnum: '',
-        auditor: 0,
+        auditor: '',
         shift: '',
         mp: '',
-        molder: 0,
+        molder: '',
         icc: false,
     },
     secondParams: {
         mold: '',
         cavities: 1,
         metal: '',
-        body: 0,
-        strips: 0,
-        full_cycle: 0,
-        cycle_time: 0,
+        body: '',
+        strips: '',
+        full_cycle: '',
+        cycle_time: '',
         screen: { superior: 0, inferior: 0 },
         mold2: { superior: 0, inferior: 0 },
         platen: { superior: 0, inferior: 0 },
-        pressure: 0,
-        waste_pct: 0,
+        pressure: '',
+        waste_pct: '',
     },
     thirdParams: {
         batch: '',
@@ -63,7 +63,25 @@ const useFormStore = create<FormState>((set, get) => ({
         get().calculateProgress();
     },
     setSecondParams: params => {
-        set({ secondParams: params });
+        set(state => {
+            if (!get().thirdParams.cavities_arr) {
+                const updatedCavitiesArr = Array(params.cavities)
+                    .fill(null)
+                    .map((_, i) => state.thirdParams.cavities_arr[i] || [0, 0, 0, 0]);
+
+                return {
+                    secondParams: params,
+                    thirdParams: {
+                        ...state.thirdParams,
+                        cavities_arr: updatedCavitiesArr,
+                    },
+                };
+            } else {
+                return {
+                    secondParams: params,
+                };
+            }
+        });
         get().calculateProgress();
     },
     setThirdParams: params => {
@@ -92,25 +110,25 @@ const useFormStore = create<FormState>((set, get) => ({
             progress: 0,
             initParams: {
                 partnum: '',
-                auditor: 0,
+                auditor: '',
                 shift: '',
                 mp: '',
-                molder: 0,
+                molder: '',
                 icc: false,
             },
             secondParams: {
                 mold: '',
                 cavities: 1,
                 metal: '',
-                body: 0,
-                strips: 0,
-                full_cycle: 0,
-                cycle_time: 0,
+                body: '',
+                strips: '',
+                full_cycle: '',
+                cycle_time: '',
                 screen: { superior: 0, inferior: 0 },
                 mold2: { superior: 0, inferior: 0 },
                 platen: { superior: 0, inferior: 0 },
-                pressure: 0,
-                waste_pct: 0,
+                pressure: '',
+                waste_pct: '',
             },
             thirdParams: {
                 batch: '',
