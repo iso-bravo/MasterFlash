@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { toast } from 'react-toastify';
@@ -10,6 +10,7 @@ const GeneralInfoFromStep = () => {
 
     const [machines, setMachines] = useState<string[]>();
     const [partNumberValid, setPartNumberValid] = useState<boolean | null>(null);
+    const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
     const {
         register,
@@ -42,16 +43,26 @@ const GeneralInfoFromStep = () => {
     }, []);
 
     const validatePartNumber = async (partnum: string) => {
-        if (!partnum) return; 
+        if (!partnum) return;
 
         try {
             const response = await api.get(`/validate_part_number/${partnum}/`);
-            console.log(response.data)
-            setPartNumberValid(true); 
-            clearErrors('partnum'); 
+            console.log(response.data);
+            setPartNumberValid(true);
+            clearErrors('partnum');
         } catch (error) {
-            setPartNumberValid(false); 
-            setError('partnum', { type: 'manual', message: 'Número de parte no válido' }); 
+            setPartNumberValid(false);
+            setError('partnum', { type: 'manual', message: 'Número de parte no válido' });
+        }
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const nextInput = inputsRef.current[index + 1];
+            if (nextInput) {
+                nextInput.focus();
+            }
         }
     };
 
@@ -110,34 +121,42 @@ const GeneralInfoFromStep = () => {
                         </select>
                         {errors.shift && <span className='text-red-500 text-sm'>Campo obligatorio</span>}
                     </div>
-                    {['partnum', 'auditor', 'molder'].map(input => (
-                        <div key={input}>
-                            <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
-                                {fieldLabels[input]}
-                            </label>
-                            <input
-                                type={input === 'partnum' ? 'text' : 'number'}
-                                min={0}
-                                id={input}
-                                {...register(input as keyof InitParamsRegister, {
-                                    required: true,
-                                    onChange: input === 'partnum' ? e => validatePartNumber(e.target.value) : undefined,
-                                })}
-                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                            />
-                            {input === 'partnum' && partNumberValid === true && (
-                                <span className='text-green-500 text-sm'>✔ Número de parte válido</span>
-                            )}
-                            {input === 'partnum' && partNumberValid === false && (
-                                <span className='text-red-500 text-sm'>Número de parte no válido</span>
-                            )}
-                            {errors[input as keyof InitParamsRegister] && (
-                                <span className='text-red-500 text-sm'>
-                                    {errors[input as keyof InitParamsRegister]?.message || 'Campo obligatorio'}
-                                </span>
-                            )}
-                        </div>
-                    ))}
+                    {['partnum', 'auditor', 'molder'].map((input, index) => {
+                        const { ref, ...rest } = register(input as keyof InitParamsRegister, {
+                            required: true,
+                            onChange: input === 'partnum' ? e => validatePartNumber(e.target.value) : undefined,
+                        });
+                        return (
+                            <div key={input}>
+                                <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
+                                    {fieldLabels[input]}
+                                </label>
+                                <input
+                                    type={input === 'partnum' ? 'text' : 'number'}
+                                    min={0}
+                                    id={input}
+                                    {...rest}
+                                    ref={e => {
+                                        ref(e);
+                                        inputsRef.current[index] = e;
+                                    }}
+                                    onKeyDown={e => handleKeyDown(e, index)}
+                                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                />
+                                {input === 'partnum' && partNumberValid === true && (
+                                    <span className='text-green-500 text-sm'>✔ Número de parte válido</span>
+                                )}
+                                {input === 'partnum' && partNumberValid === false && (
+                                    <span className='text-red-500 text-sm'>Número de parte no válido</span>
+                                )}
+                                {errors[input as keyof InitParamsRegister] && (
+                                    <span className='text-red-500 text-sm'>
+                                        {errors[input as keyof InitParamsRegister]?.message || 'Campo obligatorio'}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
                     <label className='inline-flex items-center cursor-pointer'>
                         <input type='checkbox' {...register('icc')} className='sr-only peer' />
                         <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
