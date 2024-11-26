@@ -65,7 +65,6 @@ const EditPartNumModal: React.FC<EditPartNumModalProps> = ({ partNumId, isOpen, 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [partNumData, setPartNumData] = useState<PartNum | null>(null);
-    
 
     useEffect(() => {
         if (isOpen && partNumId) {
@@ -94,7 +93,7 @@ const EditPartNumModal: React.FC<EditPartNumModalProps> = ({ partNumId, isOpen, 
 
     return (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
-            <div className='bg-white p-6 rounded-md shadow-lg w-1/2'>
+            <div className='bg-white p-6 rounded-md shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden'>
                 <div className='flex justify-between items-center'>
                     <h2 className='text-xl font-bold'>Editar Número de Parte</h2>
                     <IoClose size={30} className='cursor-pointer' onClick={onClose} />
@@ -104,30 +103,36 @@ const EditPartNumModal: React.FC<EditPartNumModalProps> = ({ partNumId, isOpen, 
                 {error && <p className='text-red-500'>{error}</p>}
 
                 {!loading && (
-                    <form onSubmit={handleSubmit(onSubmit)} className='grid grid-cols-4 gap-4'>
-                        {partNumData &&
-                            Object.keys(partNumData).map(key => (
-                                <div key={key} className='col-span-1'>
-                                    <label className='block mb-1 capitalize'>{key.replace(/_/g, ' ')}</label>
-                                    {key.startsWith('image_') ? (
-                                        <input
-                                            type='file'
-                                            {...register(key as keyof PartNum)}
-                                            className='w-full p-2 border rounded'
-                                        />
-                                    ) : (
-                                        <input
-                                            type='text'
-                                            {...register(key as keyof PartNum)}
-                                            className='w-full p-2 border rounded'
-                                            placeholder={key.replace(/_/g, ' ')}
-                                        />
-                                    )}
-                                    {errors[key as keyof PartNum] && (
-                                        <p className='text-red-500 text-sm'>Error en {key.replace(/_/g, ' ')}</p>
-                                    )}
-                                </div>
-                            ))}
+                    <form onSubmit={handleSubmit(onSubmit)} className='mt-4'>
+                        <div className='overflow-y-auto max-h-[70vh] pr-4'>
+                            <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+                                {partNumData &&
+                                    Object.keys(partNumData).map(key => (
+                                        <div key={key} className='col-span-1'>
+                                            <label className='block mb-1 capitalize'>{key.replace(/_/g, ' ')}</label>
+                                            {key.startsWith('image_') ? (
+                                                <input
+                                                    type='file'
+                                                    {...register(key as keyof PartNum)}
+                                                    className='w-full p-2 border rounded'
+                                                />
+                                            ) : (
+                                                <input
+                                                    type='text'
+                                                    {...register(key as keyof PartNum)}
+                                                    className='w-full p-2 border rounded'
+                                                    placeholder={key.replace(/_/g, ' ')}
+                                                />
+                                            )}
+                                            {errors[key as keyof PartNum] && (
+                                                <p className='text-red-500 text-sm'>
+                                                    Error en {key.replace(/_/g, ' ')}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
 
                         {/* Botones de acción */}
                         <div className='col-span-2 flex justify-end space-x-4 mt-6'>
