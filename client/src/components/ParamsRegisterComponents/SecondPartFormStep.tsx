@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
@@ -8,6 +8,7 @@ const SecondPartFormStep = () => {
     const { initParams, secondParams, setSecondParams, setSteps } = useFormStore();
     const options = Array.from({ length: 9 }, (_, i) => i + 1);
     const sectionTypes: SectionType[] = ['superior', 'inferior'];
+    const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
     const {
         register,
@@ -26,6 +27,16 @@ const SecondPartFormStep = () => {
         screen: 'Pantalla',
         mold2: 'Molde',
         platen: 'Placa',
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const nextInput = inputsRef.current[index + 1];
+            if (nextInput) {
+                nextInput.focus();
+            }
+        }
     };
 
     useEffect(() => {
@@ -54,6 +65,8 @@ const SecondPartFormStep = () => {
         setSecondParams(updatedData);
         setSteps(3);
     };
+
+    let inputIndex = 0;
 
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
@@ -103,6 +116,10 @@ const SecondPartFormStep = () => {
                                 type='number'
                                 {...register(input as keyof SecondParamsRegister, { required: true, min: 0 })}
                                 step='0.01'
+                                ref={e => {
+                                    inputsRef.current[inputIndex++] = e;
+                                }}
+                                onKeyDown={e => handleKeyDown(e, inputIndex - 1)}
                                 className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             />
                             {errors[input as keyof SecondParamsRegister] && (
@@ -114,9 +131,11 @@ const SecondPartFormStep = () => {
                         <div className='flex justify-between'>
                             {['screen', 'mold2', 'platen'].map(type => (
                                 <div key={type} className='text-center flex-1 p-1'>
-                                    <label className='block mb-2 text-sm font-medium text-gray-900'>{fieldLabels[type]}</label>
+                                    <label className='block mb-2 text-sm font-medium text-gray-900'>
+                                        {fieldLabels[type]}
+                                    </label>
                                     {sectionTypes.map(section => (
-                                        <div key={section} className='mb-2'>
+                                        <div key={`${type}-${section}`} className='mb-2'>
                                             <label
                                                 htmlFor={`${type}-${section.toLowerCase()}`}
                                                 className='block mb-1 text-xs text-gray-700'
@@ -130,6 +149,10 @@ const SecondPartFormStep = () => {
                                                     required: true,
                                                     min: 0,
                                                 })}
+                                                ref={e => {
+                                                    inputsRef.current[inputIndex++] = e;
+                                                }}
+                                                onKeyDown={e => handleKeyDown(e, inputIndex - 1)}
                                                 className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5'
                                             />
                                             {errors[type as 'screen' | 'mold2' | 'platen']?.[
