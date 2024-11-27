@@ -107,30 +107,34 @@ const EditPartNumModal: React.FC<EditPartNumModalProps> = ({ partNumId, isOpen, 
                         <div className='overflow-y-auto max-h-[70vh] pr-4'>
                             <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                                 {partNumData &&
-                                    Object.keys(partNumData).map(key => (
-                                        <div key={key} className='col-span-1'>
-                                            <label className='block mb-1 capitalize'>{key.replace(/_/g, ' ')}</label>
-                                            {key.startsWith('image_') ? (
-                                                <input
-                                                    type='file'
-                                                    {...register(key as keyof PartNum)}
-                                                    className='w-full p-2 border rounded'
-                                                />
-                                            ) : (
-                                                <input
-                                                    type='text'
-                                                    {...register(key as keyof PartNum)}
-                                                    className='w-full p-2 border rounded'
-                                                    placeholder={key.replace(/_/g, ' ')}
-                                                />
-                                            )}
-                                            {errors[key as keyof PartNum] && (
-                                                <p className='text-red-500 text-sm'>
-                                                    Error en {key.replace(/_/g, ' ')}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
+                                    Object.keys(partNumData)
+                                        .filter(key => key !== 'id')
+                                        .map(key => (
+                                            <div key={key} className='col-span-1'>
+                                                <label className='block mb-1 capitalize'>
+                                                    {key.replace(/_/g, ' ')}
+                                                </label>
+                                                {key.startsWith('image_') ? (
+                                                    <input
+                                                        type='file'
+                                                        {...register(key as keyof PartNum)}
+                                                        className='w-full p-2 border rounded'
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type='text'
+                                                        {...register(key as keyof PartNum)}
+                                                        className='w-full p-2 border rounded'
+                                                        placeholder={key.replace(/_/g, ' ')}
+                                                    />
+                                                )}
+                                                {errors[key as keyof PartNum] && (
+                                                    <p className='text-red-500 text-sm'>
+                                                        Error en {key.replace(/_/g, ' ')}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
                             </div>
                         </div>
 
