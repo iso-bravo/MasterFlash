@@ -21,7 +21,7 @@ const ThirdFormStep = () => {
             ts2: !initParams.icc ? thirdParams.ts2 : undefined,
             cavities_arr: thirdParams.cavities_arr.length
                 ? thirdParams.cavities_arr
-                : Array.from({ length: secondParams.cavities }, () => [0, 0, 0, 0]),
+                : Array.from({ length: secondParams.cavities }, () => [0, 0, 0, 0, 0]),
         },
     });
 
@@ -31,7 +31,7 @@ const ThirdFormStep = () => {
         const expectedLength = secondParams.cavities;
         const updatedCavitiesArr = Array.from(
             { length: expectedLength },
-            (_, idx) => cavities_arr[idx] || [0, 0, 0, 0],
+            (_, idx) => cavities_arr[idx] || [0, 0, 0, 0, 0],
         );
 
         // Solo actualiza si es necesario
@@ -61,12 +61,13 @@ const ThirdFormStep = () => {
             return;
         }
 
-        const areCavitiesValid = data.cavities_arr.every(
-            cavity => cavity.length === 4 && cavity.every(value => value > 0),
-        );
+        const areCavitiesValid = data.cavities_arr.every(cavity => {
+            const validCount = cavity.filter(value => value > 0).length;
+            return validCount >= 4;
+        });
 
         if (!areCavitiesValid) {
-            toast.error('Revisa las cavidades: todos los valores deben ser diferentes de 0.');
+            toast.error('Revisa las cavidades: al menos 4 valores deben ser mayores a 0.');
             return;
         }
 
@@ -77,9 +78,7 @@ const ThirdFormStep = () => {
             console.error('Error setting params: ', error);
             toast.error('Ocurrió un error al procesar los datos.');
         }
-
     };
-
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
@@ -135,7 +134,7 @@ const ThirdFormStep = () => {
                     {cavities_arr.map((cavity, cavityIndex) => (
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
                             <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavidad {cavityIndex + 1}</h5>
-                            <div className='grid grid-cols-4 gap-2'>
+                            <div className='grid grid-cols-5 gap-2'>
                                 {cavity.map((value, valueIndex) => (
                                     <input
                                         key={valueIndex}
@@ -144,8 +143,7 @@ const ThirdFormStep = () => {
                                         min={0}
                                         value={value}
                                         {...register(`cavities_arr.${cavityIndex}.${valueIndex}`, {
-                                            required: true,
-                                            min: 0.01,
+                                            min: 0,
                                         })}
                                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                     />

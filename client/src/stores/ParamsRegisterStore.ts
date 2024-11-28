@@ -67,7 +67,7 @@ const useFormStore = create<FormState>((set, get) => ({
             if (!get().thirdParams.cavities_arr) {
                 const updatedCavitiesArr = Array(params.cavities)
                     .fill(null)
-                    .map((_, i) => state.thirdParams.cavities_arr[i] || [0, 0, 0, 0]);
+                    .map((_, i) => state.thirdParams.cavities_arr[i] || [0, 0, 0, 0, 0]);
 
                 return {
                     secondParams: params,
