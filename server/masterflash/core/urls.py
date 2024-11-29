@@ -125,4 +125,7 @@ urlpatterns = [
         views.update_part_number,
         name="update_part_number",
     ),
+    path(
+        "part_numbers/<int:id>/", views.get_part_num_by_id, name="get_part_number_by_id"
+    ),
 ]

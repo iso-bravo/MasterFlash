@@ -1496,7 +1496,7 @@ def save_params(request):
             platen_superior=second_params.get("platen", {}).get("superior", 0),
             platen_inferior=second_params.get("platen", {}).get("inferior", 0),
             pressure=second_params.get("pressure"),
-            waste_pct=second_params.get("waste_pct"),
+            waste_pct=float(second_params.get("waste_pct", 0) or 0),
             batch=third_params.get("batch"),
             julian=third_params.get("julian", None),
             cavities_arr=third_params.get("cavities_arr", []),
@@ -1542,3 +1542,16 @@ def update_part_number(request, pk):
     part_number.save()
 
     return JsonResponse({"message": "Part number updated successfully"}, status=200)
+
+
+@csrf_exempt
+def get_part_num_by_id(request, id):
+    try:
+        part_num = Part_Number.objects.filter(id=id).values().first()
+        if part_num is None:
+            return JsonResponse({"error": "Part_number not found"}, status=404)
+
+        return JsonResponse(part_num, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
