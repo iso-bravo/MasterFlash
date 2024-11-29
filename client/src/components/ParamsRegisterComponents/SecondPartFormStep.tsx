@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import useFormStore from '../../stores/ParamsRegisterStore';
 import api from '../../config/axiosConfig';
 import { SecondParamsRegister, SectionType } from '../../types/ParamsRegisterTypes';
@@ -8,6 +8,7 @@ const SecondPartFormStep = () => {
     const { initParams, secondParams, setSecondParams, setSteps } = useFormStore();
     const options = Array.from({ length: 9 }, (_, i) => i + 1);
     const sectionTypes: SectionType[] = ['superior', 'inferior'];
+    const inputsRef = useRef(new Map<string, HTMLInputElement | null>());
 
     const {
         register,
@@ -18,6 +19,8 @@ const SecondPartFormStep = () => {
         defaultValues: secondParams,
     });
 
+    const {ref,...rest} = register('pressure',{ required: true, min: 0 });
+
     const fieldLabels: { [key: string]: string } = {
         body: 'Cuerpo',
         strips: 'Cintas',
@@ -26,6 +29,19 @@ const SecondPartFormStep = () => {
         screen: 'Pantalla',
         mold2: 'Molde',
         platen: 'Placa',
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, key: string) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const keys = Array.from(inputsRef.current.keys());
+            const currentIndex = keys.indexOf(key);
+            const nextKey = keys[currentIndex + 1];
+            if (nextKey) {
+                const nextInput = inputsRef.current.get(nextKey);
+                nextInput?.focus();
+            }
+        }
     };
 
     useEffect(() => {
@@ -94,49 +110,74 @@ const SecondPartFormStep = () => {
                         </select>
                         {errors.metal && <span className='text-red-500 text-sm'>Campo requerido</span>}
                     </div>
-                    {['body', 'strips', 'full_cycle', 'cycle_time'].map(input => (
-                        <div key={input}>
-                            <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
-                                {fieldLabels[input]}
-                            </label>
-                            <input
-                                type='number'
-                                {...register(input as keyof SecondParamsRegister, { required: true, min: 0 })}
-                                step='0.01'
-                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                            />
-                            {errors[input as keyof SecondParamsRegister] && (
-                                <span className='text-red-500 text-sm'>Campo requerido</span>
-                            )}
-                        </div>
-                    ))}
+                    {['body', 'strips', 'full_cycle', 'cycle_time'].map(input => {
+                        const { ref, ...rest } = register(input as keyof SecondParamsRegister, {
+                            required: true,
+                            min: 0,
+                        });
+                        return (
+                            <div key={input}>
+                                <label htmlFor={input} className='block mb-2 text-sm font-medium text-gray-900'>
+                                    {fieldLabels[input]}
+                                </label>
+                                <input
+                                    type='number'
+                                    step='0.01'
+                                    {...rest}
+                                    ref={e => {
+                                        ref(e);
+                                        inputsRef.current.set(input, e);
+                                    }}
+                                    onKeyDown={e => handleKeyDown(e, input)}
+                                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                />
+                                {errors[input as keyof SecondParamsRegister] && (
+                                    <span className='text-red-500 text-sm'>Campo requerido</span>
+                                )}
+                            </div>
+                        );
+                    })}
                     <div className='col-span-2'>
                         <div className='flex justify-between'>
                             {['screen', 'mold2', 'platen'].map(type => (
                                 <div key={type} className='text-center flex-1 p-1'>
-                                    <label className='block mb-2 text-sm font-medium text-gray-900'>{fieldLabels[type]}</label>
-                                    {sectionTypes.map(section => (
-                                        <div key={section} className='mb-2'>
-                                            <label
-                                                htmlFor={`${type}-${section.toLowerCase()}`}
-                                                className='block mb-1 text-xs text-gray-700'
-                                            >
-                                                {section}
-                                            </label>
-                                            <input
-                                                type='number'
-                                                step='0.01'
-                                                {...register(`${type as 'screen' | 'mold2' | 'platen'}.${section}`, {
-                                                    required: true,
-                                                    min: 0,
-                                                })}
-                                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5'
-                                            />
-                                            {errors[type as 'screen' | 'mold2' | 'platen']?.[
-                                                section as 'superior' | 'inferior'
-                                            ] && <span className='text-red-500 text-sm'>Campo requerido</span>}
-                                        </div>
-                                    ))}
+                                    <label className='block mb-2 text-sm font-medium text-gray-900'>
+                                        {fieldLabels[type]}
+                                    </label>
+                                    {sectionTypes.map(section => {
+                                        const key = `${type}.${section}`;
+                                        const { ref: registerRef, ...restRegister } = register(
+                                            `${type}.${section}` as `${'screen' | 'mold2' | 'platen'}.${
+                                                | 'superior'
+                                                | 'inferior'}`,
+                                            { required: true, min: 0 },
+                                        );
+
+                                        return (
+                                            <div key={`${type}-${section}`} className='mb-2'>
+                                                <label
+                                                    htmlFor={`${type}-${section.toLowerCase()}`}
+                                                    className='block mb-1 text-xs text-gray-700'
+                                                >
+                                                    {section}
+                                                </label>
+                                                <input
+                                                    type='number'
+                                                    step='0.01'
+                                                    {...restRegister}
+                                                    ref={e => {
+                                                        registerRef(e);
+                                                        inputsRef.current.set(key, e);
+                                                    }}
+                                                    onKeyDown={e => handleKeyDown(e, key)} // Usar índice actual
+                                                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5'
+                                                />
+                                                {errors[type as 'screen' | 'mold2' | 'platen']?.[section] && (
+                                                    <span className='text-red-500 text-sm'>Campo requerido</span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ))}
                         </div>
@@ -147,8 +188,13 @@ const SecondPartFormStep = () => {
                         </label>
                         <input
                             type='number'
-                            {...register('pressure', { required: true, min: 0 })}
+                            {...rest}
                             step='0.01'
+                            ref={e => {
+                                ref(e)
+                                inputsRef.current.set('psi', e);
+                            }}
+                            onKeyDown={e => handleKeyDown(e, 'psi')}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         />
                         {errors.pressure && <span className='text-red-500 text-sm'>Campo requerido</span>}

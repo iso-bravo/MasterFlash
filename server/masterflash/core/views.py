@@ -1496,7 +1496,7 @@ def save_params(request):
             platen_superior=second_params.get("platen", {}).get("superior", 0),
             platen_inferior=second_params.get("platen", {}).get("inferior", 0),
             pressure=second_params.get("pressure"),
-            waste_pct=second_params.get("waste_pct"),
+            waste_pct=float(second_params.get("waste_pct", 0) or 0),
             batch=third_params.get("batch"),
             julian=third_params.get("julian", None),
             cavities_arr=third_params.get("cavities_arr", []),
