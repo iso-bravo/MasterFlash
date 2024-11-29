@@ -489,7 +489,7 @@ const ScrapRegister: React.FC = () => {
                                             <input
                                                 value={formData.inputs[inputName] || ''}
                                                 onChange={e => handleChange(e, 'input')}
-                                                name={inputMap[index]} // Importante agregar el name para manejar el campo
+                                                name={inputMap[index]}
                                                 className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
                                             />
                                             <button
@@ -514,6 +514,45 @@ const ScrapRegister: React.FC = () => {
                                                 Buscar
                                             </button>
                                         </>
+                                    ) : input === 'Compuesto' ? (
+                                        <div className='flex items-start gap-4'>
+                                            <input
+                                                value={formData.inputs[inputName] || ''}
+                                                onChange={e => handleChange(e, 'input')}
+                                                name={inputMap[index]}
+                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                            />
+                                            <div className='flex flex-col gap-2'>
+                                                <div className='flex items-center'>
+                                                    <input
+                                                        id={`checkbox-molding-${index}`}
+                                                        type='checkbox'
+                                                        value=''
+                                                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
+                                                    />
+                                                    <label
+                                                        htmlFor={`checkbox-molding-${index}`}
+                                                        className='ml-2 text-sm font-medium text-gray-900'
+                                                    >
+                                                        Molding
+                                                    </label>
+                                                </div>
+                                                <div className='flex items-center'>
+                                                    <input
+                                                        id={`checkbox-peroxid-${index}`}
+                                                        type='checkbox'
+                                                        value=''
+                                                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
+                                                    />
+                                                    <label
+                                                        htmlFor={`checkbox-peroxid-${index}`}
+                                                        className='ml-2 text-sm font-medium text-gray-900'
+                                                    >
+                                                        Peroxid
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <input
                                             value={formData.inputs[inputName] || ''}
