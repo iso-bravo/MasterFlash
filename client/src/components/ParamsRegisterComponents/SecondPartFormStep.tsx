@@ -19,6 +19,8 @@ const SecondPartFormStep = () => {
         defaultValues: secondParams,
     });
 
+    const {ref,...rest} = register('pressure',{ required: true, min: 0 });
+
     const fieldLabels: { [key: string]: string } = {
         body: 'Cuerpo',
         strips: 'Cintas',
@@ -186,10 +188,10 @@ const SecondPartFormStep = () => {
                         </label>
                         <input
                             type='number'
-                            {...register('pressure', { required: true, min: 0 })}
+                            {...rest}
                             step='0.01'
                             ref={e => {
-                                register('pressure').ref(e);
+                                ref(e)
                                 inputsRef.current.set('psi', e);
                             }}
                             onKeyDown={e => handleKeyDown(e, 'psi')}

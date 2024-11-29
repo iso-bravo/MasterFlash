@@ -1,11 +1,12 @@
 import useFormStore from '../../stores/ParamsRegisterStore';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useForm, SubmitHandler, useWatch } from 'react-hook-form';
 import { ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 
 const ThirdFormStep = () => {
     const { initParams, secondParams, thirdParams, setSteps, setThirdParams } = useFormStore();
+    const inputsRef = useRef(new Map<string, HTMLInputElement | null>());
 
     const {
         register,
@@ -24,6 +25,19 @@ const ThirdFormStep = () => {
                 : Array.from({ length: secondParams.cavities }, () => [0, 0, 0, 0, 0]),
         },
     });
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, key: string) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const keys = Array.from(inputsRef.current.keys());
+            const currentIndex = keys.indexOf(key);
+            const nextKey = keys[currentIndex + 1];
+            if (nextKey) {
+                const nextInput = inputsRef.current.get(nextKey);
+                nextInput?.focus();
+            }
+        }
+    };
 
     const cavities_arr = useWatch({ control, name: 'cavities_arr' });
 
@@ -93,7 +107,17 @@ const ThirdFormStep = () => {
                         <input
                             type='text'
                             id='batch'
-                            {...register('batch', { required: true })}
+                            {...(() => {
+                                const { ref, ...rest } = register('batch', { required: true });
+                                return {
+                                    ...rest,
+                                    ref: e => {
+                                        ref(e);
+                                        inputsRef.current.set('batch', e);
+                                    },
+                                };
+                            })()}
+                            onKeyDown={e => handleKeyDown(e, 'batch')}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         />
                         {errors.batch && <span className='text-red-500 text-sm'>Campo requerido</span>}
@@ -108,7 +132,17 @@ const ThirdFormStep = () => {
                                     type='number'
                                     step='0.01'
                                     id='julian'
-                                    {...register('julian', { required: true })}
+                                    {...(() => {
+                                        const { ref, ...rest } = register('julian', { required: true });
+                                        return {
+                                            ...rest,
+                                            ref: e => {
+                                                ref(e);
+                                                inputsRef.current.set('julian', e);
+                                            },
+                                        };
+                                    })()}
+                                    onKeyDown={e => handleKeyDown(e, 'julian')}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
                                 {errors.julian && <span className='text-red-500 text-sm'>Campo requerido</span>}
@@ -122,7 +156,17 @@ const ThirdFormStep = () => {
                                     type='number'
                                     step='0.01'
                                     id='ts2'
-                                    {...register('ts2', { required: true })}
+                                    {...(() => {
+                                        const { ref, ...rest } = register('ts2', { required: true });
+                                        return {
+                                            ...rest,
+                                            ref: e => {
+                                                ref(e);
+                                                inputsRef.current.set('ts2', e);
+                                            },
+                                        };
+                                    })()}
+                                    onKeyDown={e => handleKeyDown(e, 'ts2')}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
                                 {errors.ts2 && <span className='text-red-500 text-sm'>Campo requerido</span>}
@@ -135,19 +179,39 @@ const ThirdFormStep = () => {
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
                             <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavidad {cavityIndex + 1}</h5>
                             <div className='grid grid-cols-5 gap-2'>
-                                {cavity.map((value, valueIndex) => (
-                                    <input
-                                        key={valueIndex}
-                                        type='number'
-                                        step='0.01'
-                                        min={0}
-                                        value={value}
-                                        {...register(`cavities_arr.${cavityIndex}.${valueIndex}`, {
-                                            min: 0,
-                                        })}
-                                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                                    />
-                                ))}
+                                {cavity.map((value, valueIndex) => {
+                                    const key = `${cavityIndex}.${valueIndex}`;
+                                    const { ref, ...rest } = register(`cavities_arr.${cavityIndex}.${valueIndex}`, {
+                                        min: {
+                                            value: 0,
+                                            message: 'El valor mínimo permitido es 0',
+                                        },
+                                        required: 'Este campo es obligatorio, mínimo 0',
+                                    });
+                                    return (
+                                        <div key={valueIndex}>
+                                            <input
+                                                type='number'
+                                                step='0.01'
+                                                min={0}
+                                                value={value}
+                                                {...rest}
+                                                ref={e => {
+                                                    ref(e);
+                                                    inputsRef.current.set(key, e);
+                                                }}
+                                                onKeyDown={e => handleKeyDown(e, key)}
+                                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            />
+                                            {/* Mensaje de error */}
+                                            {errors.cavities_arr?.[cavityIndex]?.[valueIndex] && (
+                                                <span className='text-red-500 text-sm'>
+                                                    {errors.cavities_arr[cavityIndex][valueIndex].message}
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
