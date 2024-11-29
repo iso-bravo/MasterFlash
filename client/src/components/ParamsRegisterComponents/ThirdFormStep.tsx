@@ -1,96 +1,101 @@
-import { MdArrowBack } from 'react-icons/md';
 import useFormStore from '../../stores/ParamsRegisterStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { useForm, SubmitHandler, useWatch } from 'react-hook-form';
+import { ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 
 const ThirdFormStep = () => {
-    const { initParams, secondParams, iccParams, thirdParams, setSteps, setThirdParams, setIccParams } = useFormStore();
+    const { initParams, secondParams, thirdParams, setSteps, setThirdParams } = useFormStore();
+    const inputsRef = useRef(new Map<string, HTMLInputElement | null>());
 
-    const [cavitiesData, setCavitiesData] = useState<Array<number[]>>(Array(secondParams.cavities).fill([0, 0, 0, 0]));
+    const {
+        register,
+        handleSubmit,
+        control,
+        setValue,
+        formState: { errors },
+    } = useForm<ThirdParamsRegister>({
+        mode: 'onChange',
+        defaultValues: {
+            batch: thirdParams.batch || '',
+            julian: initParams.icc ? thirdParams.julian : undefined,
+            ts2: !initParams.icc ? thirdParams.ts2 : undefined,
+            cavities_arr: thirdParams.cavities_arr.length
+                ? thirdParams.cavities_arr
+                : Array.from({ length: secondParams.cavities }, () => [0, 0, 0, 0, 0]),
+        },
+    });
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, key: string) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const keys = Array.from(inputsRef.current.keys());
+            const currentIndex = keys.indexOf(key);
+            const nextKey = keys[currentIndex + 1];
+            if (nextKey) {
+                const nextInput = inputsRef.current.get(nextKey);
+                nextInput?.focus();
+            }
+        }
+    };
+
+    const cavities_arr = useWatch({ control, name: 'cavities_arr' });
 
     useEffect(() => {
-        if (initParams.icc && iccParams) {
-            setIccParams({ ...iccParams, cavities_arr: cavitiesData });
-        } else if (thirdParams) {
-            setThirdParams({ ...thirdParams, cavities_arr: cavitiesData });
+        const expectedLength = secondParams.cavities;
+        const updatedCavitiesArr = Array.from(
+            { length: expectedLength },
+            (_, idx) => cavities_arr[idx] || [0, 0, 0, 0, 0],
+        );
+
+        // Solo actualiza si es necesario
+        if (JSON.stringify(cavities_arr) !== JSON.stringify(updatedCavitiesArr)) {
+            setValue('cavities_arr', updatedCavitiesArr);
         }
-    }, [cavitiesData]);
 
-    const handleCavityChange = (cavityIndex: number, valueIndex: number, value: number) => {
-        setCavitiesData(prevData => {
-            const updatedData = [...prevData];
-            updatedData[cavityIndex] = [...updatedData[cavityIndex]];
-            updatedData[cavityIndex][valueIndex] = value;
-            return updatedData;
-        });
-    };
-
-    const handleBatchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const batchValue = e.target.value;
-        if (initParams.icc && iccParams) {
-            setIccParams({ ...iccParams, batch: batchValue });
-        } else if (thirdParams) {
-            setThirdParams({ ...thirdParams, batch: batchValue });
+        // Sincroniza con el estado global
+        if (JSON.stringify(thirdParams.cavities_arr) !== JSON.stringify(cavities_arr)) {
+            setThirdParams({ ...thirdParams, cavities_arr });
         }
-    };
+    }, [secondParams.cavities, cavities_arr, setValue, thirdParams, setThirdParams]);
 
-    const handleJulianChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const julianValue = parseFloat(e.target.value);
-        if (iccParams?.batch) {
-            setIccParams({ ...iccParams, julian: julianValue });
-        }
-    };
-
-    const handleTs2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const ts2Value = parseFloat(e.target.value);
-        if (thirdParams?.batch) {
-            setThirdParams({ ...thirdParams, ts2: ts2Value });
-        }
-    };
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Validar que el campo batch esté completo
-        const batchValue = initParams.icc ? iccParams?.batch : thirdParams?.batch;
-        if (!batchValue) {
+    const onSubmit: SubmitHandler<ThirdParamsRegister> = data => {
+        if (!data.batch) {
             toast.error('Por favor, completa el campo Batch.');
             return;
         }
 
-        // Validar campos específicos para ICC o ThirdParams
-        if (initParams.icc) {
-            if (!iccParams?.julian) {
-                toast.error('Por favor, completa el campo Julian.');
-                return;
-            }
-        } else {
-            if (!thirdParams?.ts2) {
-                toast.error('Por favor, completa el campo TS2.');
-                return;
-            }
-        }
-
-        // Validar que los valores de las cavidades estén completos
-        const areCavitiesValid = cavitiesData.every(cavity => cavity.every(value => value !== 0));
-        if (!areCavitiesValid) {
-            toast.error('Por favor, completa todos los valores de las cavidades.');
+        if (initParams.icc && !data.julian) {
+            toast.error('Por favor, completa el campo Julian.');
             return;
         }
 
-        // Si todo está completo, avanzar al siguiente paso
-        setSteps(4);
+        if (!initParams.icc && !data.ts2) {
+            toast.error('Por favor, completa el campo TS2.');
+            return;
+        }
+
+        const areCavitiesValid = data.cavities_arr.every(cavity => {
+            const validCount = cavity.filter(value => value > 0).length;
+            return validCount >= 4;
+        });
+
+        if (!areCavitiesValid) {
+            toast.error('Revisa las cavidades: al menos 4 valores deben ser mayores a 0.');
+            return;
+        }
+
+        try {
+            setThirdParams(data);
+            setSteps(4);
+        } catch (error) {
+            console.error('Error setting params: ', error);
+            toast.error('Ocurrió un error al procesar los datos.');
+        }
     };
-
-    const batchValue = initParams.icc ? iccParams?.batch : thirdParams?.batch;
-    const isFormValid =
-        batchValue &&
-        (initParams.icc ? iccParams?.julian : thirdParams?.ts2) &&
-        cavitiesData.every(cavity => cavity.every(value => value !== 0));
-
     return (
         <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8'>
-            <form onSubmit={handleSubmit} className=' space-y-6'>
-                <MdArrowBack size={30} onClick={() => setSteps(2)} className='cursor-pointer' />
+            <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                 <h5 className='text-xl font-medium text-gray-900'>
                     {initParams.icc ? 'Registro ICC' : 'Registro de paredes'}
                 </h5>
@@ -102,82 +107,120 @@ const ThirdFormStep = () => {
                         <input
                             type='text'
                             id='batch'
-                            name='batch'
-                            value={initParams.icc ? iccParams?.batch : thirdParams?.batch}
-                            onChange={handleBatchChange}
+                            {...(() => {
+                                const { ref, ...rest } = register('batch', { required: true });
+                                return {
+                                    ...rest,
+                                    ref: e => {
+                                        ref(e);
+                                        inputsRef.current.set('batch', e);
+                                    },
+                                };
+                            })()}
+                            onKeyDown={e => handleKeyDown(e, 'batch')}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                         />
+                        {errors.batch && <span className='text-red-500 text-sm'>Campo requerido</span>}
                     </div>
                     <div>
                         {initParams.icc ? (
                             <>
                                 <label htmlFor='julian' className='block mb-2 text-sm font-medium text-gray-900'>
-                                    julian
+                                    Julian
                                 </label>
                                 <input
                                     type='number'
                                     step='0.01'
                                     id='julian'
-                                    name='julian'
-                                    min={0}
-                                    value={iccParams?.julian}
-                                    onChange={handleJulianChange}
+                                    {...(() => {
+                                        const { ref, ...rest } = register('julian', { required: true });
+                                        return {
+                                            ...rest,
+                                            ref: e => {
+                                                ref(e);
+                                                inputsRef.current.set('julian', e);
+                                            },
+                                        };
+                                    })()}
+                                    onKeyDown={e => handleKeyDown(e, 'julian')}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
+                                {errors.julian && <span className='text-red-500 text-sm'>Campo requerido</span>}
                             </>
                         ) : (
                             <>
                                 <label htmlFor='ts2' className='block mb-2 text-sm font-medium text-gray-900'>
-                                    ts2
+                                    TS2
                                 </label>
                                 <input
                                     type='number'
                                     step='0.01'
                                     id='ts2'
-                                    name='ts2'
-                                    min={0}
-                                    value={thirdParams?.ts2}
-                                    onChange={handleTs2Change}
+                                    {...(() => {
+                                        const { ref, ...rest } = register('ts2', { required: true });
+                                        return {
+                                            ...rest,
+                                            ref: e => {
+                                                ref(e);
+                                                inputsRef.current.set('ts2', e);
+                                            },
+                                        };
+                                    })()}
+                                    onKeyDown={e => handleKeyDown(e, 'ts2')}
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 />
+                                {errors.ts2 && <span className='text-red-500 text-sm'>Campo requerido</span>}
                             </>
                         )}
                     </div>
                 </div>
                 <div className='grid grid-cols-1 gap-4'>
-                    {cavitiesData.map((cavity, cavityIndex) => (
+                    {cavities_arr.map((cavity, cavityIndex) => (
                         <div key={cavityIndex} className='p-2 border border-gray-300 rounded-lg'>
-                            <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavity {cavityIndex + 1}</h5>
-                            <div className='grid grid-cols-4 gap-2'>
-                                {cavity.map((value, valueIndex) => (
-                                    <div key={valueIndex}>
-                                        <label className='block mb-1 text-sm font-medium text-gray-900'>
-                                            Value {valueIndex + 1}
-                                        </label>
-                                        <input
-                                            type='number'
-                                            step='0.01'
-                                            min={0}
-                                            value={value}
-                                            onChange={e =>
-                                                handleCavityChange(cavityIndex, valueIndex, Number(e.target.value))
-                                            }
-                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                                        />
-                                    </div>
-                                ))}
+                            <h5 className='mb-2 text-lg font-medium text-gray-900'>Cavidad {cavityIndex + 1}</h5>
+                            <div className='grid grid-cols-5 gap-2'>
+                                {cavity.map((value, valueIndex) => {
+                                    const key = `${cavityIndex}.${valueIndex}`;
+                                    const { ref, ...rest } = register(`cavities_arr.${cavityIndex}.${valueIndex}`, {
+                                        min: {
+                                            value: 0,
+                                            message: 'El valor mínimo permitido es 0',
+                                        },
+                                        required: 'Este campo es obligatorio, mínimo 0',
+                                    });
+                                    return (
+                                        <div key={valueIndex}>
+                                            <input
+                                                type='number'
+                                                step='0.01'
+                                                min={0}
+                                                value={value}
+                                                {...rest}
+                                                ref={e => {
+                                                    ref(e);
+                                                    inputsRef.current.set(key, e);
+                                                }}
+                                                onKeyDown={e => handleKeyDown(e, key)}
+                                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            />
+                                            {/* Mensaje de error */}
+                                            {errors.cavities_arr?.[cavityIndex]?.[valueIndex] && (
+                                                <span className='text-red-500 text-sm'>
+                                                    {errors.cavities_arr[cavityIndex][valueIndex].message}
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
                 </div>
                 <button
                     type='submit'
-                    className={`w-full text-white ${
-                        isFormValid ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-300 cursor-not-allowed'
-                    } focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center`}
-                    disabled={!isFormValid}
+                    className='w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
                 >
-                    Siguiente
+                    Continuar
                 </button>
             </form>
         </div>

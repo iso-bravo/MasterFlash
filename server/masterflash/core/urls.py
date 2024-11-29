@@ -81,6 +81,11 @@ urlpatterns = [
         views.get_rubber_report_history,
         name="get_rubber_report_history",
     ),
+    path(
+        "get_inserts_report_history/",
+        views.get_inserts_report_history,
+        name="get_inserts_report_history",
+    ),
     path("get_all_part_nums/", views.get_part_nums, name="get_all_part_nums"),
     path(
         "part-numbers/names/",
@@ -108,5 +113,19 @@ urlpatterns = [
         "get_record_by_id/<int:id>",
         views.get_record_by_id,
         name="get_production_record_by_id",
+    ),
+    path("save-params", views.save_params, name="save_params"),
+    path(
+        "validate_part_number/<str:part_number>/",
+        views.validate_part_number,
+        name="validate_part_number",
+    ),
+    path(
+        "part_numbers/<int:pk>/update/",
+        views.update_part_number,
+        name="update_part_number",
+    ),
+    path(
+        "part_numbers/<int:id>/", views.get_part_num_by_id, name="get_part_number_by_id"
     ),
 ]

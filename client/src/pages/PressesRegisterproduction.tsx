@@ -27,6 +27,7 @@ interface DataItem {
     proposed_efficiency: number;
     date_time: string;
     shift: string;
+    relay:boolean
     editableField?: keyof DataItem;
 }
 
@@ -132,9 +133,10 @@ const PressesRegisterProduction: React.FC = () => {
             const workedHrs = Number(value);
             if (workedHrs > 0) {
                 const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
-                const proposed_decimal = 100 * (newData[index].pieces_ok / (parseFloat(newData[index].proposed_standard) * workedHrs));
+                const proposed_decimal =
+                    100 * (newData[index].pieces_ok / (parseFloat(newData[index].proposed_standard) * workedHrs));
                 newData[index].efficiency = Number(decimal.toFixed(2));
-                newData[index].proposed_efficiency = Number(proposed_decimal.toFixed(2))
+                newData[index].proposed_efficiency = Number(proposed_decimal.toFixed(2));
             } else {
                 newData[index].efficiency = 0;
                 newData[index].proposed_efficiency = 0;
@@ -261,15 +263,14 @@ const PressesRegisterProduction: React.FC = () => {
             />
             <Header title='Registro Producción' goto='/press_production_records_summary' />
 
-            <div className='grid grid-cols-3 items-center gap-4'>
-                <div className=' col-start-2 flex justify-center gap-4'>
-                    <div>
-                        <label htmlFor='shifts select' className='block mb-2 text-sm font-medium text-gray-900'>
+            <nav className='grid grid-cols-3 items-center gap-4'>
+                <ul className=' col-start-2 flex justify-center gap-4'>
+                    <li>
+                        <label htmlFor='shifts' className='block mb-2 text-sm font-medium text-gray-900'>
                             Turno
                         </label>
                         <select
                             name='shifts select'
-                            defaultValue=''
                             id='shifts'
                             value={selectedShift}
                             onChange={handleShiftChange}
@@ -282,23 +283,24 @@ const PressesRegisterProduction: React.FC = () => {
                             <option value='Second'>Second</option>
                             <option value='Free'>Free</option>
                         </select>
-                    </div>
-                    <div>
+                    </li>
+                    <li>
                         <label htmlFor='date' className='block mb-2 text-sm font-medium text-gray-900'>
                             Fecha
                         </label>
                         <input
+                            id='date'
                             name='date'
                             type='date'
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             onChange={handleDateChange}
                             value={selectedDate}
                         />
-                    </div>
-                    <div className='flex justify-end p-2'>
+                    </li>
+                    <li className='flex justify-end p-2'>
                         <span className='text-lg font-medium'>Total Producción: {calculateTotalProduction()}</span>
-                    </div>
-                </div>
+                    </li>
+                </ul>
                 <div className='flex justify-end p-2 gap-4'>
                     <button
                         onClick={handleSave}
@@ -313,9 +315,9 @@ const PressesRegisterProduction: React.FC = () => {
                         Editar
                     </button>
                 </div>
-            </div>
+            </nav>
 
-            <div className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
+            <main className='relative overflow-x-auto shadow-md sm:rounded-lg mt-12'>
                 <table className='w-full text-sm text-left text-gray-500'>
                     <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
                         <tr>
@@ -337,9 +339,6 @@ const PressesRegisterProduction: React.FC = () => {
                             <th scope='col' className='px-6 py-3'>
                                 Calibre
                             </th>
-                            <th scope='col' className='px-6 py-3'>
-                                Hrs Trabajadas
-                            </th>
                             <th scope='col' className='px-6 py-3 bg-yellow-300'>
                                 Causa de Tiempo muerto (Str.)
                             </th>
@@ -351,6 +350,9 @@ const PressesRegisterProduction: React.FC = () => {
                             </th>
                             <th scope='col' className='px-6 py-3 bg-yellow-300'>
                                 Causa de tiempo muerto (Tiempo)
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Hrs Trabajadas
                             </th>
                             <th scope='col' className='px-6 py-3'>
                                 Producción
@@ -365,14 +367,17 @@ const PressesRegisterProduction: React.FC = () => {
                     </thead>
                     <tbody>
                         {editableData.map((item, index) => (
-                            <tr key={`${index}-${item.id}`} className='odd:bg-white even:bg-gray-50 border-b'>
+                            <tr
+                                key={`${index}-${item.id}`}
+                                className={`${item.relay ? 'bg-blue-100' : 'odd:bg-white even:bg-gray-50'} border-b`}
+                            >
                                 <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
                                     {item.press}
                                 </th>
                                 <td className='px-6 py-4'>{item.molder_number}</td>
                                 <td className='px-6 py-4'>{item.work_order}</td>
                                 <td className='px-6 py-4'>{item.part_number}</td>
-                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'cavities')}>
+                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'cavities')}>
                                     {item.editableField === 'cavities' ? (
                                         <input
                                             type='text'
@@ -386,7 +391,7 @@ const PressesRegisterProduction: React.FC = () => {
                                         <span>{item.cavities}</span>
                                     )}
                                 </td>
-                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'caliber')}>
+                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'caliber')}>
                                     {item.editableField === 'caliber' ? (
                                         <input
                                             type='text'
@@ -400,23 +405,10 @@ const PressesRegisterProduction: React.FC = () => {
                                         <span>{item.caliber}</span>
                                     )}
                                 </td>
-                                <td className='px-6 py-4' onDoubleClick={() => handleDoubleClick(index, 'worked_hrs')}>
-                                    {item.editableField === 'worked_hrs' ? (
-                                        <input
-                                            type='text'
-                                            value={item.worked_hrs || ''}
-                                            onChange={e => handleChange(index, 'worked_hrs', e.target.value)}
-                                            onBlur={() => handleBlur(index)}
-                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                                            autoFocus
-                                        />
-                                    ) : (
-                                        <span>{item.worked_hrs}</span>
-                                    )}
-                                </td>
+
                                 <td
                                     className='px-6 py-4 bg-yellow-300'
-                                    onDoubleClick={() => handleDoubleClick(index, 'dead_time_cause_1')}
+                                    onClick={() => handleDoubleClick(index, 'dead_time_cause_1')}
                                 >
                                     {item.editableField === 'dead_time_cause_1' ? (
                                         <input
@@ -432,10 +424,7 @@ const PressesRegisterProduction: React.FC = () => {
                                     )}
                                 </td>
                                 <td className='px-6 py-4'>{item.standard}</td>
-                                <td
-                                    className='px-6 py-4'
-                                    onDoubleClick={() => handleDoubleClick(index, 'proposed_standard')}
-                                >
+                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'proposed_standard')}>
                                     {item.editableField === 'proposed_standard' ? (
                                         <input
                                             type='text'
@@ -451,7 +440,7 @@ const PressesRegisterProduction: React.FC = () => {
                                 </td>
                                 <td
                                     className='px-6 py-4 bg-yellow-300'
-                                    onDoubleClick={() => handleDoubleClick(index, 'dead_time_cause_2')}
+                                    onClick={() => handleDoubleClick(index, 'dead_time_cause_2')}
                                 >
                                     {item.editableField === 'dead_time_cause_2' ? (
                                         <input
@@ -466,6 +455,20 @@ const PressesRegisterProduction: React.FC = () => {
                                         <span>{item.dead_time_cause_2}</span>
                                     )}
                                 </td>
+                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'worked_hrs')}>
+                                    {item.editableField === 'worked_hrs' ? (
+                                        <input
+                                            type='text'
+                                            value={item.worked_hrs || ''}
+                                            onChange={e => handleChange(index, 'worked_hrs', e.target.value)}
+                                            onBlur={() => handleBlur(index)}
+                                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <span>{item.worked_hrs}</span>
+                                    )}
+                                </td>
                                 <td className='px-6 py-4'>{item.pieces_ok}</td>
                                 <td className='px-6 py-4'>{`${item.efficiency}%`}</td>
                                 <td className='px-6 py-4'>{`${item.proposed_efficiency}%`}</td>
@@ -473,7 +476,7 @@ const PressesRegisterProduction: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-            </div>
+            </main>
         </div>
     );
 };

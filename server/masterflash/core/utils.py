@@ -1,5 +1,7 @@
 from datetime import date, time,datetime
+from django.conf import settings
 from django.db.models import Q,Sum
+import redis
 
 from masterflash.core.models import LinePress, Presses_monthly_goals, ProductionPress, ShiftSchedule, StatePress
 
@@ -70,6 +72,9 @@ def send_production_data():
     machines = LinePress.objects.all()
     machines_data = []
     total_piecesProduced = 0
+    redis_client = redis.StrictRedis(
+        host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
+    )
 
     # 'total_pieces and 'porcentage' calculation
     year = current_date.year
@@ -139,16 +144,23 @@ def send_production_data():
         else:
             machine_state = 'Inactive'
 
+        previous_molder_number = (
+            redis_client.get(f"previous_molder_number_{machine.name}")
+        )
+        previous_molder_number = previous_molder_number.decode("utf-8") if previous_molder_number else "----"
+
+
         machine_data = {
-            'name': machine.name,
-            'state': machine_state,
-            'employee_number': employeeNumber,
-            'pieces_ok': actual_ok,
-            'pieces_rework': total_rework,
-            'part_number': partNumber,
-            'work_order': workOrder,
-            'total_ok': total_ok,
-            'molder_number': molderNumber
+            "name": machine.name,
+            "state": machine_state,
+            "employee_number": employeeNumber,
+            "pieces_ok": actual_ok,
+            "pieces_rework": total_rework,
+            "part_number": partNumber,
+            "work_order": workOrder,
+            "total_ok": total_ok,
+            "molder_number": molderNumber,
+            "previous_molder_number": previous_molder_number,
         }
         total_piecesProduced += total_ok
         machines_data.append(machine_data)

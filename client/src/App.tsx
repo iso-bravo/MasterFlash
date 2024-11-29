@@ -20,6 +20,7 @@ import ShiftConfig from './pages/ShiftConfig';
 import ProductionRecordsSummary from './pages/ProductionRecordsSummary';
 import ProductionRecordsDetails from './pages/ProductionRecordsDetails';
 import ScrapRegisterTest from './pages/ScrapRegisterTest';
+import InsertsShipsHistory from './pages/InsertsShipsHistory';
 
 function App() {
     return (
@@ -34,6 +35,7 @@ function App() {
                 <Route path='/presses_register_production' element={<PressesRegisterProduction />} />
                 <Route path='/reports_menu' element={<ReportsMenu />} />
                 <Route path='/scrap_report' element={<ScrapReport />} />
+                <Route path='/inserts_history' element={<InsertsShipsHistory/>} />
                 <Route path='/rubber_history' element={<WareHouseShipsHistory />} />
                 <Route path='/rubber_report' element={<RubberReport />} />
                 <Route path='/production_records' element={<ProductionRecordsMenu />} />

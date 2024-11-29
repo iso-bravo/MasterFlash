@@ -6,8 +6,13 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.utils.dateparse import parse_datetime
+from django.conf import settings
+
+
+import redis
 
 from .models import (
+    Insert_Query_history,
     LinePress,
     Part_Number,
     Production_records,
@@ -20,6 +25,7 @@ from .models import (
     Qc_Scrap,
     Insert,
     Presses_monthly_goals,
+    Params,
 )
 from .utils import set_shift, sum_pieces
 from django.db.models import Q, Sum
@@ -372,6 +378,16 @@ def register_data_production(request):
     partNumber = data.get("part_number")
     molderNumber = data.get("molder_number")
     workOrder = data.get("work_order")
+    previousMolderNumber = data.get("previous_molder_number")
+    relay = data.get("is_relay")
+
+    if relay and previousMolderNumber:
+        redis_client = redis.StrictRedis(
+            host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
+        )
+        redis_client.set(
+            f"previous_molder_number_{data.get('name')}", previousMolderNumber
+        )
 
     piecesOk = data.get("pieces_ok") or 0
     piecesRework = data.get("pieces_rework") or 0
@@ -394,7 +410,9 @@ def register_data_production(request):
         molder_number=molderNumber,
         press=data.get("name"),
         shift=shift,
+        relay=relay,
     )
+
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
 
 
@@ -418,6 +436,7 @@ def get_production_press_by_date(request):
         "work_order",
         "pieces_ok",
         "date_time",
+        "relay",
     )
 
     print("ProductionPress records found:", production_press_records)
@@ -444,6 +463,7 @@ def get_production_press_by_date(request):
                 "standard": part_number_record["standard"],
                 "pieces_ok": record["pieces_ok"],
                 "hour": record["date_time"].strftime("%H:%M:%S"),
+                "relay": record["relay"],
             }
             result.append(combined_record)
     print("Final result:", result)
@@ -861,6 +881,7 @@ def register_scrap_test(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
+
 def register(request):
     print("Aqui")
     return JsonResponse({"message": "Registro exitoso"}, status=200)
@@ -1083,6 +1104,17 @@ def get_mold_by_part_number(request, part_number):
 
 
 @csrf_exempt
+def validate_part_number(request, part_number):
+    try:
+        part = Part_Number.objects.get(part_number=part_number)
+        return JsonResponse({"exists": True, "part_number": part.part_number})
+    except Part_Number.DoesNotExist:
+        return JsonResponse(
+            {"exists": False, "error": "Part number not found"}, status=404
+        )
+
+
+@csrf_exempt
 def get_scrap_register_summary(request, date):
     # Convierte la fecha del parámetro
     try:
@@ -1142,6 +1174,28 @@ def get_rubber_report_history(request):
             "end_date": h.end_date,
             "compound": h.compound,
             "total_weight": h.total_weight,
+            "comments": h.comments,
+        }
+        for h in history
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_inserts_report_history(request):
+    history = Insert_Query_history.objects.all()
+
+    data = [
+        {
+            "query_date": h.query_date,
+            "start_date": h.start_date,
+            "end_date": h.end_date,
+            "insert": h.insert,
+            "total_insert": h.total_insert,
+            "total_rubber": h.total_rubber,
+            "total_metal": h.total_metal,
+            "total_sum": h.total_sum,
         }
         for h in history
     ]
@@ -1155,6 +1209,7 @@ def get_part_nums(request):
 
     data = [
         {
+            "id": p.id,
             "part_number": p.part_number,
             "client": p.client,
             "box": p.box,
@@ -1392,6 +1447,111 @@ def get_record_by_id(request, id):
             return JsonResponse({"error": "Record not found"}, status=404)
 
         return JsonResponse(record, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+logger = logging.getLogger("__name__")
+
+
+@csrf_exempt
+@require_POST
+def save_params(request):
+    try:
+        # Obtener los datos del cuerpo de la solicitud
+        logger.info("Recibiendo solicitud...")
+        data = json.loads(request.body)
+        logger.info(f"Datos recibidos: {data}")
+
+        # Validar que los datos requeridos estén presentes
+        init_params = data.get("initParams", {})
+        second_params = data.get("secondParams", {})
+        third_params = data.get("thirdParams", {})
+        logger.info(
+            f"initParams: {init_params}, secondParams: {second_params}, thirdParams: {third_params}"
+        )
+
+        if not init_params or not second_params:
+            return JsonResponse({"error": "Faltan parámetros obligatorios"}, status=400)
+
+        param_instance = Params(
+            partnum=init_params.get("partnum"),
+            auditor=init_params.get("auditor"),
+            shift=init_params.get("shift", ""),
+            mp=init_params.get("mp"),
+            molder=init_params.get("molder"),
+            icc=init_params.get("icc"),
+            mold=second_params.get("mold"),
+            cavities=second_params.get("cavities"),
+            metal=second_params.get("metal"),
+            body=second_params.get("body"),
+            strips=second_params.get("strips"),
+            full_cycle=second_params.get("full_cycle"),
+            cycle_time=second_params.get("cycle_time", 0),
+            screen_superior=second_params.get("screen", {}).get("superior", 0),
+            screen_inferior=second_params.get("screen", {}).get("inferior", 0),
+            mold_superior=second_params.get("mold2", {}).get("superior", 0),
+            mold_inferior=second_params.get("mold2", {}).get("inferior", 0),
+            platen_superior=second_params.get("platen", {}).get("superior", 0),
+            platen_inferior=second_params.get("platen", {}).get("inferior", 0),
+            pressure=second_params.get("pressure"),
+            waste_pct=float(second_params.get("waste_pct", 0) or 0),
+            batch=third_params.get("batch"),
+            julian=third_params.get("julian", None),
+            cavities_arr=third_params.get("cavities_arr", []),
+        )
+
+        # Guardar el registro en la base de datos
+        param_instance.save()
+        logger.info("Parámetros guardados correctamente.")
+
+        # Responder con un mensaje de éxito
+        return JsonResponse(
+            {"message": "Parámetros guardados correctamente"}, status=201
+        )
+
+    except json.JSONDecodeError:
+        logger.exception("Error en el formato de los datos enviados.")
+        return JsonResponse(
+            {"error": "Error en el formato de los datos enviados"}, status=400
+        )
+    except Exception as e:
+        logger.exception("Error interno.")
+        return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["PATCH"])
+def update_part_number(request, pk):
+    try:
+        part_number = Part_Number.objects.get(pk=pk)
+    except Part_Number.DoesNotExist:
+        return JsonResponse({"error": "Part number not found"}, status=404)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    # Actualización de los campos que se proporcionan
+    for key, value in data.items():
+        if hasattr(part_number, key):  # Verifica que el campo exista en el modelo
+            setattr(part_number, key, value)
+
+    part_number.save()
+
+    return JsonResponse({"message": "Part number updated successfully"}, status=200)
+
+
+@csrf_exempt
+def get_part_num_by_id(request, id):
+    try:
+        part_num = Part_Number.objects.filter(id=id).values().first()
+        if part_num is None:
+            return JsonResponse({"error": "Part_number not found"}, status=404)
+
+        return JsonResponse(part_num, status=200)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

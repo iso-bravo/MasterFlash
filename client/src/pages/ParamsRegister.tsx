@@ -1,5 +1,3 @@
-import { IoIosArrowBack } from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import GeneralInfoFromStep from '../components/ParamsRegisterComponents/GeneralInfoFromStep';
 import ProgressSummary from '../components/ParamsRegisterComponents/ProgressSummary';
@@ -8,9 +6,9 @@ import SecondPartFormStep from '../components/ParamsRegisterComponents/SecondPar
 import ThirdFormStep from '../components/ParamsRegisterComponents/ThirdFormStep';
 import ProgressBar from '../components/ProgressBar';
 import { MdArrowBack } from 'react-icons/md';
+import Header from '../components/Header';
 
 const ParamsRegister = () => {
-    const navigate = useNavigate();
     const { step, setSteps, progress } = useFormStore();
 
     let formStep;
@@ -26,8 +24,12 @@ const ParamsRegister = () => {
             formStep = <ThirdFormStep />;
             break;
 
+        case 4:
+            formStep = <ProgressSummary />;
+            break;
+
         default:
-            formStep = <></>;
+            formStep = <>nada</>;
             break;
     }
 
@@ -43,26 +45,15 @@ const ParamsRegister = () => {
                 draggable
                 theme='colored'
             />
-            <header className='flex items-start gap-3 mb-20'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
-                <h1 className='text-xl'>Reg. Params.</h1>
-            </header>
-            <section className='flex flex-col md:flex-row gap-6'>
-                {step != 4 ? (
-                    <>
-                        <div className='flex-1'>{formStep}</div>
-                        <div className='flex-1 md:w-1/3'>
-                            <ProgressBar progress={progress} />
-                            <ProgressSummary />
-                        </div>
-                    </>
-                ) : (
-                    <div className='flex-1'>
+            <Header title='Reg. Params.' />
+            <section className='flex flex-col gap-6 mt-4 overflow-auto'>
+                <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 flex-1'>
+                    {step > 1 && (
                         <MdArrowBack size={30} onClick={() => setSteps(step - 1)} className='cursor-pointer' />
-                        <ProgressBar progress={progress} />
-                        <ProgressSummary />
-                    </div>
-                )}
+                    )}
+                    <ProgressBar progress={progress} />
+                    {formStep}
+                </div>
             </section>
         </div>
     );

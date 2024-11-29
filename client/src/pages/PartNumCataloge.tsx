@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import api from '../config/axiosConfig';
 import { FaPlus } from 'react-icons/fa';
 import { IoSearch } from 'react-icons/io5';
+import EditPartNumModal from '../components/EditPartNumModal';
 
 interface PartNum {
+    id: number;
     part_number: string | null;
     box: string | null;
     client: string | null;
@@ -21,12 +23,59 @@ interface PartNum {
     gripper: string | null;
 }
 
+interface FullPartNum {
+    id: number;
+    part_number: string;
+    client: string;
+    box: string;
+    pieces_x_box: number;
+    rubber_compound: string;
+    price?: number;
+    standard: number;
+    pallet: string;
+    box_x_pallet: number;
+    pieces_x_pallet?: number;
+    assembly?: string;
+    accessories?: string;
+    mold: string;
+    instructive?: string;
+    insert: string;
+    gripper: string;
+    caliber: string;
+    paint?: string;
+    std_paint?: number;
+    painter?: number;
+    scrap?: number;
+    box_logo?: string;
+    cavities?: number;
+    category?: string;
+    type2?: string;
+    measurement?: string;
+    special?: string;
+    piece_label?: string;
+    qty_piece_labels?: number;
+    box_label?: string;
+    qty_box_labels?: number;
+    box_label_2?: string;
+    qty_box_labels_2?: number;
+    box_label_3?: string;
+    qty_box_labels_3?: number;
+    made_in_mexico?: string;
+    staples?: string;
+    image_piece_label?: File | null;
+    image_box_label?: File | null;
+    image_box_label_2?: File | null;
+    image_box_label_3?: File | null;
+}
+
 const PartNumCataloge = () => {
     const navigate = useNavigate();
     const [partNums, setPartNums] = useState<PartNum[]>([]);
     const [filteredPartNums, setFilteredPartNums] = useState<PartNum[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPartNumId, setSelectedPartNumId] = useState<number | null>(null);
 
     const fetchPartNums = async () => {
         try {
@@ -43,13 +92,35 @@ const PartNumCataloge = () => {
         fetchPartNums();
     }, []);
 
-    useEffect(()=>{
-        const filtered = partNums.filter(item=>
-            item.part_number?.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
+    useEffect(() => {
+        const filtered = partNums.filter(item =>
+            item.part_number?.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()),
         );
-        setFilteredPartNums(filtered)
+        setFilteredPartNums(filtered);
+    }, [searchTerm, partNums]);
 
-    },[searchTerm,partNums])
+    const handleEditClick = (id: number) => {
+        setSelectedPartNumId(id);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedPartNumId(null);
+    };
+
+    const handleSavePartNum = async (updatedPartNum: FullPartNum) => {
+        try {
+            await api.patch(`/part_numbers/${updatedPartNum.id}/update/`, updatedPartNum);
+            setPartNums(prev =>
+                prev.map(partNum => (partNum.id === updatedPartNum.id ? { ...partNum, ...updatedPartNum } : partNum)),
+            );
+
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error actualizando número de parte:', error);
+        }
+    };
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
@@ -130,6 +201,9 @@ const PartNumCataloge = () => {
                                 <th scope='col' className='px-6 py-3'>
                                     Gripper
                                 </th>
+                                <th scope='col' className='px-6 py-3'>
+                                    <span className='sr-only'>Edit</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -148,12 +222,26 @@ const PartNumCataloge = () => {
                                     <th className='px-6 py-3'>{item.insert}</th>
                                     <th className='px-6 py-3'>{item.caliber}</th>
                                     <th className='px-6 py-3'>{item.gripper}</th>
+                                    <td className='px-6 py-4 text-right'>
+                                        <button
+                                            onClick={() => handleEditClick(item.id)}
+                                            className='text-blue-600 hover:underline'
+                                        >
+                                            Editar
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 )}
             </section>
+            <EditPartNumModal
+                partNumId={selectedPartNumId}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onSave={handleSavePartNum}
+            />
         </div>
     );
 };
