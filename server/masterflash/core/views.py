@@ -1056,7 +1056,7 @@ def update_pieces_ok(request, id):
 
 
 def get_rubber_compounds(request):
-    compounds = Part_Number.objects.values_list("rubber_compound", flat=True).distinct()
+    compounds = Qc_Scrap.objects.values_list("compound", flat=True).distinct()
 
     return JsonResponse(list(compounds), safe=False)
 
