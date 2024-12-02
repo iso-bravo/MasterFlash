@@ -62,6 +62,8 @@ const ScrapRegister: React.FC = () => {
 
     const [machines, setMachines] = useState<string[]>([]);
     const [showModal, setShowModal] = useState(false);
+    const [isMoldingChecked, setIsMoldingChecked] = useState(false);
+    const [isPeroxidChecked, setIsPeroxidChecked] = useState(false);
 
     const inputs = [
         'No. Parte',
@@ -220,6 +222,14 @@ const ScrapRegister: React.FC = () => {
         await handleRegister();
     };
 
+    const handleCheckboxChange = (type: 'molding' | 'peroxid') => {
+        if (type === 'molding') {
+            setIsMoldingChecked(!isMoldingChecked);
+        } else if (type === 'peroxid') {
+            setIsPeroxidChecked(!isPeroxidChecked);
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, type: string) => {
         const { name, value } = e.target;
 
@@ -250,13 +260,25 @@ const ScrapRegister: React.FC = () => {
         try {
             const formattedDate = formatDate(formData.date);
 
+            let compound = formData.inputs.compound;
+
+            if (isMoldingChecked) {
+                compound += '-molding';
+            }
+            if (isPeroxidChecked) {
+                compound += '-peroxid';
+            }
+
             const payload = {
                 date: formattedDate,
                 shift: formData.shift,
                 line: formData.line,
                 auditor: formData.auditor,
                 molder: formData.molder,
-                inputs: formData.inputs,
+                inputs: {
+                    ...formData.inputs,
+                    compound,
+                },
                 codes: formData.codes,
             };
 
@@ -526,8 +548,10 @@ const ScrapRegister: React.FC = () => {
                                                 <div className='flex items-center'>
                                                     <input
                                                         id={`checkbox-molding-${index}`}
+                                                        disabled ={isPeroxidChecked}
                                                         type='checkbox'
-                                                        value=''
+                                                        checked={isMoldingChecked}
+                                                        onChange={() => handleCheckboxChange('molding')}
                                                         className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
                                                     />
                                                     <label
@@ -541,7 +565,9 @@ const ScrapRegister: React.FC = () => {
                                                     <input
                                                         id={`checkbox-peroxid-${index}`}
                                                         type='checkbox'
-                                                        value=''
+                                                        disabled={isMoldingChecked}
+                                                        checked={isPeroxidChecked}
+                                                        onChange={() => handleCheckboxChange('peroxid')}
                                                         className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
                                                     />
                                                     <label
