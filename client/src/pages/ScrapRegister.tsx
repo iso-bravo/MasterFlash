@@ -62,6 +62,8 @@ const ScrapRegister: React.FC = () => {
 
     const [machines, setMachines] = useState<string[]>([]);
     const [showModal, setShowModal] = useState(false);
+    const [isMoldingChecked, setIsMoldingChecked] = useState(false);
+    const [isPeroxidChecked, setIsPeroxidChecked] = useState(false);
 
     const inputs = [
         'No. Parte',
@@ -220,6 +222,14 @@ const ScrapRegister: React.FC = () => {
         await handleRegister();
     };
 
+    const handleCheckboxChange = (type: 'molding' | 'peroxid') => {
+        if (type === 'molding') {
+            setIsMoldingChecked(!isMoldingChecked);
+        } else if (type === 'peroxid') {
+            setIsPeroxidChecked(!isPeroxidChecked);
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, type: string) => {
         const { name, value } = e.target;
 
@@ -250,13 +260,25 @@ const ScrapRegister: React.FC = () => {
         try {
             const formattedDate = formatDate(formData.date);
 
+            let compound = formData.inputs.compound;
+
+            if (isMoldingChecked) {
+                compound += '-molding';
+            }
+            if (isPeroxidChecked) {
+                compound += '-peroxid';
+            }
+
             const payload = {
                 date: formattedDate,
                 shift: formData.shift,
                 line: formData.line,
                 auditor: formData.auditor,
                 molder: formData.molder,
-                inputs: formData.inputs,
+                inputs: {
+                    ...formData.inputs,
+                    compound,
+                },
                 codes: formData.codes,
             };
 
@@ -489,7 +511,7 @@ const ScrapRegister: React.FC = () => {
                                             <input
                                                 value={formData.inputs[inputName] || ''}
                                                 onChange={e => handleChange(e, 'input')}
-                                                name={inputMap[index]} // Importante agregar el name para manejar el campo
+                                                name={inputMap[index]}
                                                 className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
                                             />
                                             <button
@@ -514,6 +536,49 @@ const ScrapRegister: React.FC = () => {
                                                 Buscar
                                             </button>
                                         </>
+                                    ) : input === 'Compuesto' ? (
+                                        <div className='flex items-start gap-4'>
+                                            <input
+                                                value={formData.inputs[inputName] || ''}
+                                                onChange={e => handleChange(e, 'input')}
+                                                name={inputMap[index]}
+                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                            />
+                                            <div className='flex flex-col gap-2'>
+                                                <div className='flex items-center'>
+                                                    <input
+                                                        id={`checkbox-molding-${index}`}
+                                                        disabled ={isPeroxidChecked}
+                                                        type='checkbox'
+                                                        checked={isMoldingChecked}
+                                                        onChange={() => handleCheckboxChange('molding')}
+                                                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
+                                                    />
+                                                    <label
+                                                        htmlFor={`checkbox-molding-${index}`}
+                                                        className='ml-2 text-sm font-medium text-gray-900'
+                                                    >
+                                                        Molding
+                                                    </label>
+                                                </div>
+                                                <div className='flex items-center'>
+                                                    <input
+                                                        id={`checkbox-peroxid-${index}`}
+                                                        type='checkbox'
+                                                        disabled={isMoldingChecked}
+                                                        checked={isPeroxidChecked}
+                                                        onChange={() => handleCheckboxChange('peroxid')}
+                                                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
+                                                    />
+                                                    <label
+                                                        htmlFor={`checkbox-peroxid-${index}`}
+                                                        className='ml-2 text-sm font-medium text-gray-900'
+                                                    >
+                                                        Peroxid
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <input
                                             value={formData.inputs[inputName] || ''}
