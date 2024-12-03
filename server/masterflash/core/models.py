@@ -269,6 +269,7 @@ class Params(models.Model):
     mp = models.CharField(max_length=100)
     molder = models.IntegerField()
     icc = models.BooleanField()
+    register_date = models.DateField()
     mold = models.CharField(max_length=100)
     cavities = models.IntegerField()
     metal = models.CharField(max_length=50, null=True)
@@ -291,3 +292,33 @@ class Params(models.Model):
 
     def __str__(self):
         return f"Params for {self.partnum} - {self.mold}"
+
+    def to_dict(self):
+        return {
+            "partnum": self.partnum,
+            "auditor": self.auditor,
+            "shift": self.shift,
+            "mp": self.mp,
+            "molder": self.molder,
+            "icc": self.icc,
+            "register_date": self.register_date,
+            "mold": self.mold,
+            "cavities": self.cavities,
+            "metal": self.metal,
+            "body": self.body,
+            "strips": self.strips,
+            "full_cycle": self.full_cycle,
+            "cycle_time": self.cycle_time,
+            "screen_superior" : self.screen_superior,
+            "screen_inferior" : self.screen_inferior,
+            "mold_superior" : self.mold_superior,
+            "mold_inferior": self.mold_inferior,
+            "platen_superior":self.platen_superior,
+            "platen_inferior":self.platen_inferior,
+            "pressure":self.pressure,
+            "waste_pct":self.waste_pct,
+            "batch":self.batch,
+            "julian":self.julian,
+            "ts2":self.ts2,
+            "cavities_arr":self.cavities_arr
+        }

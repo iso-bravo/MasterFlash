@@ -15,6 +15,8 @@ interface FormState {
     resetForm: () => void;
 }
 
+const today = new Date();
+
 const useFormStore = create<FormState>((set, get) => ({
     // Estado inicial del formulario
     step: 1,
@@ -25,6 +27,7 @@ const useFormStore = create<FormState>((set, get) => ({
         shift: '',
         mp: '',
         molder: '',
+        register_date: today.toISOString().split('T')[0],
         icc: false,
     },
     secondParams: {
@@ -114,6 +117,7 @@ const useFormStore = create<FormState>((set, get) => ({
                 shift: '',
                 mp: '',
                 molder: '',
+                register_date: today.toISOString().split('T')[0],
                 icc: false,
             },
             secondParams: {
