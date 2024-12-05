@@ -2,9 +2,11 @@ import useFormStore from '../../stores/ParamsRegisterStore';
 import { InitParamsRegister, SecondParamsRegister, ThirdParamsRegister } from '../../types/ParamsRegisterTypes';
 import api from '../../config/axiosConfig';
 import { toast } from 'react-toastify';
+import { useState } from 'react';
 
 const ProgressSummary = () => {
     const { step, initParams, secondParams, thirdParams, resetForm } = useFormStore();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const renderParams = <T extends InitParamsRegister | SecondParamsRegister | ThirdParamsRegister>(
         params: T | undefined,
@@ -47,6 +49,9 @@ const ProgressSummary = () => {
     };
 
     const handleSubmit = async () => {
+        if (isSubmitting) return;
+
+        setIsSubmitting(true);
         try {
             const response = await api.post('/save-params', {
                 initParams,
@@ -59,6 +64,8 @@ const ProgressSummary = () => {
         } catch (error) {
             console.error('Error enviando los datos:', error);
             toast.error('Ocurrió un error al enviar los datos.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -78,6 +85,7 @@ const ProgressSummary = () => {
                         {renderParams(thirdParams, 'Parametros de calidad')}
                         <button
                             onClick={handleSubmit}
+                            disabled={isSubmitting}
                             className='mt-4 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
                         >
                             Enviar

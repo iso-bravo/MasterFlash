@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.utils.dateparse import parse_datetime
 from django.conf import settings
+from django.core.mail import EmailMessage
 
 
 import redis
@@ -1482,6 +1483,7 @@ def save_params(request):
             mp=init_params.get("mp"),
             molder=init_params.get("molder"),
             icc=init_params.get("icc"),
+            register_date=init_params.get("register_date"),
             mold=second_params.get("mold"),
             cavities=second_params.get("cavities"),
             metal=second_params.get("metal"),
@@ -1505,6 +1507,26 @@ def save_params(request):
         # Guardar el registro en la base de datos
         param_instance.save()
         logger.info("Parámetros guardados correctamente.")
+
+        # Formatear el mensaje del correo
+        email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
+        email_body = (
+            f"Se ha registrado un nuevo conjunto de parámetros.\n\n"
+            f"Detalles del registro:\n"
+            f"{json.dumps(param_instance.to_dict(), indent=4, default=str)}"  # Convertir a JSON serializable
+        )
+
+        # Enviar el correo
+        email = EmailMessage(
+            email_subject,
+            email_body,
+            settings.EMAIL_HOST_USER,
+            # TODO change email to the right one
+            ["osminfregosoangel@gmail.com"],
+        )
+        email.fail_silently = False
+        email.send()
+        logger.info("Correo enviado correctamente.")
 
         # Responder con un mensaje de éxito
         return JsonResponse(
