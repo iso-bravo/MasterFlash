@@ -1522,7 +1522,7 @@ def save_params(request):
             email_body,
             settings.EMAIL_HOST_USER,
             # TODO change email to the right one
-            ["osminfregosoangel@gmail.com"],
+            ["muyprofesional@maildrop.cc"],
         )
         email.fail_silently = False
         email.send()
