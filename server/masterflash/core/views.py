@@ -1509,7 +1509,7 @@ def save_params(request):
         logger.info("Parámetros guardados correctamente.")
 
         # Formatear el mensaje del correo
-        email_subject = f"Registro de parámetros {param_instance.register_date}"
+        email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
         email_body = (
             f"Se ha registrado un nuevo conjunto de parámetros.\n\n"
             f"Detalles del registro:\n"
