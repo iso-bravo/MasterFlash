@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.utils.dateparse import parse_datetime
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 
 
 import redis
@@ -1510,16 +1511,21 @@ def save_params(request):
 
         # Formatear el mensaje del correo
         email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
-        email_body = (
-            f"Se ha registrado un nuevo conjunto de parámetros.\n\n"
-            f"Detalles del registro:\n"
-            f"{json.dumps(param_instance.to_dict(), indent=4, default=str)}"  # Convertir a JSON serializable
+
+        context = {
+            "params_details": json.dumps(
+                param_instance.to_dict(), indent=4, default=str
+            )
+        }
+
+        html_content = render_to_string(
+            "templates/emails/params_email.html", context=context
         )
 
         # Enviar el correo
         email = EmailMessage(
             email_subject,
-            email_body,
+            html_content,
             settings.EMAIL_HOST_USER,
             # TODO change email to the right one
             ["osminfregosoangel@gmail.com"],
