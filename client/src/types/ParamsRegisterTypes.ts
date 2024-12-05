@@ -4,6 +4,7 @@ export interface InitParamsRegister {
     shift: '' | 1 | 2;
     mp: string;
     molder: number | '';
+    register_date: string;
     icc: boolean;
 }
 
