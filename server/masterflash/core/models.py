@@ -1,5 +1,6 @@
 # type: ignore
 from django.db import models
+import json
 
 
 class LinePress(models.Model):
@@ -309,16 +310,33 @@ class Params(models.Model):
             "strips": self.strips,
             "full_cycle": self.full_cycle,
             "cycle_time": self.cycle_time,
-            "screen_superior" : self.screen_superior,
-            "screen_inferior" : self.screen_inferior,
-            "mold_superior" : self.mold_superior,
+            "screen_superior": self.screen_superior,
+            "screen_inferior": self.screen_inferior,
+            "mold_superior": self.mold_superior,
             "mold_inferior": self.mold_inferior,
-            "platen_superior":self.platen_superior,
-            "platen_inferior":self.platen_inferior,
-            "pressure":self.pressure,
-            "waste_pct":self.waste_pct,
-            "batch":self.batch,
-            "julian":self.julian,
-            "ts2":self.ts2,
-            "cavities_arr":self.cavities_arr
+            "platen_superior": self.platen_superior,
+            "platen_inferior": self.platen_inferior,
+            "pressure": self.pressure,
+            "waste_pct": self.waste_pct,
+            "batch": self.batch,
+            "julian": self.julian,
+            "ts2": self.ts2,
+            "cavities_arr": self.cavities_arr,
         }
+
+
+class EmailConfig(models.Model):
+    sender_email = models.EmailField()
+    sender_password = models.CharField(max_length=128)
+    recipients = models.TextField()
+
+    def get_recipients_list(self):
+        """Convierte la cadena JSON en una lista de correos."""
+        try:
+            return json.loads(self.recipients)
+        except json.JSONDecodeError:
+            return []
+
+    def set_recipients_list(self, recipient_list):
+        """Convierte una lista de correos a JSON."""
+        self.recipients = json.dumps(recipient_list)

@@ -125,4 +125,5 @@ urlpatterns = [
         views.update_part_number,
         name="update_part_number",
     ),
+    path("email_config/", views.email_config, name="email_config"),
 ]

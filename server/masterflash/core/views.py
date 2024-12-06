@@ -14,6 +14,7 @@ from django.template.loader import render_to_string
 import redis
 
 from .models import (
+    EmailConfig,
     Insert_Query_history,
     LinePress,
     Part_Number,
@@ -1512,15 +1513,11 @@ def save_params(request):
         # Formatear el mensaje del correo
         email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
 
-        context = {
-            "params_details": json.dumps(
-                param_instance.to_dict(), indent=4, default=str
-            )
-        }
+        param_instance_dict = param_instance.to_dict()
 
-        html_content = render_to_string(
-            "templates/emails/params_email.html", context=context
-        )
+        context = {"param_instance": param_instance_dict}
+
+        html_content = render_to_string("emails/params_email.html", context=context)
 
         # Enviar el correo
         email = EmailMessage(
@@ -1530,6 +1527,7 @@ def save_params(request):
             # TODO change email to the right one
             ["osminfregosoangel@gmail.com"],
         )
+        email.content_subtype = "html"
         email.fail_silently = False
         email.send()
         logger.info("Correo enviado correctamente.")
@@ -1570,3 +1568,45 @@ def update_part_number(request, pk):
     part_number.save()
 
     return JsonResponse({"message": "Part number updated successfully"}, status=200)
+
+
+@csrf_exempt
+def email_config(request):
+    if request.method == "GET":
+        try:
+            config = EmailConfig.objects.first()
+            if not config:
+                return JsonResponse(
+                    {"message": "No email configuration found"}, status=404
+                )
+
+            return JsonResponse(
+                {
+                    "sender_email": config.sender_email,
+                    "recipients": config.get_recipients_list(),
+                }
+            )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    elif request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            sender_email = data.get("sender_email")
+            sender_password = data.get("sender_password")
+            recipients = data.get("recipients", [])
+
+            if not sender_email or not sender_password:
+                return JsonResponse(
+                    {"error": "Sender email and password are required"}, status=400
+                )
+
+            config, created = EmailConfig.objects.get_or_create(id=1)
+            config.sender_email = sender_email
+            config.sender_password = sender_password
+            config.set_recipients_list(recipients)
+            config.save()
+
+            return JsonResponse({"message": "Email configuration updated successfully"})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

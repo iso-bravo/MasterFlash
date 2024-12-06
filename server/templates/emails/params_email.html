@@ -18,6 +18,16 @@
                 border: 1px solid #ddd;
                 background-color: #f9f9f9;
             }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
         </style>
     </head>
     <body>
@@ -25,15 +35,9 @@
         <p>Se ha registrado un nuevo conjunto de parámetros.</p>
         <div class="details">
             <h2>Detalles del registro:</h2>
-            <div class="list">
-                {% for key in param_instance %} {% if key != cavities_arr %}
-                <ul>
-                    <li>
-                        <h2>{{key }}</h2>
-                        <p>{{param_instance[key]}}</p>
-                    </li>
-                </ul>
-
+            <ul>
+                {% for key, value in param_instance.items %} {% if key != "cavities_arr" %}
+                <li><strong>{{ key }}</strong>: {{ value }}</li>
                 {% else %}
                 <h2>Detalles de cavidades</h2>
                 <table>
@@ -48,19 +52,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for idx, row in param_instance[key]|default:[] %}
+                        {% for row in value %}
                         <tr>
-                            <td>{{ idx|add:1 }}</td>
-                            {% for Valor in row %}
-                            <td>{{ Valor }}</td>
+                            <td>{{ forloop.counter }}</td>
+                            {% for item in row %}
+                            <td>{{ item }}</td>
                             {% endfor %}
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-
-                {% endif %} {% endfor %}
-            </div>
+                {% endif %} 
+                {% endfor %}
+            </ul>
         </div>
     </body>
 </html>
