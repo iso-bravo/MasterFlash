@@ -10,6 +10,7 @@ interface EmailConfigs {
     recipients: string[];
 }
 
+//TODO - Check what the server is sending
 const EmailConfig = () => {
     const { register, handleSubmit, reset, setValue } = useForm<EmailConfigs>();
     const [recipients, setRecipients] = useState<string[]>([]);
@@ -63,7 +64,6 @@ const EmailConfig = () => {
         <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
                 position='top-center'
-                autoClose={1000}
                 stacked
                 newestOnTop
                 closeOnClick
@@ -80,7 +80,7 @@ const EmailConfig = () => {
                         <input
                             {...register('email', { required: 'Este campo es obligatorio.' })}
                             type='email'
-                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5'
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             placeholder='example@gmail.com'
                         />
                     </div>
@@ -120,7 +120,7 @@ const EmailConfig = () => {
                             <button
                                 type='button'
                                 onClick={handleAddRecipient}
-                                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
+                                className='py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100'
                             >
                                 Añadir
                             </button>

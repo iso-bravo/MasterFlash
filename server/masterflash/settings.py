@@ -66,9 +66,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "masterflash.urls"
 
-TEMPLATES = [ {
+TEMPLATES = [
+    {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR,'templates')],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -162,7 +163,10 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 #! EMAIL_HOST changes depending on the email provider
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = config("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = config("EMAIL_PASSWORD")
 #! gmail needs this:
 EMAIL_USE_TLS = True
+
+SECRET_KEY_EMAIL_ENCRYPTION = config("SECRET_KEY_EMAIL_ENCRYPTION")
+EMAIL_HOST_USER = None
+EMAIL_HOST_PASSWORD = None
+

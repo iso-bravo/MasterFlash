@@ -1510,6 +1510,10 @@ def save_params(request):
         param_instance.save()
         logger.info("Parámetros guardados correctamente.")
 
+        email_config = EmailConfig.objects.first()
+        if not email_config:
+            raise Exception("Configuración de correo no encontrada.")
+
         # Formatear el mensaje del correo
         email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
 
@@ -1523,9 +1527,8 @@ def save_params(request):
         email = EmailMessage(
             email_subject,
             html_content,
-            settings.EMAIL_HOST_USER,
-            # TODO change email to the right one
-            ["osminfregosoangel@gmail.com"],
+            email_config.sender_email,
+            email_config.get_recipients_list(),
         )
         email.content_subtype = "html"
         email.fail_silently = False
@@ -1592,21 +1595,28 @@ def email_config(request):
     elif request.method == "POST":
         try:
             data = json.loads(request.body)
-            sender_email = data.get("sender_email")
-            sender_password = data.get("sender_password")
+            print("Cuerpo recibido:", data)
+
+            sender_email = data.get("email")
+            sender_password = data.get("password")
             recipients = data.get("recipients", [])
 
+            print("Validando datos...")
             if not sender_email or not sender_password:
+                print("Faltan datos obligatorios:", sender_email, sender_password)
                 return JsonResponse(
                     {"error": "Sender email and password are required"}, status=400
                 )
 
+            print("Guardando configuración...")
             config, created = EmailConfig.objects.get_or_create(id=1)
             config.sender_email = sender_email
-            config.sender_password = sender_password
+            config.set_password(sender_password)
             config.set_recipients_list(recipients)
             config.save()
 
+            print("Configuración guardada exitosamente.")
             return JsonResponse({"message": "Email configuration updated successfully"})
         except Exception as e:
+            print("Error:", str(e))
             return JsonResponse({"error": str(e)}, status=500)

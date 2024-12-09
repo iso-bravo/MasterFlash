@@ -1,5 +1,7 @@
 # type: ignore
 from django.db import models
+from django.conf import settings
+from cryptography.fernet import Fernet
 import json
 
 
@@ -325,10 +327,21 @@ class Params(models.Model):
         }
 
 
+SECRET_KEY = settings.SECRET_KEY_EMAIL_ENCRYPTION
+
+
 class EmailConfig(models.Model):
     sender_email = models.EmailField()
     sender_password = models.CharField(max_length=128)
     recipients = models.TextField()
+
+    def set_password(self, password: str):
+        fernet = Fernet(SECRET_KEY)
+        self.sender_password = fernet.encrypt(password.encode()).decode()
+
+    def get_password(self):
+        fernet = Fernet(SECRET_KEY)
+        return fernet.decrypt(self.sender_password.encode()).decode()
 
     def get_recipients_list(self):
         """Convierte la cadena JSON en una lista de correos."""
