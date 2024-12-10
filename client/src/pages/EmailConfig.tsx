@@ -3,18 +3,22 @@ import Header from '../components/Header';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
+import { TbEyeClosed, TbEye } from 'react-icons/tb';
 
 interface EmailConfigs {
     email: string;
     password: string;
     recipients: string[];
+    smtp_host: string;
+    smtp_port: number;
+    use_tls: boolean;
 }
 
-//TODO - Check what the server is sending
 const EmailConfig = () => {
-    const { register, handleSubmit, reset, setValue } = useForm<EmailConfigs>();
+    const { register, handleSubmit, setValue } = useForm<EmailConfigs>();
     const [recipients, setRecipients] = useState<string[]>([]);
     const [newRecipient, setNewRecipient] = useState<string>('');
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -22,7 +26,10 @@ const EmailConfig = () => {
                 const response = await api.get('/email_config/');
                 if (response.data) {
                     const data = response.data;
-                    setValue('email', data.sender_mail || '');
+                    setValue('email', data.sender_email || '');
+                    setValue('smtp_host', data.smtp_host || 'smtp.gmail.com');
+                    setValue('smtp_port', data.smtp_port || 587);
+                    setValue('use_tls', data.use_tls || true);
                     setRecipients(data.recipients || []);
                 } else {
                     toast.error('No se pudo cargar la configuración de correo.');
@@ -60,6 +67,10 @@ const EmailConfig = () => {
         }
     };
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(prevState => !prevState);
+    };
+
     return (
         <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <ToastContainer
@@ -84,13 +95,46 @@ const EmailConfig = () => {
                             placeholder='example@gmail.com'
                         />
                     </div>
-                    <div>
+                    <div className='relative'>
                         <label className='block mb-2 text-sm font-medium text-gray-900'>Contraseña del remitente</label>
                         <input
                             {...register('password', { required: 'Este campo es obligatorio.' })}
-                            type='password'
+                            type={showPassword ? 'text' : 'password'}
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             placeholder='********'
+                        />
+                        <button
+                            type='button'
+                            onClick={togglePasswordVisibility}
+                            className='absolute right-3 top-9 text-gray-500'
+                        >
+                            {showPassword ? <TbEye size={20} /> : <TbEyeClosed size={20} />}
+                        </button>
+                    </div>
+                    <div>
+                        <label className='block mb-2 text-sm font-medium text-gray-900'>SMTP Host</label>
+                        <input
+                            {...register('smtp_host', { required: 'Este campo es obligatorio.' })}
+                            type='text'
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                            placeholder='smtp.gmail.com'
+                        />
+                    </div>
+                    <div>
+                        <label className='block mb-2 text-sm font-medium text-gray-900'>SMTP Port</label>
+                        <input
+                            {...register('smtp_port', { required: 'Este campo es obligatorio.', valueAsNumber: true })}
+                            type='number'
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                            placeholder='587'
+                        />
+                    </div>
+                    <div>
+                        <label className='block mb-2 text-sm font-medium text-gray-900'>Usar TLS</label>
+                        <input
+                            {...register('use_tls')}
+                            type='checkbox'
+                            className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
                         />
                     </div>
                     <div>

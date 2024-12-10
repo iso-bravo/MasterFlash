@@ -334,6 +334,9 @@ class EmailConfig(models.Model):
     sender_email = models.EmailField()
     sender_password = models.CharField(max_length=128)
     recipients = models.TextField()
+    smtp_host = models.CharField(max_length=255, default="smtp.gmail.com")
+    smtp_port = models.PositiveIntegerField(default=587)
+    use_tls = models.BooleanField(default=True)
 
     def set_password(self, password: str):
         fernet = Fernet(SECRET_KEY)
@@ -353,3 +356,10 @@ class EmailConfig(models.Model):
     def set_recipients_list(self, recipient_list):
         """Convierte una lista de correos a JSON."""
         self.recipients = json.dumps(recipient_list)
+
+    def save(self,*args,**kwargs):
+        """Garantiza que solo exista un único registro."""
+        if not self.pk and EmailConfig.objects.exists():
+            raise Exception("Solo puede existir una configuración de correo")
+        super().save(*args,**kwargs)
+
