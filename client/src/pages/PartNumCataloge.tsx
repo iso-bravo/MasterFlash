@@ -23,6 +23,51 @@ interface PartNum {
     gripper: string | null;
 }
 
+interface FullPartNum {
+    id: number;
+    part_number: string;
+    client: string;
+    box: string;
+    pieces_x_box: number;
+    rubber_compound: string;
+    price?: number;
+    standard: number;
+    pallet: string;
+    box_x_pallet: number;
+    pieces_x_pallet?: number;
+    assembly?: string;
+    accessories?: string;
+    mold: string;
+    instructive?: string;
+    insert: string;
+    gripper: string;
+    caliber: string;
+    paint?: string;
+    std_paint?: number;
+    painter?: number;
+    scrap?: number;
+    box_logo?: string;
+    cavities?: number;
+    category?: string;
+    type2?: string;
+    measurement?: string;
+    special?: string;
+    piece_label?: string;
+    qty_piece_labels?: number;
+    box_label?: string;
+    qty_box_labels?: number;
+    box_label_2?: string;
+    qty_box_labels_2?: number;
+    box_label_3?: string;
+    qty_box_labels_3?: number;
+    made_in_mexico?: string;
+    staples?: string;
+    image_piece_label?: File | null;
+    image_box_label?: File | null;
+    image_box_label_2?: File | null;
+    image_box_label_3?: File | null;
+}
+
 const PartNumCataloge = () => {
     const navigate = useNavigate();
     const [partNums, setPartNums] = useState<PartNum[]>([]);
@@ -30,7 +75,7 @@ const PartNumCataloge = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedPartNum, setSelectedPartNum] = useState<PartNum | null>(null);
+    const [selectedPartNumId, setSelectedPartNumId] = useState<number | null>(null);
 
     const fetchPartNums = async () => {
         try {
@@ -54,24 +99,26 @@ const PartNumCataloge = () => {
         setFilteredPartNums(filtered);
     }, [searchTerm, partNums]);
 
-    const handleEditClick = (partNum: PartNum) => {
-        setSelectedPartNum(partNum);
+    const handleEditClick = (id: number) => {
+        setSelectedPartNumId(id);
         setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setSelectedPartNum(null);
+        setSelectedPartNumId(null);
     };
 
-    const handleSavePartNum = async (updatedPartNum: PartNum) => {
+    const handleSavePartNum = async (updatedPartNum: FullPartNum) => {
         try {
             await api.patch(`/part_numbers/${updatedPartNum.id}/update/`, updatedPartNum);
-            setPartNums(prev => prev.map(p => (p.id === updatedPartNum.id ? updatedPartNum : p)));
+            setPartNums(prev =>
+                prev.map(partNum => (partNum.id === updatedPartNum.id ? { ...partNum, ...updatedPartNum } : partNum)),
+            );
+
+            handleCloseModal();
         } catch (error) {
             console.error('Error actualizando número de parte:', error);
-        } finally {
-            handleCloseModal();
         }
     };
 
@@ -177,7 +224,7 @@ const PartNumCataloge = () => {
                                     <th className='px-6 py-3'>{item.gripper}</th>
                                     <td className='px-6 py-4 text-right'>
                                         <button
-                                            onClick={() => handleEditClick(item)}
+                                            onClick={() => handleEditClick(item.id)}
                                             className='text-blue-600 hover:underline'
                                         >
                                             Editar
@@ -190,7 +237,7 @@ const PartNumCataloge = () => {
                 )}
             </section>
             <EditPartNumModal
-                partNum={selectedPartNum}
+                partNumId={selectedPartNumId}
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onSave={handleSavePartNum}

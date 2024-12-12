@@ -126,4 +126,8 @@ urlpatterns = [
         name="update_part_number",
     ),
     path("email_config/", views.email_config, name="email_config"),
+
+    path(
+        "part_numbers/<int:id>/", views.get_part_num_by_id, name="get_part_number_by_id"
+    ),
 ]

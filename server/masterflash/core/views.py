@@ -1057,7 +1057,7 @@ def update_pieces_ok(request, id):
 
 
 def get_rubber_compounds(request):
-    compounds = Part_Number.objects.values_list("rubber_compound", flat=True).distinct()
+    compounds = Qc_Scrap.objects.values_list("compound", flat=True).distinct()
 
     return JsonResponse(list(compounds), safe=False)
 
@@ -1635,3 +1635,15 @@ def email_config(request):
             return JsonResponse({"message": "Email configuration updated successfully"})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+          
+def get_part_num_by_id(request, id):
+    try:
+        part_num = Part_Number.objects.filter(id=id).values().first()
+        if part_num is None:
+            return JsonResponse({"error": "Part_number not found"}, status=404)
+
+        return JsonResponse(part_num, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
