@@ -7,12 +7,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.utils.dateparse import parse_datetime
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, get_connection
+from django.template.loader import render_to_string
 
 
 import redis
 
 from .models import (
+    EmailConfig,
     Insert_Query_history,
     LinePress,
     Part_Number,
@@ -243,7 +245,6 @@ def load_machine_data(request):
 
 @require_http_methods(["GET"])
 def load_machine_data_production(request):
-    logger = logging.getLogger(__name__)
     machines = LinePress.objects.all()
     machines_data = []
     total_piecesProduced = 0
@@ -891,7 +892,6 @@ def register(request):
 @csrf_exempt
 @require_http_methods(["POST", "PUT"])
 def post_or_put_monthly_goal(request):
-    # TODO agregar seguridad para que si se agrega el mismo mes 2 veces, se haga PUT y no POST
     data = request.POST.dict()
     print(data)
 
@@ -1508,22 +1508,37 @@ def save_params(request):
         param_instance.save()
         logger.info("Parámetros guardados correctamente.")
 
+        email_config = EmailConfig.objects.first()
+        if not email_config:
+            raise Exception("Configuración de correo no encontrada.")
+
+        connection = get_connection(
+            host=email_config.smtp_host,
+            port=email_config.smtp_port,
+            username=email_config.sender_email,
+            password=email_config.get_password(),
+            use_tls=email_config.use_tls,
+            use_ssl=False if email_config.use_tls else True,
+        )
+
         # Formatear el mensaje del correo
         email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
-        email_body = (
-            f"Se ha registrado un nuevo conjunto de parámetros.\n\n"
-            f"Detalles del registro:\n"
-            f"{json.dumps(param_instance.to_dict(), indent=4, default=str)}"  # Convertir a JSON serializable
-        )
+
+        param_instance_dict = param_instance.to_dict()
+
+        context = {"param_instance": param_instance_dict}
+
+        html_content = render_to_string("emails/params_email.html", context=context)
 
         # Enviar el correo
         email = EmailMessage(
-            email_subject,
-            email_body,
-            settings.EMAIL_HOST_USER,
-            # TODO change email to the right one
-            ["osminfregosoangel@gmail.com"],
+            subject=email_subject,
+            body=html_content,
+            from_email=email_config.sender_email,
+            to=email_config.get_recipients_list(),
+            connection=connection,
         )
+        email.content_subtype = "html"
         email.fail_silently = False
         email.send()
         logger.info("Correo enviado correctamente.")
@@ -1567,6 +1582,60 @@ def update_part_number(request, pk):
 
 
 @csrf_exempt
+def email_config(request):
+    if request.method == "GET":
+        try:
+            config = EmailConfig.objects.first()
+            if not config:
+                return JsonResponse(
+                    {"message": "No email configuration found"}, status=404
+                )
+
+            return JsonResponse(
+                {
+                    "sender_email": config.sender_email,
+                    "smtp_host": config.smtp_host,
+                    "smtp_port": config.smtp_port,
+                    "use_tls": config.use_tls,
+                    "recipients": config.get_recipients_list(),
+                }
+            )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    elif request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            sender_email = data.get("email")
+            sender_password = data.get("password")
+            recipients = data.get("recipients", [])
+            smtp_host = data.get("smtp_host", "smtp.gmail.com")
+            smtp_port = data.get("smtp_port", 587)
+            use_tls = data.get("use_tls", True)
+
+            if not sender_email or not sender_password:
+                return JsonResponse(
+                    {"error": "Sender email and password are required"}, status=400
+                )
+
+            # Actualizar o crear la configuración única
+            config, created = EmailConfig.objects.update_or_create(
+                id=1,
+                defaults={
+                    "sender_email": sender_email,
+                    "recipients": json.dumps(recipients),
+                    "smtp_host": smtp_host,
+                    "smtp_port": smtp_port,
+                    "use_tls": use_tls,
+                },
+            )
+            config.set_password(sender_password)
+            config.save()
+
+            return JsonResponse({"message": "Email configuration updated successfully"})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+          
 def get_part_num_by_id(request, id):
     try:
         part_num = Part_Number.objects.filter(id=id).values().first()
@@ -1577,3 +1646,4 @@ def get_part_num_by_id(request, id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+

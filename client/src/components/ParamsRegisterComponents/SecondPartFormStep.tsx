@@ -123,6 +123,7 @@ const SecondPartFormStep = () => {
                                 <input
                                     type='number'
                                     step='0.01'
+                                    min={0}
                                     {...rest}
                                     ref={e => {
                                         ref(e);

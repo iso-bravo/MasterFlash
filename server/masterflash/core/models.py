@@ -1,5 +1,8 @@
 # type: ignore
 from django.db import models
+from django.conf import settings
+from cryptography.fernet import Fernet
+import json
 
 
 class LinePress(models.Model):
@@ -309,16 +312,54 @@ class Params(models.Model):
             "strips": self.strips,
             "full_cycle": self.full_cycle,
             "cycle_time": self.cycle_time,
-            "screen_superior" : self.screen_superior,
-            "screen_inferior" : self.screen_inferior,
-            "mold_superior" : self.mold_superior,
+            "screen_superior": self.screen_superior,
+            "screen_inferior": self.screen_inferior,
+            "mold_superior": self.mold_superior,
             "mold_inferior": self.mold_inferior,
-            "platen_superior":self.platen_superior,
-            "platen_inferior":self.platen_inferior,
-            "pressure":self.pressure,
-            "waste_pct":self.waste_pct,
-            "batch":self.batch,
-            "julian":self.julian,
-            "ts2":self.ts2,
-            "cavities_arr":self.cavities_arr
+            "platen_superior": self.platen_superior,
+            "platen_inferior": self.platen_inferior,
+            "pressure": self.pressure,
+            "waste_pct": self.waste_pct,
+            "batch": self.batch,
+            "julian": self.julian,
+            "ts2": self.ts2,
+            "cavities_arr": self.cavities_arr,
         }
+
+
+SECRET_KEY = settings.SECRET_KEY_EMAIL_ENCRYPTION
+
+
+class EmailConfig(models.Model):
+    sender_email = models.EmailField()
+    sender_password = models.CharField(max_length=128)
+    recipients = models.TextField()
+    smtp_host = models.CharField(max_length=255, default="smtp.gmail.com")
+    smtp_port = models.PositiveIntegerField(default=587)
+    use_tls = models.BooleanField(default=True)
+
+    def set_password(self, password: str):
+        fernet = Fernet(SECRET_KEY)
+        self.sender_password = fernet.encrypt(password.encode()).decode()
+
+    def get_password(self):
+        fernet = Fernet(SECRET_KEY)
+        return fernet.decrypt(self.sender_password.encode()).decode()
+
+    def get_recipients_list(self):
+        """Convierte la cadena JSON en una lista de correos."""
+        try:
+            return json.loads(self.recipients)
+        except json.JSONDecodeError:
+            return []
+
+    def set_recipients_list(self, recipient_list):
+        """Convierte una lista de correos a JSON."""
+        self.recipients = json.dumps(recipient_list)
+
+    def save(self,*args,**kwargs):
+        """Garantiza que solo exista un único registro."""
+        if not self.pk and EmailConfig.objects.exists():
+            raise Exception("Solo puede existir una configuración de correo")
+        super().save(*args,**kwargs)
+
