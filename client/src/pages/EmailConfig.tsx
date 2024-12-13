@@ -7,6 +7,7 @@ import { TbEyeClosed, TbEye } from 'react-icons/tb';
 
 interface EmailConfigs {
     email: string;
+    username: string;
     password: string;
     recipients: string[];
     smtp_host: string;
@@ -27,6 +28,7 @@ const EmailConfig = () => {
                 if (response.data) {
                     const data = response.data;
                     setValue('email', data.sender_email || '');
+                    setValue('username', data.username || '');
                     setValue('smtp_host', data.smtp_host || 'smtp.gmail.com');
                     setValue('smtp_port', data.smtp_port || 587);
                     setValue('use_tls', data.use_tls || true);
@@ -93,6 +95,15 @@ const EmailConfig = () => {
                             type='email'
                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                             placeholder='example@gmail.com'
+                        />
+                    </div>
+                    <div>
+                        <label className='block mb-2 text-sm font-medium text-gray-900'>Nombre de usuario</label>
+                        <input
+                            {...register('username', { required: 'Este campo es obligatorio.' })}
+                            type='text'
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
+                            placeholder='example'
                         />
                     </div>
                     <div className='relative'>

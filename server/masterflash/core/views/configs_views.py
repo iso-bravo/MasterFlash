@@ -74,6 +74,7 @@ def email_config(request):
             return JsonResponse(
                 {
                     "sender_email": config.sender_email,
+                    "sender_username": config.sender_username,
                     "smtp_host": config.smtp_host,
                     "smtp_port": config.smtp_port,
                     "use_tls": config.use_tls,
@@ -87,6 +88,7 @@ def email_config(request):
         try:
             data = json.loads(request.body)
             sender_email = data.get("email")
+            sender_username = data.get("username")
             sender_password = data.get("password")
             recipients = data.get("recipients", [])
             smtp_host = data.get("smtp_host", "smtp.gmail.com")
@@ -103,6 +105,7 @@ def email_config(request):
                 id=1,
                 defaults={
                     "sender_email": sender_email,
+                    "sender_username": sender_username,
                     "recipients": json.dumps(recipients),
                     "smtp_host": smtp_host,
                     "smtp_port": smtp_port,

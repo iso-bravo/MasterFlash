@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 
 logger = logging.getLogger("__name__")
 
+
 @csrf_exempt
 @require_POST
 def save_params(request):
@@ -56,6 +57,7 @@ def save_params(request):
             waste_pct=float(second_params.get("waste_pct", 0) or 0),
             batch=third_params.get("batch"),
             julian=third_params.get("julian", None),
+            ts2=third_params.get("ts2", None),
             cavities_arr=third_params.get("cavities_arr", []),
         )
 
@@ -70,7 +72,7 @@ def save_params(request):
         connection = get_connection(
             host=email_config.smtp_host,
             port=email_config.smtp_port,
-            username=email_config.sender_email,
+            username=email_config.sender_username,
             password=email_config.get_password(),
             use_tls=email_config.use_tls,
             use_ssl=False if email_config.use_tls else True,
@@ -80,6 +82,24 @@ def save_params(request):
         email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
 
         param_instance_dict = param_instance.to_dict()
+
+        def clean_param_instance(param_instance_dict):
+            """Limpia el diccionario de parámetros según las condiciones especificadas."""
+            # Obtener el valor de ICC
+            icc_value = param_instance_dict.get("icc", False)
+
+            # Condiciones para eliminar claves según ICC
+            if not icc_value:
+                param_instance_dict.pop("icc", None)  # Eliminar ICC si es False
+                param_instance_dict.pop("ts2", None)  # Siempre eliminar ts2
+            else:
+                param_instance_dict.pop(
+                    "Julian", None
+                )  # Si ICC es True, eliminar Julian
+
+            return param_instance_dict
+
+        param_instance_dict = clean_param_instance(param_instance_dict)
 
         context = {"param_instance": param_instance_dict}
 
