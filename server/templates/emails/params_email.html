@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Registro de parámetros</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+            }
+            h1 {
+                color: #333;
+            }
+            .details {
+                margin-top: 20px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                background-color: #f9f9f9;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Registro de Parámetros</h1>
+        <p>Se ha registrado un nuevo conjunto de parámetros.</p>
+        <div class="details">
+            <h2>Detalles del registro:</h2>
+            <ul>
+                {% for key, value in param_instance.items %} {% if key != "cavities_arr" %}
+                <li><strong>{{ key }}</strong>: {{ value }}</li>
+                {% else %}
+                <h2>Detalles de cavidades</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cavidad</th>
+                            <th>Valor 1</th>
+                            <th>Valor 2</th>
+                            <th>Valor 3</th>
+                            <th>Valor 4</th>
+                            <th>Valor 5</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in value %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            {% for item in row %}
+                            <td>{{ item }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %} 
+                {% endfor %}
+            </ul>
+        </div>
+    </body>
+</html>

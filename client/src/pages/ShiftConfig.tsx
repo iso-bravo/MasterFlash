@@ -36,14 +36,14 @@ const ShiftConfig = () => {
 
     const onSubmit: SubmitHandler<ShiftConfigFormValues> = async data => {
         try {
-            const response = await api.post('/update_shift_schedule/', {
+            await api.post('/update_shift_schedule/', {
                 first_shift_start: data.firstShiftStart,
                 first_shift_end: data.firstShiftEnd,
                 second_shift_start: data.secondShiftStart,
                 second_shift_end: data.secondShiftEnd,
             });
             toast.success("Cambio en turno guardado");
-            setShifts(data); // Actualizar el estado con los nuevos valores
+            setShifts(data); 
         } catch (error) {
             console.error('Error updating shift schedule:', error);
             toast.error('Error updating shift schedule');

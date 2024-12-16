@@ -25,7 +25,7 @@ const SecondPartFormStep = () => {
         body: 'Cuerpo',
         strips: 'Cintas',
         full_cycle: 'Ciclo completo',
-        cycle_time: 'Ciclo completo',
+        cycle_time: 'Tiempo de ciclo',
         screen: 'Pantalla',
         mold2: 'Molde',
         platen: 'Placa',
@@ -123,6 +123,7 @@ const SecondPartFormStep = () => {
                                 <input
                                     type='number'
                                     step='0.01'
+                                    min={0}
                                     {...rest}
                                     ref={e => {
                                         ref(e);
