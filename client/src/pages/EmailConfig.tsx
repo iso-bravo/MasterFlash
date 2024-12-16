@@ -28,7 +28,7 @@ const EmailConfig = () => {
                 if (response.data) {
                     const data = response.data;
                     setValue('email', data.sender_email || '');
-                    setValue('username', data.username || '');
+                    setValue('username', data.sender_username || '');
                     setValue('smtp_host', data.smtp_host || 'smtp.gmail.com');
                     setValue('smtp_port', data.smtp_port || 587);
                     setValue('use_tls', data.use_tls || true);
@@ -169,7 +169,7 @@ const EmailConfig = () => {
                                 type='email'
                                 value={newRecipient}
                                 onChange={e => setNewRecipient(e.target.value)}
-                                className='mr-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
+                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                 placeholder='Nuevo destinatario'
                             />
                             <button

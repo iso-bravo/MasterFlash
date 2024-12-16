@@ -79,23 +79,21 @@ def save_params(request):
         )
 
         # Formatear el mensaje del correo
-        email_subject = f"Registro de parámetros Fecha{param_instance.register_date} máquina {param_instance.mp}"
+        email_subject = f"{param_instance.mp} Registro de parámetros {param_instance.register_date} "
 
         param_instance_dict = param_instance.to_dict()
 
         def clean_param_instance(param_instance_dict):
             """Limpia el diccionario de parámetros según las condiciones especificadas."""
-            # Obtener el valor de ICC
             icc_value = param_instance_dict.get("icc", False)
 
-            # Condiciones para eliminar claves según ICC
             if not icc_value:
-                param_instance_dict.pop("icc", None)  # Eliminar ICC si es False
-                param_instance_dict.pop("ts2", None)  # Siempre eliminar ts2
-            else:
+                param_instance_dict.pop("icc", None)  
                 param_instance_dict.pop(
                     "Julian", None
-                )  # Si ICC es True, eliminar Julian
+                )
+            else:
+                param_instance_dict.pop("ts2", None)  
 
             return param_instance_dict
 
@@ -111,7 +109,7 @@ def save_params(request):
             body=html_content,
             from_email=email_config.sender_email,
             to=email_config.get_recipients_list(),
-            connection=connection,
+            connection=connection
         )
         email.content_subtype = "html"
         email.fail_silently = False
