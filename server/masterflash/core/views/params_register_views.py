@@ -85,21 +85,33 @@ def save_params(request):
 
         def clean_param_instance(param_instance_dict):
             """Limpia el diccionario de parámetros según las condiciones especificadas."""
-            icc_value = param_instance_dict.get("icc", False)
+            icc_value = param_instance_dict["general_info"].get("icc") == "Sí"
 
             if not icc_value:
-                param_instance_dict.pop("icc", None)  
-                param_instance_dict.pop(
-                    "Julian", None
-                )
+                param_instance_dict["general_info"].pop("icc", None)
+                param_instance_dict["batch_info"].pop("Julian", None)
             else:
-                param_instance_dict.pop("ts2", None)  
+                param_instance_dict["batch_info"].pop(
+                    "ts2", None
+                ) 
 
             return param_instance_dict
 
         param_instance_dict = clean_param_instance(param_instance_dict)
 
-        context = {"param_instance": param_instance_dict}
+        general_info = {
+            key: value
+            for key, value in param_instance_dict["general_info"].items()
+            if key not in ["parameters", "temperature", "cavities_arr", "batch_info"]
+        }
+
+        context = {
+            "general_info": general_info,
+            "parameters": param_instance_dict["parameters"],
+            "temperature": param_instance_dict["temperature"],
+            "batch_info": param_instance_dict["batch_info"],
+            "cavities_arr": param_instance_dict["cavities_arr"],
+        }
 
         html_content = render_to_string("emails/params_email.html", context=context)
 
@@ -109,7 +121,7 @@ def save_params(request):
             body=html_content,
             from_email=email_config.sender_email,
             to=email_config.get_recipients_list(),
-            connection=connection
+            connection=connection,
         )
         email.content_subtype = "html"
         email.fail_silently = False
