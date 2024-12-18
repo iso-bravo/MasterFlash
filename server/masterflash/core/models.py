@@ -299,16 +299,17 @@ class Params(models.Model):
     def to_dict(self):
         return {
             "general_info": {
+                "Máquina": self.mp,
+                "Fecha": self.register_date,
+                "Turno": self.shift,
                 "Número de Parte": self.partnum,
                 "Auditor": self.auditor,
-                "Turno": self.shift,
-                "Máquina": self.mp,
                 "Moldeador": self.molder,
+                "No. Cavidades": self.cavities,
                 "icc": "Sí" if self.icc else "No",
-                "Fecha": self.register_date,
-                "Molde": self.mold,
             },
             "parameters": {
+                "Molde": self.mold,
                 "Metal": self.metal,
                 "Cuerpo": self.body,
                 "Tiras": self.strips,
