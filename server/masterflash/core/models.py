@@ -298,31 +298,49 @@ class Params(models.Model):
 
     def to_dict(self):
         return {
-            "partnum": self.partnum,
-            "auditor": self.auditor,
-            "shift": self.shift,
-            "mp": self.mp,
-            "molder": self.molder,
-            "icc": self.icc,
-            "register_date": self.register_date,
-            "mold": self.mold,
-            "cavities": self.cavities,
-            "metal": self.metal,
-            "body": self.body,
-            "strips": self.strips,
-            "full_cycle": self.full_cycle,
-            "cycle_time": self.cycle_time,
-            "screen_superior": self.screen_superior,
-            "screen_inferior": self.screen_inferior,
-            "mold_superior": self.mold_superior,
-            "mold_inferior": self.mold_inferior,
-            "platen_superior": self.platen_superior,
-            "platen_inferior": self.platen_inferior,
-            "pressure": self.pressure,
-            "waste_pct": self.waste_pct,
-            "batch": self.batch,
-            "julian": self.julian,
-            "ts2": self.ts2,
+            "general_info": {
+                "Máquina": self.mp,
+                "Fecha": self.register_date,
+                "Turno": self.shift,
+                "Número de Parte": self.partnum,
+                "Auditor": self.auditor,
+                "Moldeador": self.molder,
+                "No. Cavidades": self.cavities,
+                "icc": "Sí" if self.icc else "No",
+            },
+            "parameters": {
+                "Molde": self.mold,
+                "Metal": self.metal,
+                "Cuerpo": self.body,
+                "Tiras": self.strips,
+                "Ciclo completo": self.full_cycle,
+                "Tiempo de ciclo": self.cycle_time,
+                "Presión": self.pressure,
+                "Porcentaje de waste": self.waste_pct,
+            },
+            "temperature": {
+                "labels": [
+                    "Pantalla superior",
+                    "Pantalla inferior",
+                    "Molde superior",
+                    "Molde inferior",
+                    "Platina superior",
+                    "Platina inferior",
+                ],
+                "values": [
+                    self.screen_superior,
+                    self.screen_inferior,
+                    self.mold_superior,
+                    self.mold_inferior,
+                    self.platen_superior,
+                    self.platen_inferior,
+                ],
+            },
+            "batch_info": {
+                "Batch": self.batch,
+                "Julian": self.julian,
+                "ts2": self.ts2,
+            },
             "cavities_arr": self.cavities_arr,
         }
 
@@ -332,6 +350,7 @@ SECRET_KEY = settings.SECRET_KEY_EMAIL_ENCRYPTION
 
 class EmailConfig(models.Model):
     sender_email = models.EmailField()
+    sender_username = models.CharField(max_length=128)
     sender_password = models.CharField(max_length=128)
     recipients = models.TextField()
     smtp_host = models.CharField(max_length=255, default="smtp.gmail.com")
@@ -357,9 +376,8 @@ class EmailConfig(models.Model):
         """Convierte una lista de correos a JSON."""
         self.recipients = json.dumps(recipient_list)
 
-    def save(self,*args,**kwargs):
+    def save(self, *args, **kwargs):
         """Garantiza que solo exista un único registro."""
         if not self.pk and EmailConfig.objects.exists():
             raise Exception("Solo puede existir una configuración de correo")
-        super().save(*args,**kwargs)
-
+        super().save(*args, **kwargs)

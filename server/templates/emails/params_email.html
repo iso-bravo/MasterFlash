@@ -3,68 +3,100 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Registro de parámetros</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-            }
-            h1 {
-                color: #333;
-            }
-            .details {
-                margin-top: 20px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                background-color: #f9f9f9;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            th,
-            td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-        </style>
+        <title>Registro de Parámetros</title>
     </head>
-    <body>
-        <h1>Registro de Parámetros</h1>
-        <p>Se ha registrado un nuevo conjunto de parámetros.</p>
-        <div class="details">
-            <h2>Detalles del registro:</h2>
-            <ul>
-                {% for key, value in param_instance.items %} {% if key != "cavities_arr" %}
-                <li><strong>{{ key }}</strong>: {{ value }}</li>
-                {% else %}
-                <h2>Detalles de cavidades</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cavidad</th>
-                            <th>Valor 1</th>
-                            <th>Valor 2</th>
-                            <th>Valor 3</th>
-                            <th>Valor 4</th>
-                            <th>Valor 5</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in value %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            {% for item in row %}
-                            <td>{{ item }}</td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% endif %} 
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0">
+        <header>
+            <h1 style="text-align: center; color: #333; margin-bottom: 1em">Registro de Parámetros</h1>
+        </header>
+        <main>
+            <!-- Información General -->
+            <h3 style="color: #333; margin-bottom: 0.5em">Información General</h3>
+            <table border="0" cellpadding="5" cellspacing="0" width="100%" style="border-collapse: collapse; margin-bottom: 1.5em">
+                <tr>
+                    {% for key, value in general_info.items %}
+                    <td style="border: 1px solid #ddd; padding: 8px; vertical-align: top">
+                        <strong>{{ key | capfirst }}:</strong><br />
+                        {{ value }}
+                    </td>
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                </tr>
+                <tr>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+            </table>
+
+            <!-- Parámetros -->
+            <h3 style="color: #333; margin-bottom: 0.5em">Parámetros</h3>
+            <table border="1" cellpadding="5" cellspacing="0" width="50%" style="border-collapse: collapse; margin-bottom: 1.5em">
+                {% for param_key, param_value in parameters.items %}
+                <tr>
+                    <td style="padding: 8px; background-color: #f2f2f2; text-align: center">
+                        {{ param_key }}
+                    </td>
+                    <td style="padding: 8px; text-align: center">
+                        {{ param_value }}
+                    </td>
+                </tr>
                 {% endfor %}
-            </ul>
-        </div>
+            </table>
+
+            <!-- Temperatura -->
+            <h3 style="color: #333; margin-bottom: 0.5em">Temperatura</h3>
+            <table border="1" cellpadding="5" cellspacing="0" width="50%" style="border-collapse: collapse; margin-bottom: 1.5em">
+                <tr>
+                    {% for temp_label in temperature.labels %}
+                    <td style="padding: 8px; text-align: center; background-color: #f2f2f2">
+                        {{ temp_label }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    {% for temp_value in temperature.values %}
+                    <td style="padding: 8px; text-align: center">
+                        {{ temp_value }}
+                    </td>
+                    {% endfor %}
+                </tr>
+            </table>
+
+            <!-- Toma de muestras -->
+            <h3 style="color: #333; margin-bottom: 0.5em">Toma de muestras</h3>
+            <table border="0" cellpadding="5" cellspacing="0" width="100%" style="border-collapse: collapse; margin-bottom: 1.5em">
+                <tr>
+                    {% for batch_key, batch_value in batch_info.items %}
+                    <td style="border: 1px solid #ddd; padding: 8px; vertical-align: top">
+                        <strong>{{ batch_key | capfirst }}:</strong><br />
+                        {{ batch_value }}
+                    </td>
+                    {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                </tr>
+                <tr>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+            </table>
+
+            <!-- Cavidades -->
+            <table border="1" cellpadding="5" cellspacing="0" width="100%" style="border-collapse: collapse">
+                <tr style="background-color: #f2f2f2; text-align: center">
+                    <th>Cavidad</th>
+                    <th>Valor 1</th>
+                    <th>Valor 2</th>
+                    <th>Valor 3</th>
+                    <th>Valor 4</th>
+                    <th>Valor 5</th>
+                </tr>
+                {% for row in cavities_arr %}
+                <tr>
+                    <td style="padding: 8px; text-align: center">{{ forloop.counter }}</td>
+                    {% for item in row %}
+                    <td style="padding: 8px; text-align: center">{{ item }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </main>
     </body>
 </html>
