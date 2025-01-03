@@ -272,7 +272,7 @@ class Params(models.Model):
     mp = models.CharField(max_length=100)
     molder = models.IntegerField()
     icc = models.BooleanField()
-    register_date = models.DateField()
+    register_date = models.DateTimeField()
     mold = models.CharField(max_length=100)
     cavities = models.IntegerField()
     metal = models.CharField(max_length=50, null=True)
