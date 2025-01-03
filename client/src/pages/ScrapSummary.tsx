@@ -61,7 +61,7 @@ const ScrapSummary = () => {
     const fetchScrapData = async (date: string) => {
         setLoading(true);
         try {
-            const response = await api.get(`/get_scrap_sumary/${date}`);
+            const response = await api.get(`/get_scrap_summary/${date}`);
 
             setScrapData(response.data);
         } catch (error) {
