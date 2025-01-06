@@ -1,6 +1,6 @@
 from django.urls import path
 from .views.configs_views import get_shift_schedule, update_shift_schedule, email_config
-from .views.params_register_views import save_params
+from .views.params_register_views import save_params,get_params_by_date,get_params_by_id
 from .views.part_number_views import (
     get_mold_by_part_number,
     validate_part_number,
@@ -107,7 +107,7 @@ urlpatterns = [
         name="get_mold_by_part_number",
     ),
     path(
-        "get_scrap_sumary/<str:date>",
+        "get_scrap_summary/<str:date>",
         get_scrap_register_summary,
         name="get_scrap_register_summary",
     ),
@@ -155,6 +155,8 @@ urlpatterns = [
         name="get_production_record_by_id",
     ),
     path("save-params", save_params, name="save_params"),
+    path("get_params_by_date/<str:date>", get_params_by_date, name="get_params_by_date"),
+    path("get_params_by_id/<int:id>", get_params_by_id, name="get_params_by_id"),
     path(
         "validate_part_number/<str:part_number>/",
         validate_part_number,

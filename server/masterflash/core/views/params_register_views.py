@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 
@@ -91,9 +92,7 @@ def save_params(request):
                 param_instance_dict["general_info"].pop("icc", None)
                 param_instance_dict["batch_info"].pop("Julian", None)
             else:
-                param_instance_dict["batch_info"].pop(
-                    "ts2", None
-                ) 
+                param_instance_dict["batch_info"].pop("ts2", None)
 
             return param_instance_dict
 
@@ -141,3 +140,41 @@ def save_params(request):
     except Exception as e:
         logger.exception("Error interno.")
         return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
+
+
+@csrf_exempt
+def get_params_by_date(request, date):
+    try:
+        date = datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        return JsonResponse(
+            {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
+        )
+
+    params = Params.objects.filter(register_date__date=date)
+
+    data = list(
+        params.values(
+            "id",
+            "register_date",
+            "mp",
+            "shift",
+            "auditor",
+            "molder",
+            "partnum",
+            "mold"
+        )
+    )
+
+
+    return JsonResponse(data, safe=False)
+
+
+@csrf_exempt
+def get_params_by_id(request, id):
+    try:
+        params = Params.objects.get(id=id)
+    except Params.DoesNotExist:
+        return JsonResponse({"error": "Registro no encontrado."}, status=404)
+
+    return JsonResponse(params.to_dict(), safe=False)

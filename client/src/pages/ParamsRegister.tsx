@@ -45,7 +45,7 @@ const ParamsRegister = () => {
                 draggable
                 theme='colored'
             />
-            <Header title='Reg. Params.' />
+            <Header title='Reg. Params.' goto='/params' />
             <section className='flex flex-col gap-6 mt-4 overflow-auto'>
                 <div className='p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 flex-1'>
                     {step > 1 && (

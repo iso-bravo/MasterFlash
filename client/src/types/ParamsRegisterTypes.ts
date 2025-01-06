@@ -31,3 +31,37 @@ export interface ThirdParamsRegister {
     ts2?: number | '';
     cavities_arr: Array<number[]>;
 }
+
+
+export interface ParamsType {
+    general_info: {
+        Máquina: string;
+        Fecha: string;
+        Turno: string | null;
+        'Número de Parte': string;
+        Auditor: number;
+        Moldeador: number;
+        'No. Cavidades': number;
+        icc: string;
+    };
+    parameters: {
+        Molde: string;
+        Metal: string | null;
+        Cuerpo: number;
+        Tiras: number;
+        'Ciclo completo': number;
+        'Tiempo de ciclo': number;
+        Presión: number;
+        'Porcentaje de waste': number;
+    };
+    temperature: {
+        labels: string[];
+        values: number[];
+    };
+    batch_info: {
+        Batch: string;
+        Julian: number | null;
+        ts2: number | null;
+    };
+    cavities_arr: number[][];
+}
