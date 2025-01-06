@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
-import Header from './Header';
+import Header from '../components/Header';
 import { ParamsType } from '../types/ParamsRegisterTypes';
 import toast from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
 
-interface paramProps {
-    id: number;
-}
+const IndividualParam = () => {
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
 
-const IndividualParam: React.FC<paramProps> = ({ id }) => {
-    const [param, setParam] = useState<ParamsType | null> (null);
+    const [param, setParam] = useState<ParamsType | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -30,13 +31,13 @@ const IndividualParam: React.FC<paramProps> = ({ id }) => {
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] min-h-screen'>
-            <Header title={`Param ${id}`} goto='/params' />
+            <Header title={`Parámetro ${id}`} goto='/params' />
             {loading ? (
                 <div className='flex justify-center items-center h-full'>
                     <p className='text-gray-700 text-xl'>Cargando datos...</p>
                 </div>
             ) : param ? (
-                <div className='mt-4'>
+                <div className='mt-4 bg-white rounded-md p-2'>
                     <div className='font-sans leading-relaxed text-gray-800 p-4'>
                         <header className='text-center mb-8'>
                             <h1 className='text-2xl font-bold'>Registro de Parámetros</h1>
@@ -62,7 +63,7 @@ const IndividualParam: React.FC<paramProps> = ({ id }) => {
                                     <tbody>
                                         {Object.entries(param.parameters).map(([key, value], index) => (
                                             <tr key={index} className='even:bg-gray-100'>
-                                                <td className='border px-4 py-2 font-medium text-center bg-gray-200'>
+                                                <td className='border-gray-300 border px-4 py-2 font-medium text-center bg-gray-200'>
                                                     {key}
                                                 </td>
                                                 <td className='border px-4 py-2 text-center'>{value}</td>
@@ -101,12 +102,16 @@ const IndividualParam: React.FC<paramProps> = ({ id }) => {
                             <section className='mb-8'>
                                 <h3 className='text-lg font-semibold mb-2'>Toma de muestras</h3>
                                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                                    {Object.entries(param.batch_info).map(([key, value], index) => (
-                                        <div key={index} className='border p-4 rounded shadow-sm'>
-                                            <strong className='block mb-1'>{key}:</strong>
-                                            <span>{value}</span>
-                                        </div>
-                                    ))}
+                                    {Object.entries(param.batch_info).map(([key, value], index) => {
+                                        if (value === null) return null;
+                                        else
+                                            return (
+                                                <div key={index} className='border p-4 rounded shadow-sm'>
+                                                    <strong className='block mb-1'>{key}:</strong>
+                                                    <span>{value}</span>
+                                                </div>
+                                            );
+                                    })}
                                 </div>
                             </section>
 

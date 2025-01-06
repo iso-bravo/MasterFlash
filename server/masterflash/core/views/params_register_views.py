@@ -151,21 +151,21 @@ def get_params_by_date(request, date):
             {"error": "Formato de fecha inválido. Usa YYYY-MM-DD."}, status=400
         )
 
-    params = Params.objects.filter(register_date=date)
+    params = Params.objects.filter(register_date__date=date)
 
-    data = [
-        {
-            "id": p.id,
-            "date": p.register_date,
-            "mp": p.mp,
-            "shift": p.shift,
-            "auditor": p.auditor,
-            "molder": p.molder,
-            "part_number": p.partnum,
-            "mold": p.mold,
-        }
-        for p in params
-    ]
+    data = list(
+        params.values(
+            "id",
+            "register_date",
+            "mp",
+            "shift",
+            "auditor",
+            "molder",
+            "partnum",
+            "mold"
+        )
+    )
+
 
     return JsonResponse(data, safe=False)
 

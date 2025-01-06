@@ -4,35 +4,33 @@ import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
 import { MdRemoveRedEye } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import { useDateStore } from '../stores/DateStore';
 
 interface paramsData {
     id: number;
-    date: string;
+    register_date: string;
     mp: string;
     shift: number;
     auditor: number;
     molder: number;
-    part_number: string;
+    partnum: string;
     mold: string;
 }
 
 const ParamsSummary = () => {
-    const getTodayDate = () => {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
 
     const navigate = useNavigate();
     const [paramsData, setParamsData] = useState<paramsData[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [selectedDate, setSelectedDate] = useState<string>(getTodayDate);
+
+    const { selectedDate, setSelectedDate } = useDateStore();
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedDate(e.target.value);
+    };
+
+    const handleDetails = (id: number) => {
+        navigate(`/params_details?id=${id}`);
     };
 
     useEffect(() => {
@@ -117,19 +115,19 @@ const ParamsSummary = () => {
                                         key={index}
                                         className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b`}
                                     >
-                                        <td className='px-6 py-4'>{item.date}</td>
+                                        <td className='px-6 py-4'>{item.register_date}</td>
                                         <td className='px-6 py-4'>{item.mp}</td>
                                         <td className='px-6 py-4'>{item.shift}</td>
                                         <td className='px-6 py-4'>{item.auditor}</td>
                                         <td className='px-6 py-4'>{item.molder}</td>
-                                        <td className='px-6 py-4'>{item.part_number}</td>
+                                        <td className='px-6 py-4'>{item.partnum}</td>
                                         <td className='px-6 py-4'>{item.mold}</td>
                                         <td className='px-6 py-4'>
                                             <MdRemoveRedEye
                                                 color='#1d4ed8'
                                                 size={20}
                                                 className='cursor-pointer'
-                                                onClick={() => setSelectedId(item.id)}
+                                                onClick={() => handleDetails(item.id)}
                                             />
                                         </td>
                                     </tr>
