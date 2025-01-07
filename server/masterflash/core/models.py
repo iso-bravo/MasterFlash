@@ -63,6 +63,7 @@ class ProductionPress(models.Model):
 
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
+    chemlok = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
     caliber = models.FloatField(null=True, blank=True)
 
@@ -169,6 +170,7 @@ class Qc_Scrap(models.Model):
     insert_weight_wout_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_wout_rubber = models.FloatField(null=True, blank=True)
     insert_weight_w_rubber = models.FloatField(null=True, blank=True)
+    chemlok_x_insert_w_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_w_rubber = models.FloatField(null=True, blank=True)
     recycled_inserts = models.IntegerField(null=True, blank=True)
     total_bodies_weight = models.FloatField(null=True, blank=True)
