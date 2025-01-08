@@ -248,6 +248,7 @@ class Insert_Query_history(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     insert = models.CharField(max_length=50, null=True)
+    total_chemlok = models.FloatField(default=0)
     total_insert = models.FloatField(default=0)
     total_rubber = models.FloatField(default=0)
     total_metal = models.FloatField(default=0)

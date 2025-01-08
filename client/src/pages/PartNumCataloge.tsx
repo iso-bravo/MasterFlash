@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axiosConfig';
 import { FaPlus } from 'react-icons/fa';
 import { IoSearch } from 'react-icons/io5';
 import EditPartNumModal from '../components/EditPartNumModal';
+import Header from '../components/Header';
 
 interface PartNum {
     id: number;
@@ -124,11 +124,8 @@ const PartNumCataloge = () => {
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
-            <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
-                <h1 className='text-xl'>Catálogo de Números de Parte</h1>
-            </header>
-            <section className='flex justify-end'>
+            <Header title='Catálogo de Números de Parte' />
+            <section className='flex flex-row justify-end p-2 gap-2 items-end mb-4'>
                 <div className='m-2'>
                     <label htmlFor='search' className='mb-2 text-sm font-medium text-gray-900 sr-only'>
                         Número de parte

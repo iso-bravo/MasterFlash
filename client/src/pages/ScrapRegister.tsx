@@ -479,6 +479,7 @@ const ScrapRegister: React.FC = () => {
                                         type={config.type}
                                         value={formData.inputs[config.key as keyof InputFields['inputs']] || ''}
                                         onChange={e => handleChange(e, 'input')}
+                                        min={0}
                                         name={config.key}
                                         className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
                                     />

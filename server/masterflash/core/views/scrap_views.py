@@ -142,7 +142,7 @@ def register_scrap(request):
         chemlok = empty_to_none(inputs.get("chemlok"))
 
         if insert_with_rubber and chemlok:
-            chemlok_x_inserts = chemlok * insert_with_rubber
+            chemlok_x_inserts = chemlok * int(insert_with_rubber)
 
         # Validación del partNumber
         if part_number is None:
