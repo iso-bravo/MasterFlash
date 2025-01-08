@@ -80,10 +80,12 @@ const ScrapRegister: React.FC = () => {
                 params: { part_number: partNumber },
             });
 
+            console.log(response.data);
             const {
                 Compuesto = '',
                 Inserto = '',
                 Metal = '',
+                Chemlok = '',
                 Gripper = '',
                 'Inserto s/hule': ItoSHule = '',
             } = response.data || {};
@@ -96,6 +98,7 @@ const ScrapRegister: React.FC = () => {
                     insert: Inserto,
                     gripper: Gripper,
                     metal: Metal,
+                    chemlok: Chemlok,
                     insertWithoutRubber: ItoSHule,
                 },
             }));
@@ -471,11 +474,11 @@ const ScrapRegister: React.FC = () => {
                                 <label className='block mb-2 w-full text-sm font-medium text-gray-900'>
                                     {config.label}
                                 </label>
-                                <div className='flex items-center justify-around gap-4'>
+                                <>
                                     <input
                                         type={config.type}
                                         value={formData.inputs[config.key as keyof InputFields['inputs']] || ''}
-                                        onChange={e => handleChange(e, config.key)}
+                                        onChange={e => handleChange(e, 'input')}
                                         name={config.key}
                                         className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
                                     />
@@ -523,7 +526,7 @@ const ScrapRegister: React.FC = () => {
                                             </div>
                                         </div>
                                     )}
-                                </div>
+                                </>
                             </div>
                         ))}
                     </div>

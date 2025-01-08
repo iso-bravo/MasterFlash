@@ -39,7 +39,7 @@ def search_in_part_number(request):
     gripper = getattr(part_record, "gripper", None)
 
     insert_record = Insert.objects.get(insert=insert, caliber=caliber)
-    # chemlok = getattr(insert_record, "chemlok", None)
+    chemlok = getattr(insert_record, "chemlok")
 
     if insert is not None and caliber is not None:
         try:
@@ -55,7 +55,7 @@ def search_in_part_number(request):
         "Inserto": insert,
         "Gripper": gripper,
         "Metal": caliber,
-        # "Chemlok": chemlok,
+        "Chemlok": chemlok,
         "Ito. s/hule": weight,
     }
 
