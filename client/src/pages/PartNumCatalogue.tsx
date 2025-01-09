@@ -125,12 +125,12 @@ const PartNumCataloge = () => {
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
             <Header title='Catálogo de Números de Parte' />
-            <section className='flex flex-row justify-end p-2 gap-2 items-end mb-4'>
+            <section className='flex flex-row justify-end p-2 gap-2 items-end mb-4 '>
                 <div className='m-2'>
                     <label htmlFor='search' className='mb-2 text-sm font-medium text-gray-900 sr-only'>
                         Número de parte
                     </label>
-                    <div className='relative'>
+                    <div className='relative w-full'>
                         <div className='absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none'>
                             <IoSearch />
                         </div>
@@ -139,7 +139,7 @@ const PartNumCataloge = () => {
                             type='text'
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className='block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500'
+                            className='block w-full  px-5 py-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 me-2'
                             placeholder='Buscar Números de parte'
                         />
                     </div>

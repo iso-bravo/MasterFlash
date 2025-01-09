@@ -6,7 +6,7 @@ import { FaFileAlt } from 'react-icons/fa';
 import Barwell from '../assets/conveyor.png';
 import Troquelado from '../assets/worker.png';
 import { BiSolidDashboard } from 'react-icons/bi';
-import { GiNuclearWaste } from 'react-icons/gi';
+import { GiFactoryArm, GiNuclearWaste } from 'react-icons/gi';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { FaFileInvoice } from 'react-icons/fa';
 import { MdNumbers } from 'react-icons/md';
@@ -140,6 +140,12 @@ const Quality: React.FC = () => {
                             <MdNumbers color='white' size={35} />
                         </div>
                         <h2 className=' text-center'>No. Parte</h2>
+                    </div>
+                    <div className='flex flex-col items-center cursor-pointer' onClick={() => navigate('/inserts')}>
+                        <div className=' bg-[#C67C38] p-2 rounded-sm'>
+                            <GiFactoryArm color='white' size={35} />
+                        </div>
+                        <h2 className=' text-center'>Insertos</h2>
                     </div>
                 </div>
             </div>
