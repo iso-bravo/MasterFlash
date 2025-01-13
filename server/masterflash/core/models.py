@@ -63,8 +63,17 @@ class ProductionPress(models.Model):
 
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
+    chemlok = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
     caliber = models.FloatField(null=True, blank=True)
+
+    def to_dict(self):
+        return {
+            "insert": self.insert,
+            "caliber": self.caliber,
+            "weight": self.weight,
+            "chemlok": self.chemlok,
+        }
 
 
 def upload_path(filename):
@@ -169,6 +178,7 @@ class Qc_Scrap(models.Model):
     insert_weight_wout_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_wout_rubber = models.FloatField(null=True, blank=True)
     insert_weight_w_rubber = models.FloatField(null=True, blank=True)
+    chemlok_x_insert_w_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_w_rubber = models.FloatField(null=True, blank=True)
     recycled_inserts = models.IntegerField(null=True, blank=True)
     total_bodies_weight = models.FloatField(null=True, blank=True)
@@ -246,6 +256,7 @@ class Insert_Query_history(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     insert = models.CharField(max_length=50, null=True)
+    total_chemlok = models.FloatField(default=0)
     total_insert = models.FloatField(default=0)
     total_rubber = models.FloatField(default=0)
     total_metal = models.FloatField(default=0)

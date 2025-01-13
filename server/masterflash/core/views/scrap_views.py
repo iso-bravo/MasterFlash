@@ -72,9 +72,11 @@ def search_weight(request):
 
     insert_record = get_object_or_404(Insert, insert=insert, caliber=metal)
     weight = getattr(insert_record, "weight", None)
+    chemlok = getattr(insert_record, "chemlok")
 
     response_data = {
         "Ito. s/hule": weight,
+        "Chemlok": chemlok,
     }
 
     if gripper:
@@ -136,6 +138,10 @@ def register_scrap(request):
         recycled_inserts = empty_to_none(inputs.get("recycledInserts"))
         total_inserts = empty_to_none(inputs.get("totalInserts"))
         total_grippers = empty_to_none(inputs.get("totalGrippers"))
+        chemlok = empty_to_none(inputs.get("chemlok"))
+
+        if insert_with_rubber and chemlok:
+            chemlok_x_inserts = chemlok * int(insert_with_rubber)
 
         # Validación del partNumber
         if part_number is None:
@@ -159,6 +165,7 @@ def register_scrap(request):
             caliber=metal,
             rubber_weight=rubber_weight,
             insert_weight_w_rubber=insert_with_rubber,
+            chemlok_x_insert_w_rubber=chemlok_x_inserts,
             gripper_weight_w_rubber=gripper_with_rubber,
             insert_weight_wout_rubber=insert_without_rubber,
             gripper_weight_wout_rubber=gripper_without_rubber,
@@ -472,6 +479,7 @@ def get_inserts_report_history(request):
             "end_date": h.end_date,
             "insert": h.insert,
             "total_insert": h.total_insert,
+            "total_chemlok": h.total_chemlok,
             "total_rubber": h.total_rubber,
             "total_metal": h.total_metal,
             "total_sum": h.total_sum,
