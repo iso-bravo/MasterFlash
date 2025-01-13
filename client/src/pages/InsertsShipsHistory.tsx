@@ -10,6 +10,7 @@ interface InsertHistory {
     end_date: string;
     insert: string;
     total_insert: number;
+    total_chemlok:number
     total_rubber: number;
     total_metal: number;
     total_sum: number;
@@ -55,6 +56,7 @@ const InsertsShipsHistory = () => {
 
             if (acc[insertKey]) {
                 acc[insertKey].total_insert += item.total_insert;
+                acc[insertKey] .total_chemlok += item.total_chemlok;
                 acc[insertKey].total_rubber += item.total_rubber;
                 acc[insertKey].total_metal += item.total_metal;
                 acc[insertKey].total_sum += item.total_sum;
@@ -162,6 +164,9 @@ const InsertsShipsHistory = () => {
                                 Total Insertos
                             </th>
                             <th scope='col' className='px-6 py-3'>
+                                Total chemlok
+                            </th>
+                            <th scope='col' className='px-6 py-3'>
                                 Total Hule
                             </th>
                             <th scope='col' className='px-6 py-3'>
@@ -180,6 +185,7 @@ const InsertsShipsHistory = () => {
                                 <td className='px-6 py-3'>{item.start_date}</td>
                                 <td className='px-6 py-3'>{item.end_date}</td>
                                 <td className='px-6 py-3'>{item.total_insert}</td>
+                                <td className='px-6 py-3'>{item.total_chemlok}</td>
                                 <td className='px-6 py-3'>{item.total_rubber}</td>
                                 <td className='px-6 py-3'>{item.total_metal}</td>
                                 <td className='px-6 py-3'>{item.total_sum}</td>

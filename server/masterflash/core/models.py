@@ -67,6 +67,14 @@ class Insert(models.Model):
     weight = models.FloatField(null=True, blank=True)
     caliber = models.FloatField(null=True, blank=True)
 
+    def to_dict(self):
+        return {
+            "insert": self.insert,
+            "caliber": self.caliber,
+            "weight": self.weight,
+            "chemlok": self.chemlok,
+        }
+
 
 def upload_path(filename):
     return "/".join(["images"], filename)

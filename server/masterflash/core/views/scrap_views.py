@@ -38,11 +38,9 @@ def search_in_part_number(request):
     caliber = getattr(part_record, "caliber", None)
     gripper = getattr(part_record, "gripper", None)
 
-    insert_record = Insert.objects.get(insert=insert, caliber=caliber)
-    chemlok = getattr(insert_record, "chemlok")
-
     if insert is not None and caliber is not None:
         try:
+            insert_record = Insert.objects.get(insert=insert, caliber=caliber)
             weight = getattr(insert_record, "weight", None)
         except Insert.DoesNotExist:
             print("Insert record not found")
@@ -55,7 +53,6 @@ def search_in_part_number(request):
         "Inserto": insert,
         "Gripper": gripper,
         "Metal": caliber,
-        "Chemlok": chemlok,
         "Ito. s/hule": weight,
     }
 
@@ -75,9 +72,11 @@ def search_weight(request):
 
     insert_record = get_object_or_404(Insert, insert=insert, caliber=metal)
     weight = getattr(insert_record, "weight", None)
+    chemlok = getattr(insert_record, "chemlok")
 
     response_data = {
         "Ito. s/hule": weight,
+        "Chemlok": chemlok,
     }
 
     if gripper:
@@ -166,7 +165,7 @@ def register_scrap(request):
             caliber=metal,
             rubber_weight=rubber_weight,
             insert_weight_w_rubber=insert_with_rubber,
-            chemlok_x_insert_w_rubber = chemlok_x_inserts,
+            chemlok_x_insert_w_rubber=chemlok_x_inserts,
             gripper_weight_w_rubber=gripper_with_rubber,
             insert_weight_wout_rubber=insert_without_rubber,
             gripper_weight_wout_rubber=gripper_without_rubber,
@@ -480,6 +479,7 @@ def get_inserts_report_history(request):
             "end_date": h.end_date,
             "insert": h.insert,
             "total_insert": h.total_insert,
+            "total_chemlok": h.total_chemlok,
             "total_rubber": h.total_rubber,
             "total_metal": h.total_metal,
             "total_sum": h.total_sum,

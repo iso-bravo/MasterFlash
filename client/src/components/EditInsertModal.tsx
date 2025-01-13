@@ -13,7 +13,7 @@ interface Insert {
 interface EditModalProps {
     onClose: () => void;
     insertObj: Insert;
-    onSubmit: () => void;
+    onSubmit: (updatedInsert: Insert) => void;
 }
 
 const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) => {
@@ -29,7 +29,7 @@ const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) =
     }, [reset, insertObj]);
 
     return (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30'>
             <main className='bg-white p-6 rounded-md shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden'>
                 <header className='flex justify-between items-center'>
                     <h2 className='text-xl font-bold'>Editar Inserto</h2>
@@ -52,6 +52,8 @@ const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) =
                                 <label className='block mb-1 capitalize'>Peso</label>
                                 <input
                                     type='number'
+                                    min={0}
+                                    step={0.001}
                                     {...register('weight')}
                                     className='w-full p-2 border rounded'
                                     placeholder='Peso'
@@ -62,6 +64,8 @@ const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) =
                                 <label className='block mb-1 capitalize'>Calibre</label>
                                 <input
                                     type='number'
+                                    min={0}
+                                    step={0.001}
                                     {...register('caliber')}
                                     className='w-full p-2 border rounded'
                                     placeholder='Calibre'
@@ -72,6 +76,8 @@ const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) =
                                 <label className='block mb-1 capitalize'>Chemlok</label>
                                 <input
                                     type='number'
+                                    min={0}
+                                    step={0.001}
                                     {...register('chemlok')}
                                     className='w-full p-2 border rounded'
                                     placeholder='Chemlok'
@@ -86,11 +92,14 @@ const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) =
                         <button
                             type='button'
                             onClick={onClose}
-                            className='px-4 py-2 bg-gray-300 rounded hover:bg-gray-400'
+                            className='py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100'
                         >
                             Cancelar
                         </button>
-                        <button type='submit' className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>
+                        <button
+                            type='submit'
+                            className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
+                        >
                             Guardar
                         </button>
                     </div>
