@@ -13,7 +13,7 @@ import RubberReport from './pages/RubberReport';
 import ScrapSummary from './pages/ScrapSummary';
 import ParamsRegister from './pages/ParamsRegister';
 import WareHouseShipsHistory from './pages/WareHouseShipsHistory';
-import PartNumCataloge from './pages/PartNumCataloge';
+import PartNumCataloge from './pages/PartNumCatalogue';
 import PartNumCreation from './pages/PartNumCreation';
 import ConfigMenu from './pages/ConfigMenu';
 import ShiftConfig from './pages/ShiftConfig';
@@ -24,6 +24,7 @@ import InsertsShipsHistory from './pages/InsertsShipsHistory';
 import EmailConfig from './pages/EmailConfig';
 import ParamsSummary from './pages/ParamsSummary';
 import IndividualParam from './pages/IndividualParam';
+import InsertsCatalogue from './pages/InsertsCatalogue';
 
 function App() {
     return (
@@ -39,6 +40,7 @@ function App() {
                 <Route path='/reports_menu' element={<ReportsMenu />} />
                 <Route path='/scrap_report' element={<ScrapReport />} />
                 <Route path='/inserts_history' element={<InsertsShipsHistory />} />
+                <Route path='/inserts' element={<InsertsCatalogue />} />
                 <Route path='/rubber_history' element={<WareHouseShipsHistory />} />
                 <Route path='/rubber_report' element={<RubberReport />} />
                 <Route path='/production_records' element={<ProductionRecordsMenu />} />

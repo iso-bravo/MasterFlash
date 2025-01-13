@@ -1,6 +1,10 @@
 from django.urls import path
 from .views.configs_views import get_shift_schedule, update_shift_schedule, email_config
-from .views.params_register_views import save_params,get_params_by_date,get_params_by_id
+from .views.params_register_views import (
+    save_params,
+    get_params_by_date,
+    get_params_by_id,
+)
 from .views.part_number_views import (
     get_mold_by_part_number,
     validate_part_number,
@@ -42,6 +46,13 @@ from .views.press_views import (
     get_presses_monthly_goal,
     get_presses_production_percentage,
     update_pieces_ok,
+)
+
+from .views.insert_views import (
+    get_all_inserts,
+    get_insert_by_id,
+    post_insert,
+    update_insert,
 )
 
 urlpatterns = [
@@ -155,7 +166,9 @@ urlpatterns = [
         name="get_production_record_by_id",
     ),
     path("save-params", save_params, name="save_params"),
-    path("get_params_by_date/<str:date>", get_params_by_date, name="get_params_by_date"),
+    path(
+        "get_params_by_date/<str:date>", get_params_by_date, name="get_params_by_date"
+    ),
     path("get_params_by_id/<int:id>", get_params_by_id, name="get_params_by_id"),
     path(
         "validate_part_number/<str:part_number>/",
@@ -169,4 +182,8 @@ urlpatterns = [
     ),
     path("email_config/", email_config, name="email_config"),
     path("part_numbers/<int:id>/", get_part_num_by_id, name="get_part_number_by_id"),
+    path("inserts/", get_all_inserts, name="get_all_inserts"),
+    path("inserts/<int:id>/", get_insert_by_id, name="get_insert_by_id"),
+    path("inserts/new/", post_insert, name="post_insert"),
+    path("inserts/<int:id>/", update_insert, name="update_insert"),
 ]
