@@ -76,8 +76,12 @@ def search_weight(request):
 
     response_data = {
         "Ito. s/hule": weight,
-        "Chemlok": chemlok,
     }
+
+    if chemlok:
+        chemlok_record = get_object_or_404(Insert, chemlok=chemlok)
+        chemlok_weight = getattr(chemlok_record, "weight", None)
+        response_data["Chemlok"] = chemlok_weight
 
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
