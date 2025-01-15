@@ -128,7 +128,7 @@ const ScrapRegister: React.FC = () => {
                     inputs: {
                         ...prevState.inputs,
                         insertWithoutRubber: ItoSHule,
-                        chemlok: Chemlok,
+                        chemlok: Chemlok ? Chemlok : '0',
                     },
                 }));
             } else {
@@ -142,7 +142,7 @@ const ScrapRegister: React.FC = () => {
                         ...prevState.inputs,
                         insertWithoutRubber: ItoSHule,
                         gripperWithoutRubber: GripsHule,
-                        chemlok: Chemlok,
+                        chemlok: Chemlok ? Chemlok : '0',
                     },
                 }));
             }
