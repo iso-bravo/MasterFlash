@@ -77,7 +77,7 @@ const EditModal: React.FC<EditModalProps> = ({ onClose, insertObj, onSubmit }) =
                                 <input
                                     type='number'
                                     min={0}
-                                    step={0.001}
+                                    step={0.000001}
                                     {...register('chemlok')}
                                     className='w-full p-2 border rounded'
                                     placeholder='Chemlok'
