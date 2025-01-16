@@ -185,5 +185,5 @@ urlpatterns = [
     path("inserts/", get_all_inserts, name="get_all_inserts"),
     path("inserts/<int:id>/", get_insert_by_id, name="get_insert_by_id"),
     path("inserts/new/", post_insert, name="post_insert"),
-    path("inserts/<int:id>/", update_insert, name="update_insert"),
+    path("inserts/<int:id>/update/", update_insert, name="update_insert"),
 ]
