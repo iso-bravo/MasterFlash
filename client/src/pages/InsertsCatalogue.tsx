@@ -87,7 +87,7 @@ const InsertsCatalogue = () => {
                 chemlok: Number(updatedInsert.chemlok),
             };
             console.log('Datos guardados en setInserts:', sanitizedInsert);
-            await api.patch(`/inserts/${updatedInsert.id}/`, sanitizedInsert);
+            await api.patch(`/inserts/${updatedInsert.id}/update/`, sanitizedInsert);
             setInserts(inserts.map(insert => (insert.id === sanitizedInsert.id ? sanitizedInsert : insert)));
             handleCloseEditModal();
         } catch (error) {
