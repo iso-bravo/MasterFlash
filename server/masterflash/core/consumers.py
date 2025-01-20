@@ -33,7 +33,7 @@ class ProductionConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps(message))
 
     @staticmethod
-    def get_production_data(machhine_name=None):
+    def get_production_data(machine_name=None):
         return send_production_data()
 
 
