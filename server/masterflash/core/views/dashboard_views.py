@@ -5,6 +5,7 @@ from ..models import (
     Presses_monthly_goals,
     ProductionPress,
     Qc_Scrap,
+    StatePress,
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum, Count, Q
@@ -97,24 +98,15 @@ def mps_fails_and_pauses(request):
                 status=400,
             )
 
-        result = LinePress.objects.annotate(
-            pause_count=Count(
-                "StatePress",
-                filter=Q(StatePress__state="Pause")
-                & Q(StatePress__date__year=year)
-                & Q(StatePress__date__month=month),
-            ),
-            failure_count=Count(
-                "StatePress",
-                filter=Q(StatePress__state="Failure")
-                & Q(StatePress__date__year=year)
-                & Q(StatePress__date__month=month),
-            ),
-        ).values("name", "pause_count", "failure_count")
+        results = StatePress.objects.filter(
+            date__year=year,
+            date__month=month,
+        ).aggregate(
+            pause_count=Count("state", filter=Q(state="Pause")),
+            failure_count=Count("state", filter=Q(state="Failure")),
+        )
 
-        data = list(result)
-
-        return JsonResponse(data, safe=False)
+        return JsonResponse(results, safe=False)
 
     return JsonResponse({"error": "Only GET method is allowed."}, status=405)
 
