@@ -169,7 +169,7 @@ def register_scrap(request):
             caliber=metal,
             rubber_weight=rubber_weight,
             insert_weight_w_rubber=insert_with_rubber,
-            chemlok_x_insert_w_rubber=chemlok_x_inserts,
+            chemlok_x_insert_w_rubber=chemlok_x_inserts or 0,
             gripper_weight_w_rubber=gripper_with_rubber,
             insert_weight_wout_rubber=insert_without_rubber,
             gripper_weight_wout_rubber=gripper_without_rubber,
