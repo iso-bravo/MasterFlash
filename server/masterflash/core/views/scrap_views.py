@@ -40,7 +40,7 @@ def search_in_part_number(request):
 
     if insert is not None and caliber is not None:
         try:
-            insert_record = Insert.objects.get(insert=insert, caliber=caliber)
+            insert_record = Insert.objects.filter(insert=insert, caliber=caliber).order_by("id").first()
             weight = getattr(insert_record, "weight", None)
         except Insert.DoesNotExist:
             print("Insert record not found")
