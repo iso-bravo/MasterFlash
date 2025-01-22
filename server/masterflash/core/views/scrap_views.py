@@ -85,7 +85,7 @@ def search_weight(request):
             .first()
         ) 
         if chemlok_record:
-            chemlok_weight = getattr(chemlok_record, "weight", None)
+            chemlok_weight = getattr(chemlok_record, "chemlok", None)
             response_data["Chemlok"] = chemlok_weight
 
     if gripper:
