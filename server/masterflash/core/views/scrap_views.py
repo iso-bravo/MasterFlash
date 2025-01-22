@@ -79,9 +79,14 @@ def search_weight(request):
     }
 
     if chemlok:
-        chemlok_record = get_object_or_404(Insert, chemlok=chemlok)
-        chemlok_weight = getattr(chemlok_record, "weight", None)
-        response_data["Chemlok"] = chemlok_weight
+        chemlok_record = (
+            Insert.objects.filter(chemlok=chemlok, caliber=metal, insert=insert)
+            .order_by("id")
+            .first()
+        ) 
+        if chemlok_record:
+            chemlok_weight = getattr(chemlok_record, "weight", None)
+            response_data["Chemlok"] = chemlok_weight
 
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
