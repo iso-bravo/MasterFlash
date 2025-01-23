@@ -6,7 +6,9 @@ import { LuGoal } from 'react-icons/lu';
 import { FaPause } from 'react-icons/fa';
 import { BiSolidError } from 'react-icons/bi';
 import DashboardCard from '../components/DashboardCard';
-import { useWaitFullInput } from '../utils/useWaitFullInput';
+import { useDebounce } from '../utils/useDebounce';
+import DynamicTable from '../components/DynamicTable';
+import WeekProductionChart from '../components/WeekProductionChart';
 
 interface scrapData {
     molder_number: string;
@@ -35,11 +37,14 @@ const DashBoard = () => {
     const [pauses, setPauses] = useState<string>('');
     const [fails, setFails] = useState<string>('');
     const [scrapResults, setScrapResults] = useState<scrapData[]>([]);
+
     //! change this to the current date
     const currentDate = new Date('August 2024');
     const month = currentDate.getMonth() + 1;
     const year = currentDate.getFullYear();
 
+    const [dateInput, setDateInput] = useState<string>('');
+    const debouncedInput = useDebounce(dateInput, 1000);
 
     const fetchProductionSummary = useCallback(async () => {
         try {
@@ -51,7 +56,7 @@ const DashBoard = () => {
         } catch (error) {
             console.error('Error fetching production summary:', error);
         }
-    },[month,year]);
+    }, [month, year]);
 
     const fetchFailsAndPauses = useCallback(async () => {
         try {
@@ -61,32 +66,38 @@ const DashBoard = () => {
         } catch (error) {
             console.error('Error fetching fails and pauses:', error);
         }
-    },[month,year]);
+    }, [month, year]);
 
-    const fetchScrapPerEmployee = useCallback(async (date:string) => {
+    const fetchScrapPerEmployee = useCallback(async (date: string) => {
         try {
             //* use 09/09/2024 for testing
             const response = await api.get(`/dashboard/scrap-per-employee/?date=${date}`);
             console.log(response.data);
-            // setScrapResults(response.data);
+            setScrapResults(response.data);
         } catch (error) {
             console.error('Error fetching scrap per employee:', error);
         }
-    },[]);
+    }, []);
 
-    const { input, handleInput } = useWaitFullInput("", (value) => {
-        console.log("Api called with value:", value);
-        fetchScrapPerEmployee(value);
-    },1000);
+    useEffect(() => {
+        if (debouncedInput) {
+            fetchScrapPerEmployee(debouncedInput);
+        }
+    }, [debouncedInput, fetchScrapPerEmployee]);
 
     useEffect(() => {
         fetchProductionSummary();
         fetchFailsAndPauses();
-    }, []);
+    }, [fetchProductionSummary, fetchFailsAndPauses]);
+
+    const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setDateInput(e.target.value);
+    };
+
     return (
-        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden'>
             <Header title='Dashboard' />
-            <div className='mt-12 flex flex-wrap items-center mb-4  gap-4 md:flex-row'>
+            <div className='mt-12 mb-4 grid grid-cols-3 gap-4 md:flex-row'>
                 <DashBoardContainer
                     data={productionSummary}
                     icon={<LuGoal size={30} />}
@@ -106,18 +117,27 @@ const DashBoard = () => {
                     title='Fallas este mes'
                 />
             </div>
-            <div>GRÁFICOS</div>
+            <div className='mt-8 '>
+                <DashboardCard title='Producción semanal' subtitle='Total de piezas producidas' color='bg-green-500'>
+                    <WeekProductionChart />
+                </DashboardCard>
+            </div>
             <div className=' flex flex-wrap mt-16 w-full'>
                 <DashboardCard title='Pruebas' subtitle='Total de pruebas realizadas' color='bg-yellow-500'>
-                    <div className='flex flex-col items-center justify-center'>
-                        <label htmlFor='ScrapDate' className='sr-only'>Fecha</label>
-                        <input
-                            type='date'
-                            id='ScrapDate'
-                            value={input}
-                            onChange={handleInput}
-                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5'
-                        />
+                    <div>
+                        <div className='flex flex-col items-center justify-center'>
+                            <label htmlFor='ScrapDate' className='sr-only'>
+                                Fecha
+                            </label>
+                            <input
+                                type='date'
+                                id='ScrapDate'
+                                value={dateInput}
+                                onChange={handleDateInput}
+                                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5'
+                            />
+                        </div>
+                        <DynamicTable data={scrapResults} />
                     </div>
                 </DashboardCard>
             </div>
