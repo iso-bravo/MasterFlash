@@ -1,22 +1,18 @@
 import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { WeekProduction } from '../types/DashBoardTypes';
 
-const WeekProductionChart = () => {
-    const fakeData = [
-        { day: 'Monday', production: 120 },
-        { day: 'Tuesday', production: 150 },
-        { day: 'Wednesday', production: 130 },
-        { day: 'Thursday', production: 170 },
-        { day: 'Friday', production: 160 },
-        { day: 'Saturday', production: 110 },
-        { day: 'Sunday', production: 90 },
-    ];
+interface WeekProductionChartProps {
+    data: WeekProduction[];
+}
+
+const WeekProductionChart:React.FC<WeekProductionChartProps> = ({ data }) => {
 
     return (
             <ResponsiveContainer width='100%' height={300}>
                 <BarChart
                     width={500}
                     height={300}
-                    data={fakeData}
+                    data={data}
                     margin={{
                         top: 5,
                         right: 30,
@@ -29,7 +25,7 @@ const WeekProductionChart = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey={'production'} fill='#82ca9d' activeBar={<Rectangle fill='#82ca9d' />} />
+                    <Bar dataKey={'pieces_ok'} fill='#82ca9d' activeBar={<Rectangle fill='#82ca9d' />} />
                 </BarChart>
             </ResponsiveContainer>
     );

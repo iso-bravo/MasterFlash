@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.http import JsonResponse
 from ..models import (
     LinePress,
@@ -158,5 +158,53 @@ def scrap_per_employee(request):
             data.append(cleaned_result)
 
         return JsonResponse(data, safe=False)
+
+    return JsonResponse({"error": "Only GET method is allowed."}, status=405)
+
+
+@csrf_exempt
+def get_week_production(request):
+    if request.method == "GET":
+        date = request.GET.get("date")
+        if not date:
+            return JsonResponse(
+                {"error": "Se requiere el parámetro 'date'."}, status=400
+            )
+        try:
+            date = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            return JsonResponse(
+                {"error": "El parámetro 'date' debe tener el formato 'YYYY-MM-DD'."},
+                status=400,
+            )
+
+        start_of_week = date - timedelta(days=date.weekday())
+
+        end_of_week = start_of_week + timedelta(days=6)
+
+        week_data = ProductionPress.objects.filter(
+            date_time__date__gte=start_of_week,
+            date_time__date__lte=end_of_week,
+        )
+
+        production_by_day = {
+            "Monday": 0,
+            "Tuesday": 0,
+            "Wednesday": 0,
+            "Thursday": 0,
+            "Friday": 0,
+        }
+
+        for record in week_data:
+            day_name = record.date_time.strftime("%A")
+            if day_name in production_by_day:
+                production_by_day[day_name] += record.pieces_ok or 0
+
+        response_data = [
+            {"day": day, "pieces_ok": pieces_ok}
+            for day, pieces_ok in production_by_day.items()
+        ]
+
+        return JsonResponse(response_data, safe=False)
 
     return JsonResponse({"error": "Only GET method is allowed."}, status=405)

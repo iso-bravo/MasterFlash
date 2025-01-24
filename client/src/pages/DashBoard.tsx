@@ -9,42 +9,36 @@ import DashboardCard from '../components/DashboardCard';
 import { useDebounce } from '../utils/useDebounce';
 import DynamicTable from '../components/DynamicTable';
 import WeekProductionChart from '../components/WeekProductionChart';
+import { scrapData, WeekProduction } from '../types/DashBoardTypes';
+import { formatDate } from '../utils/formatDate';
 
-interface scrapData {
-    molder_number: string;
-    CS?: number;
-    CROP?: number;
-    DP?: number;
-    DI?: number;
-    F?: number;
-    FC?: number;
-    FPO?: number;
-    GA?: number;
-    GM?: number;
-    H?: number;
-    IM?: number;
-    IMC?: number;
-    IR: number;
-    M?: number;
-    MR?: number;
-    R?: number;
-    SG?: number;
-    SI?: number;
-}
 
 const DashBoard = () => {
     const [productionSummary, setProductionSummary] = useState<string>('');
     const [pauses, setPauses] = useState<string>('');
     const [fails, setFails] = useState<string>('');
     const [scrapResults, setScrapResults] = useState<scrapData[]>([]);
+    const [weekProduction, setWeekProduction] = useState<WeekProduction[]>([]);
 
     //! change this to the current date
     const currentDate = new Date('August 2024');
     const month = currentDate.getMonth() + 1;
     const year = currentDate.getFullYear();
 
-    const [dateInput, setDateInput] = useState<string>('');
-    const debouncedInput = useDebounce(dateInput, 1000);
+    const [scrapDateInput, setScrapDateInput] = useState<string>('');
+    const debouncedScrapInput = useDebounce(scrapDateInput, 1000);
+    const [weekProductionDateInput, setWeekProductionDateInput] = useState<string>('');
+    const debouncedWeekProductionInput = useDebounce(weekProductionDateInput, 1000);
+
+    const fetchWeekProduction = useCallback(async (date: string) => {
+        try {
+            const response = await api.get(`/dashboard/week-production/?date=${date}`);
+            console.log(response.data);
+            setWeekProduction(response.data);
+        } catch (error) {
+            console.error('Error fetching week production:', error);
+        }
+    },[]);
 
     const fetchProductionSummary = useCallback(async () => {
         try {
@@ -80,18 +74,27 @@ const DashBoard = () => {
     }, []);
 
     useEffect(() => {
-        if (debouncedInput) {
-            fetchScrapPerEmployee(debouncedInput);
+        if (debouncedScrapInput) {
+            fetchScrapPerEmployee(debouncedScrapInput);
         }
-    }, [debouncedInput, fetchScrapPerEmployee]);
+        if (debouncedWeekProductionInput) {
+            fetchWeekProduction(debouncedWeekProductionInput);
+        }
+    }, [debouncedScrapInput, fetchScrapPerEmployee, debouncedWeekProductionInput, fetchWeekProduction]);
 
     useEffect(() => {
         fetchProductionSummary();
         fetchFailsAndPauses();
-    }, [fetchProductionSummary, fetchFailsAndPauses]);
+        fetchWeekProduction(formatDate(currentDate));
+        fetchScrapPerEmployee(formatDate(currentDate));
+    }, [fetchProductionSummary, fetchFailsAndPauses, fetchWeekProduction,fetchScrapPerEmployee]);
 
-    const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setDateInput(e.target.value);
+    const handleScrapDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setScrapDateInput(e.target.value);
+    };
+
+    const handleWeekProductionDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setWeekProductionDateInput(e.target.value);
     };
 
     return (
@@ -119,11 +122,23 @@ const DashBoard = () => {
             </div>
             <div className='mt-8 '>
                 <DashboardCard title='Producción semanal' subtitle='Total de piezas producidas' color='bg-green-500'>
-                    <WeekProductionChart />
+                    <div className='flex flex-col items-center justify-center'>
+                        <label htmlFor='weekProductionDate' className='sr-only'>
+                            Fecha
+                        </label>
+                        <input
+                            type='date'
+                            id='weekProductionDate'
+                            value={weekProductionDateInput}
+                            onChange={handleWeekProductionDateInput}
+                            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5'
+                        />
+                    </div>
+                    <WeekProductionChart data={weekProduction} />
                 </DashboardCard>
             </div>
-            <div className=' flex flex-wrap mt-16 w-full'>
-                <DashboardCard title='Pruebas' subtitle='Total de pruebas realizadas' color='bg-yellow-500'>
+            <div className='  mt-16 w-full'>
+                <DashboardCard title='Scrap' subtitle='Total de scrap realizadas' color='bg-yellow-500'>
                     <div>
                         <div className='flex flex-col items-center justify-center'>
                             <label htmlFor='ScrapDate' className='sr-only'>
@@ -132,8 +147,8 @@ const DashBoard = () => {
                             <input
                                 type='date'
                                 id='ScrapDate'
-                                value={dateInput}
-                                onChange={handleDateInput}
+                                value={scrapDateInput}
+                                onChange={handleScrapDateInput}
                                 className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5'
                             />
                         </div>
