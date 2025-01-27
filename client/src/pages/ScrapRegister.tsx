@@ -97,7 +97,7 @@ const ScrapRegister: React.FC = () => {
                     insert: Inserto,
                     gripper: Gripper,
                     metal: Metal,
-                    insertWithoutRubber: ItoSHule,
+                    insertWithoutRubber: ItoSHule ? ItoSHule : '0',
                 },
             }));
         } catch (error) {
@@ -121,13 +121,14 @@ const ScrapRegister: React.FC = () => {
                 const response = await api.get(`/search_weight`, {
                     params: { metal, inserto },
                 });
+                console.log(response.data);
                 const { 'Ito. s/hule': ItoSHule, Chemlok } = response.data;
                 setFormData(prevState => ({
                     ...prevState,
                     inputs: {
                         ...prevState.inputs,
                         insertWithoutRubber: ItoSHule,
-                        chemlok: Chemlok,
+                        chemlok: Chemlok ? Chemlok : '0',
                     },
                 }));
             } else {
@@ -141,7 +142,7 @@ const ScrapRegister: React.FC = () => {
                         ...prevState.inputs,
                         insertWithoutRubber: ItoSHule,
                         gripperWithoutRubber: GripsHule,
-                        chemlok: Chemlok,
+                        chemlok: Chemlok ? Chemlok : '0',
                     },
                 }));
             }

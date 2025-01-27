@@ -40,7 +40,7 @@ def search_in_part_number(request):
 
     if insert is not None and caliber is not None:
         try:
-            insert_record = Insert.objects.get(insert=insert, caliber=caliber)
+            insert_record = Insert.objects.filter(insert=insert, caliber=caliber).order_by("id").first()
             weight = getattr(insert_record, "weight", None)
         except Insert.DoesNotExist:
             print("Insert record not found")
@@ -79,9 +79,14 @@ def search_weight(request):
     }
 
     if chemlok:
-        chemlok_record = get_object_or_404(Insert, chemlok=chemlok)
-        chemlok_weight = getattr(chemlok_record, "weight", None)
-        response_data["Chemlok"] = chemlok_weight
+        chemlok_record = (
+            Insert.objects.filter(chemlok=chemlok, caliber=metal, insert=insert)
+            .order_by("id")
+            .first()
+        ) 
+        if chemlok_record:
+            chemlok_weight = getattr(chemlok_record, "chemlok", None)
+            response_data["Chemlok"] = chemlok_weight
 
     if gripper:
         gripper_record = get_object_or_404(Insert, insert=gripper)
@@ -169,7 +174,7 @@ def register_scrap(request):
             caliber=metal,
             rubber_weight=rubber_weight,
             insert_weight_w_rubber=insert_with_rubber,
-            chemlok_x_insert_w_rubber=chemlok_x_inserts,
+            chemlok_x_insert_w_rubber=chemlok_x_inserts or 0,
             gripper_weight_w_rubber=gripper_with_rubber,
             insert_weight_wout_rubber=insert_without_rubber,
             gripper_weight_wout_rubber=gripper_without_rubber,

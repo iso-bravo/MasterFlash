@@ -94,7 +94,12 @@ def generate_inserts_report(request):
             for item in data
         )
 
-        chemlok_sum = sum(item["chemlok_x_insert_w_rubber"] for item in data)
+        chemlok_sum = sum(
+            item["chemlok_x_insert_w_rubber"]
+            if item["chemlok_x_insert_w_rubber"] is not None
+            else 0
+            for item in data
+        )
 
         total_inserts_weight_lbs = sum(
             item["total_inserts_weight_lbs"] for item in data

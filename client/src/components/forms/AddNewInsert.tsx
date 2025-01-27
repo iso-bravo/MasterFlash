@@ -67,7 +67,7 @@ const AddNewInsert: React.FC<AddNewInsertProps> = ({ onClose, onSubmit }) => {
                     <input
                         type='number'
                         min={0}
-                        step={0.001}
+                        step={0.000001}
                         {...register('chemlok', { required: true })}
                         className='w-full p-2 border rounded'
                         placeholder='Chemlok'
