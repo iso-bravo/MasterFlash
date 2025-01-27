@@ -25,6 +25,7 @@ import EmailConfig from './pages/EmailConfig';
 import ParamsSummary from './pages/ParamsSummary';
 import IndividualParam from './pages/IndividualParam';
 import InsertsCatalogue from './pages/InsertsCatalogue';
+import DashBoard from './pages/DashBoard';
 
 function App() {
     return (
@@ -55,6 +56,7 @@ function App() {
                 <Route path='/config' element={<ConfigMenu />} />
                 <Route path='/set_shift' element={<ShiftConfig />} />
                 <Route path='/set_email' element={<EmailConfig />} />
+                <Route path='/dashboard' element={<DashBoard />} />
             </Routes>
         </Router>
     );
