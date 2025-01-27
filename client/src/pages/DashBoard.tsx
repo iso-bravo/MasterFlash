@@ -21,7 +21,7 @@ const DashBoard = () => {
     const [weekProduction, setWeekProduction] = useState<WeekProduction[]>([]);
 
     //! change this to the current date
-    const currentDate = new Date('August 2024');
+    const currentDate = new Date();
     const month = currentDate.getMonth() + 1;
     const year = currentDate.getFullYear();
 
@@ -42,7 +42,6 @@ const DashBoard = () => {
 
     const fetchProductionSummary = useCallback(async () => {
         try {
-            // * For testing use month=8 and year=2024
             const response = await api.get(`/dashboard/production/?month=${month}&year=${year}`);
             const productionData: string =
                 response.data['pieces_ok_total'] + '/' + response.data['target_amount'] + ' piezas';
@@ -64,7 +63,6 @@ const DashBoard = () => {
 
     const fetchScrapPerEmployee = useCallback(async (date: string) => {
         try {
-            //* use 09/09/2024 for testing
             const response = await api.get(`/dashboard/scrap-per-employee/?date=${date}`);
             console.log(response.data);
             setScrapResults(response.data);
@@ -105,7 +103,7 @@ const DashBoard = () => {
                     data={productionSummary}
                     icon={<LuGoal size={30} />}
                     color='bg-orange-500'
-                    title='Producción'
+                    title='Meta mensual'
                 />
                 <DashBoardContainer
                     data={pauses}
