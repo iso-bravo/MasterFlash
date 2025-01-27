@@ -76,7 +76,7 @@ def send_production_data():
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
     )
 
-    # 'total_pieces and 'porcentage' calculation
+    # 'total_pieces and 'percentage' calculation
     year = current_date.year
     month = current_date.month
 

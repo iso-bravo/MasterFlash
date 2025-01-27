@@ -1,4 +1,6 @@
 from django.urls import path
+
+from .views.dashboard_views import get_week_production, mps_fails_and_pauses, production_summary, scrap_per_employee
 from .views.configs_views import get_shift_schedule, update_shift_schedule, email_config
 from .views.params_register_views import (
     save_params,
@@ -186,4 +188,10 @@ urlpatterns = [
     path("inserts/<int:id>/", get_insert_by_id, name="get_insert_by_id"),
     path("inserts/new/", post_insert, name="post_insert"),
     path("inserts/<int:id>/update/", update_insert, name="update_insert"),
+    path("dashboard/production/", production_summary, name="production_summary"),
+    path("dashboard/mps-fails-and-pauses/", mps_fails_and_pauses, name="mps_fails_and_pauses"),
+    path("dashboard/scrap-per-employee/", scrap_per_employee, name="scrap_per_employee"),
+    path("dashboard/week-production/", get_week_production, name="get_week_production"),
+
 ]
+

@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import MonthlyGoalModal from '../components/MonthlyGoalModal';
 import { toast, ToastContainer } from 'react-toastify';
 import { getErrorMessage } from '../utils/utils';
-import { PartNumberFormValues } from '../types/PartNumsRegisterTypes';
 
 interface MachineData {
     name: string;
@@ -75,7 +74,7 @@ const PressesProduction: React.FC = () => {
             } else {
                 console.error('WebSocket connection closed with error');
             }
-            console.log('WebSocket clsoed: ', event);
+            console.log('WebSocket closed: ', event);
         };
 
         return () => {
