@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from django.http import JsonResponse
 from ..models import (
-    LinePress,
     Presses_monthly_goals,
     ProductionPress,
     Qc_Scrap,
@@ -208,3 +207,47 @@ def get_week_production(request):
         return JsonResponse(response_data, safe=False)
 
     return JsonResponse({"error": "Only GET method is allowed."}, status=405)
+
+
+@csrf_exempt
+def get_anual_production(request):
+    if request.method == "GET":
+        year = request.GET.get("year")
+        if not year:
+            return JsonResponse(
+                {"error": "Se requiere el parámetro 'year'."}, status=400
+            )
+        try:
+            monthly_goals = Presses_monthly_goals.objects.filter(year=year)
+            goals_dict = {goal.month: goal.target_amount for goal in monthly_goals}
+
+            production_data = (
+                ProductionPress.objects.filter(date_time__year=year)
+                .values("date_time__month")
+                .annotate(pieces_ok=Sum("pieces_ok"))
+                .order_by("date_time__month")
+            )
+
+            response_data = []
+            for month in range(1, 13):
+                response_data.append(
+                    {
+                        "month": month,
+                        "goal": goals_dict.get(month, 0),
+                        "pieces_ok": next(
+                            (
+                                p["pieces_ok"]
+                                for p in production_data
+                                if p["date_time__month"] == month
+                            ),
+                            0,
+                        ),
+                    }
+                )
+
+            return JsonResponse(response_data, safe=False)
+
+        except ValueError:
+            return JsonResponse(
+                {"error": "El parámetro 'year' debe ser un número entero."}, status=400
+            )
