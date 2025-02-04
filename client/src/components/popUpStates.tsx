@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { ChangeEvent, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { IoIosFlashOff, IoIosWarning } from "react-icons/io";

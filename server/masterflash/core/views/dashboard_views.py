@@ -151,12 +151,25 @@ def scrap_per_employee(request):
             )
         )
 
+        general_total = 0
+
         data = []
         for result in results:
             cleaned_result = {k: v for k, v in result.items() if v is not None}
+
+            employee_total = sum(
+                v for k, v in cleaned_result.items() if k != "molder_number"
+            )
+
+            cleaned_result["total"] = employee_total
+
+            general_total += employee_total
+
             data.append(cleaned_result)
 
-        return JsonResponse(data, safe=False)
+        response = {"data": data, "general_total": general_total}
+
+        return JsonResponse(response, safe=False)
 
     return JsonResponse({"error": "Only GET method is allowed."}, status=405)
 
@@ -200,7 +213,7 @@ def get_week_production(request):
                 production_by_day[day_name] += record.pieces_ok or 0
 
         response_data = [
-            {"day": day, "pieces_ok": pieces_ok}
+            {"day": day, "Producción": pieces_ok}
             for day, pieces_ok in production_by_day.items()
         ]
 
@@ -233,8 +246,8 @@ def get_anual_production(request):
                 response_data.append(
                     {
                         "month": month,
-                        "goal": goals_dict.get(month, 0),
-                        "pieces_ok": next(
+                        "Goal": goals_dict.get(month, 0),
+                        "Producción": next(
                             (
                                 p["pieces_ok"]
                                 for p in production_data
