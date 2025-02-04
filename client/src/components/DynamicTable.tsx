@@ -1,50 +1,30 @@
 import { useEffect, useState } from 'react';
-
-interface scrapData {
-    molder_number: string;
-    CS?: number;
-    CROP?: number;
-    DP?: number;
-    DI?: number;
-    F?: number;
-    FC?: number;
-    FPO?: number;
-    GA?: number;
-    GM?: number;
-    H?: number;
-    IM?: number;
-    IMC?: number;
-    IR: number;
-    M?: number;
-    MR?: number;
-    R?: number;
-    SG?: number;
-    SI?: number;
-}
+import { ScrapData, TotalScrapData } from '../types/DashBoardTypes';
 
 interface DynamicTableProps {
-    data: scrapData[];
+    incoming_data: TotalScrapData;
 }
 
-const DynamicTable: React.FC<DynamicTableProps> = ({ data }) => {
-    const [columns, setColumns] = useState<(keyof scrapData)[]>([]);
+const DynamicTable: React.FC<DynamicTableProps> = ({ incoming_data }) => {
+    const [columns, setColumns] = useState<(keyof ScrapData)[]>([]);
 
-    const extractColumns = (data: scrapData[]) => {
+    const extractColumns = (data: ScrapData[]) => {
         if (!data || data.length === 0) return [];
 
-        const allKeys = Array.from(new Set(data.flatMap(row => Object.keys(row)))) as (keyof scrapData)[];
+        const allKeys = Array.from(new Set(data.flatMap(row => Object.keys(row)))) as (keyof ScrapData)[];
 
-        return allKeys.filter(key => data.some(row => row[key] != null));
+        // Removemos "total" y lo agregamos al final
+        return [...allKeys.filter(key => key !== 'total'),'total' as keyof ScrapData];
     };
 
     useEffect(() => {
-        const dynamicColumns = extractColumns(data);
+        const dynamicColumns = extractColumns(incoming_data.data);
         setColumns(dynamicColumns);
-    }, [data]);
+    }, [incoming_data]);
 
     return (
         <div className='relative overflow-x-auto shadow-md sm:rounded-lg'>
-            <table className='w-full text-sm text-left text-gray-500'>
+            <table className='w-full text-sm text-left text-gray-800'>
                 <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
                     <tr>
                         {columns.map(column => (
@@ -55,7 +35,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ data }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((row, index) => (
+                    {incoming_data.data.map((row, index) => (
                         <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b`}>
                             {columns.map(column => (
                                 <td key={column as string} className='px-6 py-4'>
@@ -64,6 +44,12 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ data }) => {
                             ))}
                         </tr>
                     ))}
+                    <tr className='bg-gray-200 font-semibold'>
+                        <td colSpan={columns.length - 1} className='px-6 py-4 text-right'>
+                            General Total:
+                        </td>
+                        <td className='px-6 py-4'>{incoming_data.general_total}</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
