@@ -26,6 +26,7 @@ import ParamsSummary from './pages/ParamsSummary';
 import IndividualParam from './pages/IndividualParam';
 import InsertsCatalogue from './pages/InsertsCatalogue';
 import DashBoard from './pages/DashBoard';
+import ProductionPage from './pages/ProductionPage';
 
 function App() {
     return (
@@ -33,6 +34,7 @@ function App() {
             <Routes>
                 <Route path='/presses_states' element={<PressesStates />} />
                 <Route path='/presses_production' element={<PressesProduction />} />
+                <Route path='/presses_production/machine/:machineName' element={<ProductionPage />} />
                 <Route path='/' element={<Quality />} />
                 <Route path='/scrap_register' element={<ScrapRegister />} />
                 <Route path='/scrap_register_test' element={<ScrapRegisterTest />} />
