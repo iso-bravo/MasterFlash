@@ -18,6 +18,7 @@ const PressesProduction: React.FC = () => {
     const [productionTotal, setProductionTotal] = useState<number | null>(null);
     const navigate = useNavigate();
 
+    //TODO Check this function/socket,No caliber is being sent 
     useEffect(() => {
         const socket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_BASE_URL}/ws/load_machine_data_production/`);
 

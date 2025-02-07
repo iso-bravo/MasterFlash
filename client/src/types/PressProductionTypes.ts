@@ -4,6 +4,7 @@ export interface MachineData {
     employee_number: string;
     pieces_ok: number;
     pieces_rework: number;
+    caliber: number;
     part_number: string;
     work_order: string;
     total_ok: number;
@@ -14,6 +15,7 @@ export interface MachineData {
 
 export interface FormMachineData {
     employeeNumber: string;
+    caliber: number;
     piecesOK: number;
     piecesRework: number;
     partNumber: string;
@@ -21,4 +23,9 @@ export interface FormMachineData {
     molderNumber: string;
     relay: boolean;
     relayNumber?: string;
+}
+
+export interface ProductionPerDay{
+    part_number: string;
+    total_pieces_ok: number
 }

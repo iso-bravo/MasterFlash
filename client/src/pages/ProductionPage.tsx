@@ -1,10 +1,11 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
-import { FormMachineData, MachineData } from '../types/PressProductionTypes';
+import { FormMachineData, MachineData, ProductionPerDay } from '../types/PressProductionTypes';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
 import { toast, ToastContainer } from 'react-toastify';
+import ProductionPerDayTable from '../components/ProductionPerDayTable';
 
 const ProductionPage = () => {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ const ProductionPage = () => {
         defaultValues: {
             employeeNumber: '',
             partNumber: '',
+            caliber: 0,
             piecesOK: 0,
             piecesRework: 0,
             workOrder: '',
@@ -29,13 +31,14 @@ const ProductionPage = () => {
     const workOrder = watch('workOrder');
     const partNumber = watch('partNumber');
 
+    const [production_per_day, setProduction_per_day] = useState<ProductionPerDay[]>([]);
     const [initialLoad, setInitialLoad] = useState(true);
     useEffect(() => {
         reset({
             employeeNumber: machineData?.employee_number,
             partNumber: machineData?.part_number,
+            caliber: machineData?.caliber,
             piecesOK: machineData?.pieces_ok,
-            piecesRework: machineData?.pieces_rework,
             workOrder: machineData?.work_order,
             molderNumber: machineData?.molder_number,
             relay: false,
@@ -43,6 +46,19 @@ const ProductionPage = () => {
         });
         setInitialLoad(false);
     }, [machineData, reset]);
+
+    useEffect(() => {
+        const fetch_production_per_day = async () => {
+            try {
+                const response = await api.get(`/get_todays_machine_production/?mp=${machineData?.name}`);
+                console.log(response.data);
+                setProduction_per_day(response.data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetch_production_per_day();
+    }, [machineData?.name]);
 
     useEffect(() => {
         if (!initialLoad && (partNumber !== machineData?.part_number || workOrder !== machineData.work_order)) {
@@ -69,6 +85,7 @@ const ProductionPage = () => {
             pieces_rework: Number(data.piecesRework) ?? machineData.pieces_rework,
             part_number: data.partNumber || machineData.part_number,
             work_order: data.workOrder || machineData.work_order,
+            caliber: data.caliber || machineData.caliber,
             molder_number: molderNumberToSave,
             is_relay: isRelay,
             previous_molder_number: previousMolderNumber,
@@ -95,7 +112,7 @@ const ProductionPage = () => {
     }
 
     return (
-        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen '>
+        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden'>
             <ToastContainer />
             <Header title={`Producción - ${machineName}`} goto='/presses_production' />
             <section className='flex flex-col justify-evenly items-center'>
@@ -121,6 +138,7 @@ const ProductionPage = () => {
                 {[
                     { label: 'Orden de Trabajo', name: 'workOrder', placeholder: machineData.work_order ?? '' },
                     { label: 'Número de Parte', name: 'partNumber', placeholder: machineData.part_number ?? '' },
+                    { label: 'Calibre', name: 'caliber', placeholder: machineData.caliber ?? '' },
                     {
                         label: 'Empacador',
                         name: 'employeeNumber',
@@ -175,6 +193,8 @@ const ProductionPage = () => {
                         min='0'
                     />
                 </div>
+
+                <ProductionPerDayTable data={production_per_day} />
 
                 <button
                     type='submit'

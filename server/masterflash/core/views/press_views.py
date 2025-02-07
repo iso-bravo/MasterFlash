@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
 import json
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from ..models import (
     LinePress,
@@ -362,6 +362,7 @@ def register_data_production(request):
     # Asigna los valores directamente desde el request
     employeeNumber = data.get("employee_number")
     partNumber = data.get("part_number")
+    caliber = data.get("caliber")
     molderNumber = data.get("molder_number")
     workOrder = data.get("work_order")
     previousMolderNumber = data.get("previous_molder_number")
@@ -392,6 +393,7 @@ def register_data_production(request):
         pieces_scrap=0,
         pieces_rework=piecesRework,
         part_number=partNumber,
+        caliber=caliber,
         work_order=workOrder,
         molder_number=molderNumber,
         press=data.get("name"),
@@ -527,6 +529,7 @@ def presses_general_failure(request):
 
     return JsonResponse({"message": "General Failure Success."}, status=201)
 
+
 @csrf_exempt
 @require_http_methods(["POST", "PUT"])
 def post_or_put_monthly_goal(request):
@@ -619,6 +622,7 @@ def get_presses_production_percentage(request, year, month):
     except Presses_monthly_goals.DoesNotExist:
         return HttpResponse(status=404)
 
+
 @csrf_exempt
 @require_http_methods(["PATCH"])
 def update_pieces_ok(request, id):
@@ -638,3 +642,27 @@ def update_pieces_ok(request, id):
     except Exception as e:
         print("Error: ", e)
         return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+def get_todays_machine_production(request):
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    else:
+        machine = request.GET.get("mp")
+        if not machine:
+            return JsonResponse({"error": "Missing machine parameter"}, status=400)
+
+        try:
+            production_data = (
+                ProductionPress.objects.filter(
+                    press=machine, date_time__date=date.today()
+                )
+                .values("part_number")
+                .annotate(total_pieces_ok=Sum("pieces_ok"))
+            )
+            print(production_data)
+
+            return JsonResponse(list(production_data), safe=False)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

@@ -59,6 +59,7 @@ class ProductionPress(models.Model):
     shift = models.CharField(default="", max_length=50)
     molder_number = models.IntegerField(default=None, null=True, blank=True)
     relay = models.BooleanField(default=False)
+    caliber = models.FloatField(null=True, blank=True)
 
 
 class Insert(models.Model):
