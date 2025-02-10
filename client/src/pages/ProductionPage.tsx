@@ -22,6 +22,8 @@ const ProductionPage = () => {
             piecesRework: 0,
             workOrder: '',
             molderNumber: '',
+            start_date: '',
+            end_date: null,
             relay: false,
             relayNumber: '',
         },
@@ -30,6 +32,7 @@ const ProductionPage = () => {
     const relay = watch('relay');
     const workOrder = watch('workOrder');
     const partNumber = watch('partNumber');
+    const endDateChecked = watch('end_date');
 
     const [production_per_day, setProduction_per_day] = useState<ProductionPerDay[]>([]);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -41,6 +44,7 @@ const ProductionPage = () => {
             piecesOK: machineData?.pieces_ok,
             workOrder: machineData?.work_order,
             molderNumber: machineData?.molder_number,
+            start_date: machineData?.start_date,
             relay: false,
             relayNumber: '',
         });
@@ -78,6 +82,8 @@ const ProductionPage = () => {
         const previousMolderNumber = isRelay ? machineData.molder_number : null;
         const molderNumberToSave = data.relayNumber || data.molderNumber || machineData.molder_number;
 
+        const finalEndDate = data.end_date ? new Date().toISOString() : machineData.end_date;
+
         const updatedMachine: MachineData = {
             ...machineData,
             employee_number: data.employeeNumber || machineData.employee_number,
@@ -87,6 +93,8 @@ const ProductionPage = () => {
             work_order: data.workOrder || machineData.work_order,
             caliber: data.caliber || machineData.caliber,
             molder_number: molderNumberToSave,
+            start_date: data.start_date || machineData.start_date,
+            end_date: finalEndDate,
             is_relay: isRelay,
             previous_molder_number: previousMolderNumber,
         };
@@ -140,6 +148,12 @@ const ProductionPage = () => {
                     { label: 'Número de Parte', name: 'partNumber', placeholder: machineData.part_number ?? '' },
                     { label: 'Calibre', name: 'caliber', placeholder: machineData.caliber ?? '' },
                     {
+                        label: 'Hora de inicio',
+                        name: 'start_date',
+                        placeholder: machineData.start_date ?? '',
+                        type: 'datetime-local',
+                    },
+                    {
                         label: 'Empacador',
                         name: 'employeeNumber',
                         placeholder: machineData.employee_number ?? '',
@@ -176,6 +190,25 @@ const ProductionPage = () => {
                         />
                     </div>
                 ))}
+                <div className='flex flex-col justify-evenly items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5'>
+                    <label className='text-xl w-11/12 md:w-1/2'>Último registro? </label>
+                    <label className='inline-flex items-center cursor-pointer'>
+                        <input
+                            type='checkbox'
+                            className='sr-only peer'
+                            checked={!!endDateChecked}
+                            onChange={() => {
+                                if (!endDateChecked) {
+                                    setValue('end_date', new Date().toISOString());
+                                } else {
+                                    setValue('end_date', null);
+                                }
+                            }}
+                        />
+                        <div className="relative w-11 h-6 bg-gray-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span className='ms-3 text-sm font-medium text-gray-900'>{endDateChecked ? 'Sí' : 'No'}</span>
+                    </label>
+                </div>
                 <div
                     className={`flex flex-col justify-center items-center sm:flex-row md:flex-row gap-y-4 md:gap-x-5 
                 ${relay ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}

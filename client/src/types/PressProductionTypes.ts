@@ -9,6 +9,8 @@ export interface MachineData {
     work_order: string;
     total_ok: number;
     molder_number: string;
+    start_date: string;
+    end_date: string | null;
     is_relay: boolean;
     previous_molder_number: string | null;
 }
@@ -21,6 +23,8 @@ export interface FormMachineData {
     partNumber: string;
     workOrder: string;
     molderNumber: string;
+    start_date: string;
+    end_date: string | null;
     relay: boolean;
     relayNumber?: string;
 }

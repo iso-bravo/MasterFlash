@@ -46,6 +46,16 @@ class StateBarwell(models.Model):
     employee_number = models.IntegerField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
 
+class WorkedHours(models.Model):
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    
+    @property
+    def duration(self):
+        """Calcula la duración(horas trabajadas) si se tiene hora de inicio y fin"""
+        if self.start_time and self.end_time:
+            return self.end_time - self.start_time
+        return None
 
 class ProductionPress(models.Model):
     press = models.CharField(default=None, max_length=50)
@@ -60,6 +70,13 @@ class ProductionPress(models.Model):
     molder_number = models.IntegerField(default=None, null=True, blank=True)
     relay = models.BooleanField(default=False)
     caliber = models.FloatField(null=True, blank=True)
+    
+    worked_hours = models.ForeignKey(
+        WorkedHours,
+        #! si se borra un workedHours, se borran TODAS las producciones asociadas
+        on_delete=models.CASCADE,
+        related_name='productions'
+    )
 
 
 class Insert(models.Model):
