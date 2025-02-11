@@ -10,6 +10,7 @@ from ..models import (
     StateBarwell,
     StatePress,
     StateTroquelado,
+    WorkedHours,
 )
 from ..utils import set_shift, sum_pieces
 from django.conf import settings
@@ -358,6 +359,18 @@ def register_data_production(request):
 
     if not Part_Number.objects.filter(part_number=data.get("part_number")).exists():
         return JsonResponse({"message": "Número de parte no existe"}, status=404)
+    
+    worked_hours_id = data.get("worked_hours_id")
+    if worked_hours_id:
+        try:
+            worked_hours = WorkedHours.objects.get(id=worked_hours_id)
+        except WorkedHours.DoesNotExist:
+            return JsonResponse({"error": "Horas trabajadas no encontradas"}, status=404)
+    else:
+        worked_hours = WorkedHours.objects.create(
+            start_time=data.get("start_time"),
+            end_time=data.get("end_time"),
+        )
 
     # Asigna los valores directamente desde el request
     employeeNumber = data.get("employee_number")
@@ -399,6 +412,7 @@ def register_data_production(request):
         press=data.get("name"),
         shift=shift,
         relay=relay,
+        worked_hours=worked_hours,
     )
 
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
@@ -666,3 +680,12 @@ def get_todays_machine_production(request):
             return JsonResponse(list(production_data), safe=False)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def get_worked_hours_by_id(request, id):
+    try:
+        worked_hours = WorkedHours.objects.get(id=id)
+        return JsonResponse({"worked_hours": worked_hours.duration()}, safe=False)
+    except WorkedHours.DoesNotExist:
+        return HttpResponse(status=404)

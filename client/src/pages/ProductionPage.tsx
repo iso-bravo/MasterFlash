@@ -22,8 +22,8 @@ const ProductionPage = () => {
             piecesRework: 0,
             workOrder: '',
             molderNumber: '',
-            start_date: '',
-            end_date: null,
+            start_time: '',
+            end_time: null,
             relay: false,
             relayNumber: '',
         },
@@ -32,7 +32,7 @@ const ProductionPage = () => {
     const relay = watch('relay');
     const workOrder = watch('workOrder');
     const partNumber = watch('partNumber');
-    const endDateChecked = watch('end_date');
+    const endDateChecked = watch('end_time');
 
     const [production_per_day, setProduction_per_day] = useState<ProductionPerDay[]>([]);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -44,7 +44,7 @@ const ProductionPage = () => {
             piecesOK: machineData?.pieces_ok,
             workOrder: machineData?.work_order,
             molderNumber: machineData?.molder_number,
-            start_date: machineData?.start_date,
+            start_time: machineData?.start_time ? machineData.start_time.split('+')[0] : '',
             relay: false,
             relayNumber: '',
         });
@@ -82,7 +82,7 @@ const ProductionPage = () => {
         const previousMolderNumber = isRelay ? machineData.molder_number : null;
         const molderNumberToSave = data.relayNumber || data.molderNumber || machineData.molder_number;
 
-        const finalEndDate = data.end_date ? new Date().toISOString() : machineData.end_date;
+        const finalEndDate = data.end_time ? new Date().toISOString() : machineData.end_time;
 
         const updatedMachine: MachineData = {
             ...machineData,
@@ -93,8 +93,8 @@ const ProductionPage = () => {
             work_order: data.workOrder || machineData.work_order,
             caliber: data.caliber || machineData.caliber,
             molder_number: molderNumberToSave,
-            start_date: data.start_date || machineData.start_date,
-            end_date: finalEndDate,
+            start_time: data.start_time || machineData.start_time,
+            end_time: finalEndDate,
             is_relay: isRelay,
             previous_molder_number: previousMolderNumber,
         };
@@ -149,8 +149,8 @@ const ProductionPage = () => {
                     { label: 'Calibre', name: 'caliber', placeholder: machineData.caliber ?? '' },
                     {
                         label: 'Hora de inicio',
-                        name: 'start_date',
-                        placeholder: machineData.start_date ?? '',
+                        name: 'start_time',
+                        placeholder: machineData.start_time ? new Date(machineData.start_time).toLocaleString() : '',
                         type: 'datetime-local',
                     },
                     {
@@ -199,9 +199,9 @@ const ProductionPage = () => {
                             checked={!!endDateChecked}
                             onChange={() => {
                                 if (!endDateChecked) {
-                                    setValue('end_date', new Date().toISOString());
+                                    setValue('end_time', new Date().toISOString());
                                 } else {
-                                    setValue('end_date', null);
+                                    setValue('end_time', null);
                                 }
                             }}
                         />
