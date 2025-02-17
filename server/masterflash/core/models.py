@@ -48,6 +48,16 @@ class StateBarwell(models.Model):
 
 
 class WorkedHours(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["press"],
+                condition=models.Q(end_time__isnull=True),
+                name="Unique_open_worked_hours_per_press",
+            )
+        ]
+
+    press = models.CharField(default=None, max_length=50)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
 

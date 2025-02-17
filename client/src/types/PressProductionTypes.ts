@@ -11,6 +11,7 @@ export interface MachineData {
     molder_number: string;
     start_time: string;
     end_time: string | null;
+    worked_hours_id: number | null;
     is_relay: boolean;
     previous_molder_number: string | null;
 }
@@ -25,11 +26,17 @@ export interface FormMachineData {
     molderNumber: string;
     start_time: string;
     end_time: string | null;
+    worked_hours_id: number | null;
     relay: boolean;
     relayNumber?: string;
 }
 
-export interface ProductionPerDay{
+export interface WorkedHours{
+    duration?: number;
+    start_time?: string;
+}
+
+export interface ProductionPerDay {
     part_number: string;
-    total_pieces_ok: number
+    total_pieces_ok: number;
 }

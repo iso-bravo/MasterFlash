@@ -152,11 +152,15 @@ def send_production_data():
 
         worked_hours_entry = (
             WorkedHours.objects.filter(
-                start_time__date=current_date, start_time__lte=datetime.now()
+                press=machine.name,
+                end_time__isnull=True,
+                start_time__date=current_date,
+                start_time__lte=datetime.now(),
             )
             .order_by("-start_time")
             .first()
         )
+
         start_time = worked_hours_entry.start_time if worked_hours_entry else None
 
         if shift == "First":
@@ -206,6 +210,16 @@ def send_production_data():
             previous_molder_number.decode("utf-8") if previous_molder_number else "----"
         )
 
+        redis_client = redis.StrictRedis(
+            host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
+        )
+
+        worked_hours_id = (
+            redis_client.get(f"worked_hours_id_{machine.name}").decode("utf-8")
+            if redis_client.exists(f"worked_hours_id_{machine.name}")
+            else (worked_hours_entry.pk if worked_hours_entry else None)
+        )
+
         machine_data = {
             "name": machine.name,
             "state": machine_state,
@@ -219,6 +233,7 @@ def send_production_data():
             "previous_molder_number": previous_molder_number,
             "caliber": caliber,
             "start_time": start_time.isoformat() if start_time else None,
+            "worked_hours_id": worked_hours_id,
         }
         total_piecesProduced += total_ok
         machines_data.append(machine_data)
