@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
 import { toast, ToastContainer } from 'react-toastify';
 import ProductionPerDayTable from '../components/ProductionPerDayTable';
+import axios from 'axios';
 
 const ProductionPage = () => {
     const navigate = useNavigate();
@@ -39,6 +40,7 @@ const ProductionPage = () => {
 
     useEffect(() => {
         // Reiniciar el  formulario completamente si no hay worked_hours_id
+        console.log('machineData', machineData);
         if (!machineData?.worked_hours_id) {
             reset({
                 employeeNumber: '',
@@ -140,9 +142,14 @@ const ProductionPage = () => {
             console.log(response.data);
             toast.success('Producción guardada con éxito!');
             navigate('/presses_production');
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error al guardar producción:', error);
-            toast.error('Error al guardar producción');
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.message || 'Error desconocido del servidor';
+                toast.error(errorMessage);
+            } else {
+                toast.error('Error al guardar producción');
+            }
         }
     };
 
@@ -154,8 +161,8 @@ const ProductionPage = () => {
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden'>
-            <ToastContainer />
-            <section className='bg-white rounded-lg shadow-md p-6 mb-6'>
+            <ToastContainer position='top-center' theme='colored' />
+            <section className='bg-white rounded-lg shadow-md p-2 mb-2'>
                 <Header title={`Producción - ${machineName}`} goto='/presses_production' />
                 <h1 className='text-3xl font-bold text-center mb-4 text-gray-800'>{machineData.name}</h1>
                 <div className='grid grid-cols-2 gap-4 mb-4'>
@@ -180,7 +187,7 @@ const ProductionPage = () => {
                     </div>
 
                     <div className='flex items-center justify-between bg-gray-50 p-4 rounded-lg'>
-                        <span className='text-lg font-medium text-gray-700'>Finalizar turno</span>
+                        <span className='text-lg font-medium text-gray-700'>Finalizar </span>
                         <label className='inline-flex items-center cursor-pointer'>
                             <input
                                 type='checkbox'
@@ -206,15 +213,6 @@ const ProductionPage = () => {
                             placeholder: machineData.part_number ?? '',
                             disabled: isFormLocked,
                         },
-                        { label: 'Calibre', name: 'caliber', placeholder: machineData.caliber ?? '' },
-                        {
-                            label: 'Hora de inicio',
-                            name: 'start_time',
-                            placeholder: machineData.start_time
-                                ? new Date(machineData.start_time).toLocaleString()
-                                : '',
-                            type: 'datetime-local',
-                        },
                         {
                             label: 'Empacador',
                             name: 'employeeNumber',
@@ -226,7 +224,9 @@ const ProductionPage = () => {
                             name: 'molderNumber',
                             placeholder: machineData.molder_number ?? '',
                             type: 'number',
+                            disabled: isFormLocked,
                         },
+                        { label: 'Calibre', name: 'caliber', placeholder: machineData.caliber ?? '' },
                         {
                             label: 'Piezas Producidas',
                             name: 'piecesOK',
@@ -234,6 +234,14 @@ const ProductionPage = () => {
                             type: 'number',
                         },
                         { label: 'Piezas Re trabajo', name: 'piecesRework', placeholder: '0', type: 'number' },
+                        {
+                            label: 'Hora de inicio',
+                            name: 'start_time',
+                            placeholder: machineData.start_time
+                                ? new Date(machineData.start_time).toLocaleString()
+                                : '',
+                            type: 'datetime-local',
+                        },
                     ].map(({ label, name, placeholder, type = 'text', disabled }, idx) => (
                         <div key={idx} className='space-y-2'>
                             <label htmlFor={`${name}Input`} className='block text-sm font-medium text-gray-700'>

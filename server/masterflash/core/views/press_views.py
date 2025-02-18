@@ -345,7 +345,7 @@ def register_data_production(request):
 
     data = json.loads(request.body.decode("utf-8"))
     logger.error(f"Data received: {data}")
-    
+
     redis_client = redis.StrictRedis(
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
     )
@@ -363,57 +363,67 @@ def register_data_production(request):
 
     if not Part_Number.objects.filter(part_number=data.get("part_number")).exists():
         return JsonResponse({"message": "Número de parte no existe"}, status=404)
-    
+
     press_name = data.get("name")
     worked_hours_id = data.get("worked_hours_id")
     previousMolderNumber = data.get("previous_molder_number")
     relay = data.get("is_relay")
+    start_time = data.get("start_time")
+    end_time = data.get("end_time")
+
+    if end_time and end_time < start_time:
+        return JsonResponse(
+            {"message": "La hora de finalización no puede ser anterior a la de inicio"},
+            status=400,
+        )
 
     previous_worked_hours_id = redis_client.get(
         f"previous_worked_hours_id_{press_name}"
     )
 
-    # TODO Asegurarse de que si se guarde el previous_molder_number y que se pueda usar
     if relay and previousMolderNumber:
         redis_client.set(
             f"previous_molder_number_{data.get('name')}", previousMolderNumber
         )
 
-    
     if relay:
         try:
-            redis_client.set(
-                f"previous_worked_hours_id_{press_name}", worked_hours_id
-            )
+            redis_client.set(f"previous_worked_hours_id_{press_name}", worked_hours_id)
             worked_hours = WorkedHours.objects.create(
                 press=press_name,
-                start_time= data.get("start_time"),
-                end_time= data.get("end_time"),
+                start_time=start_time,
+                end_time=end_time,
             )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-    
+
     elif worked_hours_id:
         try:
-            worked_hours = WorkedHours.objects.get(id=worked_hours_id,press=press_name)
+            worked_hours = WorkedHours.objects.get(id=worked_hours_id, press=press_name)
         except WorkedHours.DoesNotExist:
-            return JsonResponse({"error": "Horas trabajadas no encontradas"}, status=404)
-    
+            return JsonResponse(
+                {"error": "Horas trabajadas no encontradas"}, status=404
+            )
+
     elif previous_worked_hours_id:
         try:
-            worked_hours = WorkedHours.objects.get(id=previous_worked_hours_id, press=press_name)
+            worked_hours = WorkedHours.objects.get(
+                id=previous_worked_hours_id, press=press_name
+            )
             redis_client.delete(f"previous_worked_hours_id_{press_name}")
         except WorkedHours.DoesNotExist:
-            return JsonResponse({"error": "Horas trabajadas no encontradas"}, status=404)
+            return JsonResponse(
+                {"error": "Horas trabajadas no encontradas"}, status=404
+            )
     else:
         worked_hours = WorkedHours.objects.create(
             press=press_name,
-            start_time=data.get("start_time"),
-            end_time=data.get("end_time"),
+            start_time=start_time,
+            end_time=end_time,
         )
-    
-    if data.get("end_time"):
-        worked_hours.end_time = data.get("end_time")
+
+    if end_time:
+        worked_hours.end_time = end_time
         worked_hours.save()
 
     # Asigna los valores directamente desde el request
@@ -422,7 +432,6 @@ def register_data_production(request):
     caliber = data.get("caliber")
     molderNumber = data.get("molder_number")
     workOrder = data.get("work_order")
-    
 
     piecesOk = data.get("pieces_ok") or 0
     piecesRework = data.get("pieces_rework") or 0
