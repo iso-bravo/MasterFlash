@@ -44,6 +44,7 @@ from .views.scrap_views import (
 from .views.press_views import (
     arduino_data,
     client_data,
+    get_todays_machine_production,
     load_machine_data,
     register_data_production,
     load_machine_data_production,
@@ -77,6 +78,7 @@ urlpatterns = [
         register_data_production,
         name="register_data_production",
     ),
+    path("get_todays_machine_production/", get_todays_machine_production, name="get_todays_machine_production"),
     path(
         "presses_general_pause/",
         presses_general_pause,
