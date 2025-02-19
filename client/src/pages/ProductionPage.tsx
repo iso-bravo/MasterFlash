@@ -100,7 +100,7 @@ const ProductionPage = () => {
 
         const isRelay = !!data.relayNumber;
         const previousMolderNumber = isRelay ? machineData.molder_number : null;
-        const molderNumberToSave = data.relayNumber || data.molderNumber || machineData.molder_number;
+        const molderNumberToSave = data.relayNumber || data.molderNumber;
 
         if (data.relay && !data.relayNumber) {
             toast.error('Debe ingresar el número del relevo');
@@ -162,18 +162,12 @@ const ProductionPage = () => {
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden'>
             <ToastContainer position='top-center' theme='colored' />
-            <section className='bg-white rounded-lg shadow-md p-2 mb-2'>
+            <section className='bg-white rounded-lg shadow-md p-2 mb-2 flex justify-between items-center'>
                 <Header title={`Producción - ${machineName}`} goto='/presses_production' />
-                <h1 className='text-3xl font-bold text-center mb-4 text-gray-800'>{machineData.name}</h1>
-                <div className='grid grid-cols-2 gap-4 mb-4'>
-                    <div className='bg-blue-50 p-4 rounded-lg'>
-                        <p className='text-lg font-semibold text-blue-800'>Piezas producidas</p>
-                        <p className='text-2xl font-bold text-blue-600'>{machineData.pieces_ok}</p>
-                    </div>
-                    <div className='bg-orange-50 p-4 rounded-lg'>
-                        <p className='text-lg font-semibold text-orange-800'>Piezas re trabajo</p>
-                        <p className='text-2xl font-bold text-orange-600'>{machineData.pieces_rework}</p>
-                    </div>
+                <h1 className='text-3xl font-bold text-gray-800'>{machineData.name}</h1>
+                <div className='bg-blue-50 p-4 rounded-lg'>
+                    <p className='text-lg font-semibold text-blue-800'>Piezas producidas</p>
+                    <p className='text-2xl font-bold text-blue-600'>{machineData.pieces_ok}</p>
                 </div>
             </section>
             <form onSubmit={handleSubmit(handleSave)} className='bg-white rounded-lg shadow-md p-6 space-y-6'>
