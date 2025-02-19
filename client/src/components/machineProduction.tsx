@@ -1,24 +1,14 @@
-import React, { useEffect, useRef } from 'react';
 import { SlEnergy } from 'react-icons/sl';
 import { IoIosFlashOff, IoIosWarning } from 'react-icons/io';
 import { IoPause } from 'react-icons/io5';
+import { MachineData } from '../types/PressProductionTypes';
 
 interface MachineProps {
-    machineData: {
-        name: string;
-        state: string;
-        employee_number: string;
-        pieces_ok: string;
-        pieces_rework: string;
-        part_number: string;
-        total_ok: string;
-        work_order: string;
-    };
+    machineData: MachineData
     onClick: () => void;
-    selectedState: string;
 }
 
-const MachineProduction: React.FC<MachineProps> = ({ machineData, onClick, selectedState }) => {
+const MachineProduction: React.FC<MachineProps> = ({ machineData, onClick}) => {
     let icon;
     let backgroundColorClass;
 

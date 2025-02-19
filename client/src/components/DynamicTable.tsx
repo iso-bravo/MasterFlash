@@ -14,7 +14,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ incoming_data }) => {
         const allKeys = Array.from(new Set(data.flatMap(row => Object.keys(row)))) as (keyof ScrapData)[];
 
         // Removemos "total" y lo agregamos al final
-        return [...allKeys.filter(key => key !== 'total'),'total' as keyof ScrapData];
+        return [...allKeys.filter(key => key !== 'total'), 'total' as keyof ScrapData];
     };
 
     useEffect(() => {
@@ -46,7 +46,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ incoming_data }) => {
                     ))}
                     <tr className='bg-gray-200 font-semibold'>
                         <td colSpan={columns.length - 1} className='px-6 py-4 text-right'>
-                            General Total:
+                            Total general:
                         </td>
                         <td className='px-6 py-4'>{incoming_data.general_total}</td>
                     </tr>
