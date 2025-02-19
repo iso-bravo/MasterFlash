@@ -17,6 +17,7 @@ from django.conf import settings
 import logging
 import redis
 from django.db.models import Q, Sum
+from django.db import transaction
 from django.views.decorators.http import require_http_methods, require_POST
 
 
@@ -425,6 +426,9 @@ def register_data_production(request):
     if end_time:
         worked_hours.end_time = end_time
         worked_hours.save()
+        redis_client.delete(
+            f"previous_molder_number_{data.get('name')}", previousMolderNumber
+        )
 
     # Asigna los valores directamente desde el request
     employeeNumber = data.get("employee_number")
@@ -458,6 +462,8 @@ def register_data_production(request):
         relay=relay,
         worked_hours=worked_hours,
     )
+
+    transaction.commit()
 
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
 
