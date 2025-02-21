@@ -13,7 +13,7 @@ import RubberReport from './pages/RubberReport';
 import ScrapSummary from './pages/ScrapSummary';
 import ParamsRegister from './pages/ParamsRegister';
 import WareHouseShipsHistory from './pages/WareHouseShipsHistory';
-import PartNumCataloge from './pages/PartNumCatalogue';
+import PartNumCatalogue from './pages/PartNumCatalogue';
 import PartNumCreation from './pages/PartNumCreation';
 import ConfigMenu from './pages/ConfigMenu';
 import ShiftConfig from './pages/ShiftConfig';
@@ -53,7 +53,7 @@ function App() {
                 <Route path='/params' element={<ParamsSummary />} />
                 <Route path='params_details' element={<IndividualParam />} />
                 <Route path='/params_register' element={<ParamsRegister />} />
-                <Route path='/part_num' element={<PartNumCataloge />} />
+                <Route path='/part_num' element={<PartNumCatalogue />} />
                 <Route path='/part_num_creation' element={<PartNumCreation />} />
                 <Route path='/config' element={<ConfigMenu />} />
                 <Route path='/set_shift' element={<ShiftConfig />} />
