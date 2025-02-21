@@ -227,7 +227,9 @@ def send_production_data():
             "part_number": partNumber,
             "work_order": workOrder,
             "total_ok": total_ok,
-            "molder_number": molderNumber,  
+            "molder_number": previous_molder_number
+            if previous_molder_number != "----"
+            else molderNumber,
             "previous_molder_number": previous_molder_number,
             "caliber": caliber,
             "start_time": start_time.isoformat() if start_time else None,

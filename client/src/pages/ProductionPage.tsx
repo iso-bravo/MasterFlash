@@ -99,7 +99,7 @@ const ProductionPage = () => {
         if (!machineData) return;
 
         const isRelay = !!data.relayNumber;
-        const previousMolderNumber = isRelay ? machineData.molder_number : null;
+        const previousMolderNumber = isRelay ? data.molderNumber : null;
         const molderNumberToSave = data.relayNumber || data.molderNumber;
 
         if (data.relay && !data.relayNumber) {
@@ -198,25 +198,21 @@ const ProductionPage = () => {
                         {
                             label: 'Orden de Trabajo',
                             name: 'workOrder',
-                            placeholder: machineData.work_order ?? '',
                             disabled: isFormLocked,
                         },
                         {
                             label: 'Número de Parte',
                             name: 'partNumber',
-                            placeholder: machineData.part_number ?? '',
                             disabled: isFormLocked,
                         },
                         {
                             label: 'Empacador',
                             name: 'employeeNumber',
-                            placeholder: machineData.employee_number ?? '',
                             type: 'number',
                         },
                         {
                             label: 'Moldeador',
                             name: 'molderNumber',
-                            placeholder: machineData.molder_number ?? '',
                             type: 'number',
                             disabled: isFormLocked,
                         },
@@ -224,19 +220,15 @@ const ProductionPage = () => {
                         {
                             label: 'Piezas Producidas',
                             name: 'piecesOK',
-                            placeholder: machineData.pieces_ok ?? '',
                             type: 'number',
                         },
                         { label: 'Piezas Re trabajo', name: 'piecesRework', placeholder: '0', type: 'number' },
                         {
                             label: 'Hora de inicio',
                             name: 'start_time',
-                            placeholder: machineData.start_time
-                                ? new Date(machineData.start_time).toLocaleString()
-                                : '',
                             type: 'datetime-local',
                         },
-                    ].map(({ label, name, placeholder, type = 'text', disabled }, idx) => (
+                    ].map(({ label, name, type = 'text', disabled }, idx) => (
                         <div key={idx} className='space-y-2'>
                             <label htmlFor={`${name}Input`} className='block text-sm font-medium text-gray-700'>
                                 {label}
@@ -248,7 +240,6 @@ const ProductionPage = () => {
                                 className={`w-full h-12 px-4 border rounded-lg ${
                                     disabled ? 'bg-gray-100 cursor-not-allowed' : 'focus:ring-2 focus:ring-blue-500'
                                 }`}
-                                placeholder={String(placeholder)}
                                 disabled={disabled}
                                 min={type === 'number' ? 0 : undefined}
                             />

@@ -423,12 +423,10 @@ def register_data_production(request):
             end_time=end_time,
         )
 
-    if end_time:
+    if end_time and not relay:
         worked_hours.end_time = end_time
         worked_hours.save()
-        redis_client.delete(
-            f"previous_molder_number_{data.get('name')}", previousMolderNumber
-        )
+        redis_client.delete(f"previous_molder_number_{data.get('name')}")
 
     # Asigna los valores directamente desde el request
     employeeNumber = data.get("employee_number")
