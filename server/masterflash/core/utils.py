@@ -102,7 +102,7 @@ def send_production_data():
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
     )
 
-    # 'total_pieces and 'percentage' calculation
+    # 'total_pieces' and 'percentage' calculation
     year = current_date.year
     month = current_date.month
 
@@ -123,7 +123,8 @@ def send_production_data():
         if machine.status != "Available":
             continue
 
-        production = (
+        # Obtener la última producción para datos como part_number, molder_number, etc.
+        latest_production = (
             ProductionPress.objects.filter(press=machine.name)
             .order_by("-date_time")
             .first()
@@ -131,24 +132,30 @@ def send_production_data():
         states = StatePress.objects.filter(name=machine.name)
 
         partNumber = (
-            production.part_number
-            if production and production.part_number
+            latest_production.part_number
+            if latest_production and latest_production.part_number
             else "--------"
         )
         employeeNumber = (
-            production.employee_number
-            if production and production.employee_number
+            latest_production.employee_number
+            if latest_production and latest_production.employee_number
             else "----"
         )
         workOrder = (
-            production.work_order if production and production.work_order else ""
+            latest_production.work_order
+            if latest_production and latest_production.work_order
+            else ""
         )
         molderNumber = (
-            production.molder_number
-            if production and production.molder_number
+            latest_production.molder_number
+            if latest_production and latest_production.molder_number
             else "----"
         )
-        caliber = production.caliber if production and production.caliber else "----"
+        caliber = (
+            latest_production.caliber
+            if latest_production and latest_production.caliber
+            else "----"
+        )
 
         worked_hours_entry = (
             WorkedHours.objects.filter(
@@ -163,15 +170,16 @@ def send_production_data():
 
         start_time = worked_hours_entry.start_time if worked_hours_entry else None
 
+        # Obtener datos agregados del turno usando un nombre de variable diferente
         if shift == "First":
-            production = ProductionPress.objects.filter(
+            shift_production = ProductionPress.objects.filter(
                 press=machine.name,
                 shift=shift,
                 date_time__date=current_date,
                 date_time__time__range=(time(5, 0), time(16, 35)),
             ).aggregate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
         elif shift == "Second":
-            production = ProductionPress.objects.filter(
+            shift_production = ProductionPress.objects.filter(
                 Q(
                     press=machine.name,
                     shift=shift,
@@ -185,12 +193,12 @@ def send_production_data():
                     date_time__time__range=(time.min, time(1, 20)),
                 )
             ).aggregate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
+        else:
+            shift_production = None
 
-        if production and (shift == "First" or shift == "Second"):
-            total_ok = production["total_ok"] if production["total_ok"] else 0
-            total_rework = (
-                production["total_rework"] if production["total_rework"] else 0
-            )
+        if shift_production and (shift == "First" or shift == "Second"):
+            total_ok = shift_production["total_ok"] or 0
+            total_rework = shift_production["total_rework"] or 0
             actual_ok = sum_pieces(machine, shift, current_date)
         else:
             total_ok = 0
@@ -210,10 +218,6 @@ def send_production_data():
             previous_molder_number.decode("utf-8") if previous_molder_number else "----"
         )
 
-        redis_client = redis.StrictRedis(
-            host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
-        )
-
         machine_data = {
             "name": machine.name,
             "state": machine_state,
@@ -223,7 +227,9 @@ def send_production_data():
             "part_number": partNumber,
             "work_order": workOrder,
             "total_ok": total_ok,
-            "molder_number": molderNumber,
+            "molder_number": previous_molder_number
+            if previous_molder_number != "----"
+            else molderNumber,
             "previous_molder_number": previous_molder_number,
             "caliber": caliber,
             "start_time": start_time.isoformat() if start_time else None,
