@@ -16,13 +16,16 @@ class ProductionConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({"type": "disconnected", "message": "Consumidor desconectado"}))
 
     def receive(self, text_data):
-        self.send(
-            text_data=json.dumps(
-                {"type": "received", "message": "Received message: " + text_data}
-            )
-        )
-        self.send_production_update()
+        data = json.loads(text_data)
         
+        if data.get("type") == "request_update":
+            self.send_production_update()
+        else:
+            self.send(
+                text_data=json.dumps(
+                    {"type":"received","message":"Received message: " + text_data}
+                )
+            )
 
     def send_production_update(self):
         production_data = send_production_data()
@@ -33,7 +36,7 @@ class ProductionConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps(message))
 
     @staticmethod
-    def get_production_data(machhine_name=None):
+    def get_production_data(machine_name=None):
         return send_production_data()
 
 

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <style>
+            .general_info {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                grid-gap: 10px;
+            }
+            .batch_container {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                grid-gap: 10px;
+            }
+            .border_text_container {
+                border: 1px solid black;
+                padding: 5px;
+            }
+            table {
+                border-collapse: collapse;
+                width: 50%;
+                margin: 1.5em;
+            }
+            td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            .temp_table td:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            .general_info li, .batch_container li {
+                display: flex;
+                align-items: center;
+                justify-content:space-around; 
+            }
+            .titles {
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h2>Registro de parámetros</h2>
+        </header>
+        <main>
+            <div>
+                <h3>Información General</h3>
+                <ul class="general_info">
+                    <li>
+                        Máquina:
+                        <p class="border_text_container">MP-18</p>
+                    </li>
+                    <li>
+                        Fecha:
+                        <p class="border_text_container">12/16/2024</p>
+                    </li>
+                    <li>
+                        Turno:
+                        <p class="border_text_container">1</p>
+                    </li>
+                    <li>
+                        # Parte:
+                        <p class="border_text_container">RF2001BS-RD</p>
+                    </li>
+                    <li>
+                        Auditor:
+                        <p class="border_text_container">123</p>
+                    </li>
+                    <li>
+                        Moldeador:
+                        <p class="border_text_container">4</p>
+                    </li>
+                    <li>
+                        ICC:
+                        <p class="border_text_container">Si</p>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h3>Parametros</h3>
+                <table>
+                    <tr>
+                        <td>Metal</td>
+                        <td>0.032</td>
+                    </tr>
+                    <tr>
+                        <td>Cuerpo</td>
+                        <td>4.42</td>
+                    </tr>
+                    <tr>
+                        <td>Tiras</td>
+                        <td>0.26</td>
+                    </tr>
+                    <tr>
+                        <td>Ciclo completo</td>
+                        <td>0.31</td>
+                    </tr>
+                    <tr>
+                        <td>Tiempo de ciclo</td>
+                        <td>0.28</td>
+                    </tr>
+                    <tr>
+                        <td>Presión</td>
+                        <td>0.43</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <h3>Temperatura</h3>
+                <table class="temp_table">
+                    <tr>
+                        <td>Pantalla superior</td>
+                        <td>Pantalla inferior</td>
+                        <td>Molde superior</td>
+                        <td>Molde inferior</td>
+                        <td>Platina superior</td>
+                        <td>Platina inferior</td>
+                    </tr>
+                    <tr>
+                        <td>0.31</td>
+                        <td>0.26</td>
+                        <td>0.22</td>
+                        <td>0.2</td>
+                        <td>0.24</td>
+                        <td>0.36</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <h3>Toma de muestras</h3>
+                <ul class="batch_container">
+                    <li>
+                        Batch:
+
+                        <p class="border_text_container">0.24</p>
+                    </li>
+                    <li>
+                        Julian:
+
+                        <p class="border_text_container">4.5</p>
+                    </li>
+                </ul>
+                <table>
+                    <tr class="titles">
+                        <td>Cavidad</td>
+                        <td>Valor 1</td>
+                        <td>Valor 2</td>
+                        <td>Valor 3</td>
+                        <td>Valor 4</td>
+                        <td>Valor 5</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>0.24</td>
+                        <td>0.27</td>
+                        <td>0.26</td>
+                        <td>0.28</td>
+                        <td>0.3</td>
+                    </tr>
+                </table>
+            </div>
+        </main>
+    </body>
+</html>

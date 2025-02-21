@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { FaTrash } from 'react-icons/fa';
-import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import ConfirmPopUp from '../components/ConfirmPopUp';
 import api from '../config/axiosConfig';
+import Header from '../components/Header';
 
 interface scrapData {
     id: number;
@@ -61,7 +61,7 @@ const ScrapSummary = () => {
     const fetchScrapData = async (date: string) => {
         setLoading(true);
         try {
-            const response = await api.get(`/get_scrap_sumary/${date}`);
+            const response = await api.get(`/get_scrap_summary/${date}`);
 
             setScrapData(response.data);
         } catch (error) {
@@ -91,10 +91,7 @@ const ScrapSummary = () => {
                 draggable
                 theme='colored'
             />
-            <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/')} />
-                <h1 className='text-xl'>Resumen Scrap</h1>
-            </header>
+            <Header title='Resumen Scrap' />
             <div className='flex justify-end'>
                 <div>
                     <label htmlFor='date' className='block mb-2 text-sm font-medium text-gray-900'>

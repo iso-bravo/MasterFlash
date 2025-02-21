@@ -12,14 +12,15 @@ interface Summary {
         insert: string;
         gripper: string;
         metal: string;
-        insertWithoutRubber: string;
-        gripperWithoutRubber: string;
-        rubberWeight: string;
-        insertWithRubber: string;
-        gripperWithRubber: string;
-        recycledInserts: string;
-        totalInserts: string;
-        totalGrippers: string;
+        insertWithoutRubber: number | '';
+        chemlok: number;
+        gripperWithoutRubber: number;
+        rubberWeight: number | '';
+        insertWithRubber: number | '';
+        gripperWithRubber: number;
+        recycledInserts: number | '';
+        totalInserts: number | '';
+        totalGrippers: number;
     };
     codes: { [key: string]: string };
 }

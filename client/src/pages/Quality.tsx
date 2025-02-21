@@ -6,7 +6,7 @@ import { FaFileAlt } from 'react-icons/fa';
 import Barwell from '../assets/conveyor.png';
 import Troquelado from '../assets/worker.png';
 import { BiSolidDashboard } from 'react-icons/bi';
-import { GiNuclearWaste } from 'react-icons/gi';
+import { GiFactoryArm, GiNuclearWaste } from 'react-icons/gi';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { FaFileInvoice } from 'react-icons/fa';
 import { MdNumbers } from 'react-icons/md';
@@ -20,7 +20,7 @@ const Quality: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className='min-h-screen flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
+        <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden'>
             <div className='flex flex-col items-center px-10 pt-7'>
                 <h1 className='w-3/4 text-xl text-start m-3'>Producción</h1>
                 <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
@@ -69,10 +69,7 @@ const Quality: React.FC = () => {
             <div className='flex flex-col items-center py-5 px-10'>
                 <h1 className='w-3/4 text-xl m-3'>Calidad</h1>
                 <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
-                    <div
-                        className='flex flex-col w-14 items-center cursor-pointer'
-                        onClick={() => navigate('/params_register')}
-                    >
+                    <div className='flex flex-col w-14 items-center cursor-pointer' onClick={() => navigate('/params')}>
                         <div className=' bg-[#538D4A] p-3 rounded-sm'>
                             <BsFillFileEarmarkCheckFill color='white' size={35} className='' />
                         </div>
@@ -114,17 +111,11 @@ const Quality: React.FC = () => {
             <div className='flex flex-col items-center px-10'>
                 <h1 className='w-3/4 text-xl m-3'>Planeación</h1>
                 <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
-                    <div className='flex flex-col w-14 items-center cursor-pointer'>
+                    <div className='flex flex-col w-14 items-center cursor-pointer' onClick={()=> navigate('/dashboard')}>
                         <div className=' bg-[#8F2C2C] p-2 rounded-sm'>
                             <BiSolidDashboard color='white' size={40} className='' />
                         </div>
                         <h2 className=' text-center'>Dash.</h2>
-                    </div>
-                    <div className='flex flex-col w-14 items-center cursor-pointer' onClick={() => navigate('/config')}>
-                        <div className=' bg-[#2459A9] p-2 rounded-sm'>
-                            <IoSettingsSharp color='white' size={40} />
-                        </div>
-                        <h2 className=' text-center'>Config.</h2>
                     </div>
                     <div className='flex flex-col w-14 items-center cursor-pointer'>
                         <div className=' bg-[#538D4A] p-3 rounded-sm'>
@@ -138,11 +129,28 @@ const Quality: React.FC = () => {
                         </div>
                         <h2 className=' text-center'>Prog. Prod.</h2>
                     </div>
+                </div>
+            </div>
+            <div className='flex flex-col items-center px-10'>
+                <h1 className='w-3/4 text-xl m-3'>Configuración</h1>
+                <div className='w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center'>
+                    <div className='flex flex-col w-14 items-center cursor-pointer' onClick={() => navigate('/config')}>
+                        <div className=' bg-[#2459A9] p-2 rounded-sm'>
+                            <IoSettingsSharp color='white' size={40} />
+                        </div>
+                        <h2 className=' text-center'>Config.</h2>
+                    </div>
                     <div className='flex flex-col items-center cursor-pointer' onClick={() => navigate('/part_num')}>
                         <div className=' bg-[#B75182] p-2 rounded-sm'>
                             <MdNumbers color='white' size={35} />
                         </div>
                         <h2 className=' text-center'>No. Parte</h2>
+                    </div>
+                    <div className='flex flex-col items-center cursor-pointer' onClick={() => navigate('/inserts')}>
+                        <div className=' bg-[#C67C38] p-2 rounded-sm'>
+                            <GiFactoryArm color='white' size={35} />
+                        </div>
+                        <h2 className=' text-center'>Insertos</h2>
                     </div>
                 </div>
             </div>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axiosConfig';
 import { FaLayerGroup, FaPlus } from 'react-icons/fa';
+import Header from '../components/Header';
 
 interface reportHistory {
     query_date: string;
@@ -10,6 +10,7 @@ interface reportHistory {
     end_date: string;
     compound: string;
     total_weight: number;
+    comments: string | null
 }
 
 const WareHouseShipsHistory = () => {
@@ -72,10 +73,7 @@ const WareHouseShipsHistory = () => {
 
     return (
         <div className='flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-full sm:h-screen'>
-            <header className='flex items-start gap-3'>
-                <IoIosArrowBack size={30} className='cursor-pointer' onClick={() => navigate('/reports_menu')} />
-                <h1 className='text-xl'>Envios a Almacén</h1>
-            </header>
+            <Header title='Envios a Almacén' goto='/reports_menu' />
             <section className='flex justify-end p-4'>
                 <div className='mr-3'>
                     <label htmlFor='start_date' className='block mb-2 text-sm font-medium text-gray-900'>
@@ -84,6 +82,7 @@ const WareHouseShipsHistory = () => {
                     <input
                         type='date'
                         name='start_date'
+                        id='start_date'
                         value={startDate}
                         onChange={e => setStartDate(e.target.value)}
                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
@@ -96,6 +95,7 @@ const WareHouseShipsHistory = () => {
                     <input
                         type='date'
                         name='end_date'
+                        id='end_date'
                         value={endDate}
                         onChange={e => setEndDate(e.target.value)}
                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
@@ -108,6 +108,7 @@ const WareHouseShipsHistory = () => {
                     <input
                         type='text'
                         name='compound'
+                        id='compound'
                         value={selectedCompound}
                         onChange={e => setSelectedCompound(e.target.value)}
                         className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
@@ -151,6 +152,9 @@ const WareHouseShipsHistory = () => {
                             <th scope='col' className='px-6 py-3'>
                                 Peso Total (lbs)
                             </th>
+                            <th scope='col' className='px-6 py-3'>
+                                Comentarios
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -161,6 +165,7 @@ const WareHouseShipsHistory = () => {
                                 <td className='px-6 py-3'>{item.end_date}</td>
                                 <td className='px-6 py-3'>{item.compound}</td>
                                 <td className='px-6 py-3'>{item.total_weight}</td>
+                                <td className='px-6 py-3'>{item.comments}</td>
                             </tr>
                         ))}
                     </tbody>

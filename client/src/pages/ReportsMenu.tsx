@@ -1,7 +1,7 @@
-import Scrap from '../assets/scrap.png';
 import { SiRoundcube } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import { GiFactoryArm } from 'react-icons/gi';
 
 const ReportsMenu: React.FC = () => {
     const navigate = useNavigate();
@@ -14,10 +14,10 @@ const ReportsMenu: React.FC = () => {
                 <div className='flex flex-col items-center justify-center'>
                     <div
                         className='flex flex-col w-14 items-center cursor-pointer'
-                        onClick={() => navigate('/scrap_report')}
+                        onClick={() => navigate('/inserts_history')}
                     >
                         <div className=' bg-[#6A3A90] p-2 rounded-sm'>
-                            <img src={Scrap} className=' w-10'></img>
+                            <GiFactoryArm  color='white' size={40} />
                         </div>
                         <h2 className=' text-center'>Insertos</h2>
                     </div>
