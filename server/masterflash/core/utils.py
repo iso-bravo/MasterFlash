@@ -34,58 +34,49 @@ def set_shift(current_time: time) -> str:
     else:
         return "Free"
 
-
 def sum_pieces(machine, shift, current_date):
     last_record = (
-        ProductionPress.objects.filter(press=machine.name)
+        ProductionPress.objects
+        .filter(press=machine.name)
         .order_by("-date_time")
+        .values("part_number", "work_order")  
         .first()
     )
 
     if not last_record:
         return 0
 
-    part_number = last_record.part_number
-    work_order = last_record.work_order
-    pieces_sum = 0
+    # Obtener el horario de turnos
+    schedule = ShiftSchedule.objects.first()
+    if not schedule:
+        schedule = ShiftSchedule.objects.create()  
 
+    # Definir los rangos de tiempo dinámicamente
     if shift == "First":
-        records = ProductionPress.objects.filter(
+        shift_filter = Q(
+            date_time__time__range=(schedule.first_shift_start, schedule.first_shift_end)
+        )
+    elif shift == "Second":
+        shift_filter = Q(
+            date_time__time__range=(schedule.second_shift_start, schedule.second_shift_end)
+        ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
+    else:
+        return 0 
+
+    # Obtener la suma directamente desde la base de datos
+    return (
+        ProductionPress.objects
+        .filter(
             press=machine.name,
             shift=shift,
             date_time__date=current_date,
-            date_time__time__range=(time(5, 0), time(16, 35)),
-        ).order_by("-date_time")
-    elif shift == "Second":
-        records = ProductionPress.objects.filter(
-            Q(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time(16, 36), time.max),
-            )
-            | Q(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time.min, time(1, 20)),
-            )
-        ).order_by("-date_time")
-    else:
-        return 0
-
-    record_iterator = records.iterator()
-
-    current_record = next(record_iterator, None)
-    while (
-        current_record
-        and current_record.part_number == part_number
-        and current_record.work_order == work_order
-    ):
-        pieces_sum += current_record.pieces_ok or 0
-        current_record = next(record_iterator, None)
-
-    return pieces_sum
+            part_number=last_record["part_number"],
+            work_order=last_record["work_order"],
+        )
+        .filter(shift_filter)
+        .aggregate(total_pieces=Sum("pieces_ok"))["total_pieces"]
+        or 0
+    )
 
 
 def send_production_data():
