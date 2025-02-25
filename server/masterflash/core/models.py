@@ -22,6 +22,12 @@ class StatePress(models.Model):
     employee_number = models.IntegerField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
 
+    class Meta:
+        indexes = [
+            # Índice para consultas por nombre y fecha
+            models.Index(fields=["name", "date"]),
+        ]
+
 
 class StateTroquelado(models.Model):
     name = models.CharField(max_length=50)
@@ -91,6 +97,16 @@ class ProductionPress(models.Model):
         blank=True,
         null=True,
     )
+
+    class Meta:
+        indexes = [
+            # Índice para consultas por prensa y fecha
+            models.Index(fields=["press", "date_time"]),
+            # Índice para consultas por turno
+            models.Index(fields=["shift"]),
+            # Índice para consultas por número de parte
+            models.Index(fields=["part_number"]),
+        ]
 
 
 class Insert(models.Model):

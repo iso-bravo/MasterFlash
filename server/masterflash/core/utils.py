@@ -1,11 +1,10 @@
-from datetime import date, time, datetime
+from datetime import time, datetime
 from django.conf import settings
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Max
 import redis
 
 from masterflash.core.models import (
     LinePress,
-    Presses_monthly_goals,
     ProductionPress,
     ShiftSchedule,
     StatePress,
@@ -35,58 +34,49 @@ def set_shift(current_time: time) -> str:
     else:
         return "Free"
 
-
 def sum_pieces(machine, shift, current_date):
     last_record = (
-        ProductionPress.objects.filter(press=machine.name)
+        ProductionPress.objects
+        .filter(press=machine.name)
         .order_by("-date_time")
+        .values("part_number", "work_order")  
         .first()
     )
 
     if not last_record:
         return 0
 
-    part_number = last_record.part_number
-    work_order = last_record.work_order
-    pieces_sum = 0
+    # Obtener el horario de turnos
+    schedule = ShiftSchedule.objects.first()
+    if not schedule:
+        schedule = ShiftSchedule.objects.create()  
 
+    # Definir los rangos de tiempo dinámicamente
     if shift == "First":
-        records = ProductionPress.objects.filter(
+        shift_filter = Q(
+            date_time__time__range=(schedule.first_shift_start, schedule.first_shift_end)
+        )
+    elif shift == "Second":
+        shift_filter = Q(
+            date_time__time__range=(schedule.second_shift_start, schedule.second_shift_end)
+        ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
+    else:
+        return 0 
+
+    # Obtener la suma directamente desde la base de datos
+    return (
+        ProductionPress.objects
+        .filter(
             press=machine.name,
             shift=shift,
             date_time__date=current_date,
-            date_time__time__range=(time(5, 0), time(16, 35)),
-        ).order_by("-date_time")
-    elif shift == "Second":
-        records = ProductionPress.objects.filter(
-            Q(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time(16, 36), time.max),
-            )
-            | Q(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time.min, time(1, 20)),
-            )
-        ).order_by("-date_time")
-    else:
-        return 0
-
-    record_iterator = records.iterator()
-
-    current_record = next(record_iterator, None)
-    while (
-        current_record
-        and current_record.part_number == part_number
-        and current_record.work_order == work_order
-    ):
-        pieces_sum += current_record.pieces_ok or 0
-        current_record = next(record_iterator, None)
-
-    return pieces_sum
+            part_number=last_record["part_number"],
+            work_order=last_record["work_order"],
+        )
+        .filter(shift_filter)
+        .aggregate(total_pieces=Sum("pieces_ok"))["total_pieces"]
+        or 0
+    )
 
 
 def send_production_data():
@@ -95,128 +85,123 @@ def send_production_data():
     current_time = datetime.now().time()
     shift = set_shift(current_time)
 
-    machines = LinePress.objects.all()
-    machines_data = []
-    total_piecesProduced = 0
+    machines = LinePress.objects.filter(status="Available")
+
+    states = StatePress.objects.all().values("name", "state")
+    states_dict = {s["name"]: s["state"] for s in states}
+
+    latest_dates = (
+        ProductionPress.objects.filter(press__in=[m.name for m in machines])
+        .values("press")
+        .annotate(max_date=Max("date_time"))
+    )
+
+    latest_prod_dict = {}
+    for item in latest_dates:
+        prod = ProductionPress.objects.filter(
+            press=item["press"], date_time=item["max_date"]
+        ).first()
+        if prod:
+            latest_prod_dict[item["press"]] = prod
+
+    latest_hours = (
+        WorkedHours.objects.filter(
+            press__in=[m.name for m in machines],
+            end_time__isnull=True,
+            start_time__date=current_date,
+            start_time__lte=datetime.now(),
+        )
+        .values("press")
+        .annotate(max_start_time=Max("start_time"))
+    )
+
+    worked_hours_dict = {}
+    for item in latest_hours:
+        wh = WorkedHours.objects.filter(
+            press=item["press"], start_time=item["max_start_time"]
+        ).first()
+        if wh:
+            worked_hours_dict[item["press"]] = wh
+
+    # Obtener el horario de turnos
+    try:
+        schedule = ShiftSchedule.objects.first()
+        if not schedule:
+            raise Exception("No Shift Schedule defined")
+    except ShiftSchedule.DoesNotExist:
+        # Crear valores por defecto si no existen
+        schedule = ShiftSchedule.objects.create()
+
+    # Definir los rangos de tiempo dinámicamente
+    if shift == "First":
+        shift_filter = Q(
+            date_time__time__range=(
+                schedule.first_shift_start,
+                schedule.first_shift_end,
+            )
+        )
+    elif shift == "Second":
+        shift_filter = Q(
+            date_time__time__range=(
+                schedule.second_shift_start,
+                schedule.second_shift_end,
+            )
+        ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
+
+    shift_productions = (
+        ProductionPress.objects.filter(shift=shift, date_time__date=current_date)
+        .filter(shift_filter)
+        .values("press")
+        .annotate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
+    )
+
+    shift_data = {item["press"]: item for item in shift_productions}
+
     redis_client = redis.StrictRedis(
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
     )
 
-    # 'total_pieces' and 'percentage' calculation
-    year = current_date.year
-    month = current_date.month
+    molder_keys = [f"previous_molder_number_{machine.name}" for machine in machines]
+    previous_molders = redis_client.mget(molder_keys)
 
-    try:
-        start_date = date(year, month, 1)
-        end_date = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
+    molder_dict = {
+        machine.name: val.decode("utf-8") if val else "----"
+        for machine, val in zip(machines, previous_molders)
+    }
 
-        total_pieces = (
-            ProductionPress.objects.filter(
-                date_time__gte=start_date, date_time__lt=end_date
-            ).aggregate(Sum("pieces_ok"))["pieces_ok__sum"]
-            or 0
-        )
-    except Presses_monthly_goals.DoesNotExist:
-        total_pieces = 0
+    machines_data = []
+    total_piecesProduced = 0
+    total_pieces = (
+        ProductionPress.objects.filter(
+            date_time__year=current_date.year, date_time__month=current_date.month
+        ).aggregate(total=Sum("pieces_ok"))["total"]
+        or 0
+    )
 
     for machine in machines:
-        if machine.status != "Available":
-            continue
-
         # Obtener la última producción para datos como part_number, molder_number, etc.
-        latest_production = (
-            ProductionPress.objects.filter(press=machine.name)
-            .order_by("-date_time")
-            .first()
-        )
-        states = StatePress.objects.filter(name=machine.name)
+        latest_production = latest_prod_dict.get(machine.name)
 
-        partNumber = (
-            latest_production.part_number
-            if latest_production and latest_production.part_number
-            else "--------"
-        )
-        employeeNumber = (
-            latest_production.employee_number
-            if latest_production and latest_production.employee_number
-            else "----"
-        )
-        workOrder = (
-            latest_production.work_order
-            if latest_production and latest_production.work_order
-            else ""
-        )
-        molderNumber = (
-            latest_production.molder_number
-            if latest_production and latest_production.molder_number
-            else "----"
-        )
-        caliber = (
-            latest_production.caliber
-            if latest_production and latest_production.caliber
-            else "----"
-        )
+        partNumber = getattr(latest_production, "part_number", "--------")
+        employeeNumber = getattr(latest_production, "employee_number", "----")
+        workOrder = getattr(latest_production, "work_order", "")
+        molderNumber = getattr(latest_production, "molder_number", "----")
+        caliber = getattr(latest_production, "caliber", "----")
 
-        worked_hours_entry = (
-            WorkedHours.objects.filter(
-                press=machine.name,
-                end_time__isnull=True,
-                start_time__date=current_date,
-                start_time__lte=datetime.now(),
-            )
-            .order_by("-start_time")
-            .first()
-        )
-
+        # Obtener horas trabajadas desde el diccionario
+        worked_hours_entry = worked_hours_dict.get(machine.name)
         start_time = worked_hours_entry.start_time if worked_hours_entry else None
 
-        # Obtener datos agregados del turno usando un nombre de variable diferente
-        if shift == "First":
-            shift_production = ProductionPress.objects.filter(
-                press=machine.name,
-                shift=shift,
-                date_time__date=current_date,
-                date_time__time__range=(time(5, 0), time(16, 35)),
-            ).aggregate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
-        elif shift == "Second":
-            shift_production = ProductionPress.objects.filter(
-                Q(
-                    press=machine.name,
-                    shift=shift,
-                    date_time__date=current_date,
-                    date_time__time__range=(time(16, 36), time.max),
-                )
-                | Q(
-                    press=machine.name,
-                    shift=shift,
-                    date_time__date=current_date,
-                    date_time__time__range=(time.min, time(1, 20)),
-                )
-            ).aggregate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
-        else:
-            shift_production = None
+        # Obtener datos del turno desde el diccionario
+        shift_info = shift_data.get(machine.name, {})
+        total_ok = shift_info.get("total_ok", 0)
+        total_rework = shift_info.get("total_rework", 0)
+        actual_ok = sum_pieces(machine, shift, current_date) if shift else 0
 
-        if shift_production and (shift == "First" or shift == "Second"):
-            total_ok = shift_production["total_ok"] or 0
-            total_rework = shift_production["total_rework"] or 0
-            actual_ok = sum_pieces(machine, shift, current_date)
-        else:
-            total_ok = 0
-            total_rework = 0
-            actual_ok = 0
+        # Obtener el estado desde el diccionario de estados
+        machine_state = states_dict.get(machine.name, "Inactive")
 
-        if states:
-            last_state = states.latest("date", "start_time")
-            machine_state = last_state.state
-        else:
-            machine_state = "Inactive"
-
-        previous_molder_number = redis_client.get(
-            f"previous_molder_number_{machine.name}"
-        )
-        previous_molder_number = (
-            previous_molder_number.decode("utf-8") if previous_molder_number else "----"
-        )
+        previous_molder_number = molder_dict.get(machine.name, "----")
 
         machine_data = {
             "name": machine.name,

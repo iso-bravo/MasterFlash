@@ -1,42 +1,48 @@
 import json
-from channels.generic.websocket import WebsocketConsumer
-from asgiref.sync import async_to_sync
+from channels.generic.websocket import AsyncWebsocketConsumer
+from asgiref.sync import sync_to_async
 from .utils import send_production_data
 
-class ProductionConsumer(WebsocketConsumer):
 
-    def connect(self):
-        self.accept()
-        async_to_sync(self.channel_layer.group_add)("production_group", self.channel_name)
-        self.send(text_data=json.dumps({"type": "connected", "message": "Conexión establecida"}))
-        self.send_production_update()
+class ProductionConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+        await self.channel_layer.group_add("production_group", self.channel_name)
+        await self.send(
+            text_data=json.dumps(
+                {"type": "connected", "message": "Conexión establecida"}
+            )
+        )
+        await self.send_production_update()
 
-    def disconnect(self, code):
-        async_to_sync(self.channel_layer.group_discard)("production_group", self.channel_name)
-        self.send(text_data=json.dumps({"type": "disconnected", "message": "Consumidor desconectado"}))
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard("production_group", self.channel_name)
+        await self.send(
+            text_data=json.dumps(
+                {"type": "disconnected", "message": "Consumidor desconectado"}
+            )
+        )
 
-    def receive(self, text_data):
+    async def receive(self, text_data):
         data = json.loads(text_data)
-        
+
         if data.get("type") == "request_update":
-            self.send_production_update()
+            await self.send_production_update()
         else:
-            self.send(
+            await self.send(
                 text_data=json.dumps(
-                    {"type":"received","message":"Received message: " + text_data}
+                    {"type": "received", "message": "Received message: " + text_data}
                 )
             )
 
-    def send_production_update(self):
-        production_data = send_production_data()
-        self.send(text_data=json.dumps(production_data))
-
-    def production_message(self, event):
-        message = event['message']
-        self.send(text_data=json.dumps(message))
-
-    @staticmethod
-    def get_production_data(machine_name=None):
+    @sync_to_async
+    def get_production_data_async(self):
         return send_production_data()
 
+    async def send_production_update(self):
+        production_data = await self.get_production_data_async()
+        await self.send(text_data=json.dumps(production_data))
 
+    async def production_message(self, event):
+        message = event["message"]
+        await self.send(text_data=json.dumps(message))

@@ -37,6 +37,7 @@ const ProductionPage = () => {
     const [isEndTime, setIsEndTime] = useState(false);
     const [production_per_day, setProduction_per_day] = useState<ProductionPerDay[]>([]);
     const [isFormLocked, setIsFormLocked] = useState(false);
+    const [isStock, setIsStock] = useState(false);
 
     useEffect(() => {
         // Reiniciar el  formulario completamente si no hay worked_hours_id
@@ -172,7 +173,7 @@ const ProductionPage = () => {
             </section>
             <form onSubmit={handleSubmit(handleSave)} className='bg-white rounded-lg shadow-md p-6 space-y-6'>
                 <section className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                    <div className='flex items-center justify-between bg-gray-50 p-4 rounded-lg'>
+                    <div className='flex items-center justify-between bg-blue-50 p-4 rounded-lg'>
                         <span className='text-lg font-medium text-gray-700'>Relevo</span>
                         <label className='inline-flex items-center cursor-pointer'>
                             <input type='checkbox' className='sr-only peer' {...register('relay')} />
@@ -180,7 +181,7 @@ const ProductionPage = () => {
                         </label>
                     </div>
 
-                    <div className='flex items-center justify-between bg-gray-50 p-4 rounded-lg'>
+                    <div className='flex items-center justify-between bg-orange-50 p-4 rounded-lg'>
                         <span className='text-lg font-medium text-gray-700'>Finalizar </span>
                         <label className='inline-flex items-center cursor-pointer'>
                             <input
@@ -194,12 +195,36 @@ const ProductionPage = () => {
                     </div>
                 </section>
                 <article className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                    <div className='space-y-2'>
+                        <label htmlFor='workOrder' className='block text-sm font-medium text-gray-700'>
+                            Orden de Trabajo
+                        </label>
+                        <div className='flex items-center gap-3'>
+                            <input
+                                id='workOrder'
+                                type='text'
+                                {...register('workOrder')}
+                                className={`w-full h-12 px-4 border rounded-lg ${
+                                    isStock || isFormLocked
+                                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                        : 'focus:ring-2 focus:ring-blue-500'
+                                }`}
+                                value={isStock ? 'Stock' : undefined}
+                                disabled={isFormLocked || isStock}
+                            />
+                            <label className='inline-flex items-center cursor-pointer'>
+                                <input
+                                    type='checkbox'
+                                    className='sr-only peer'
+                                    checked={isStock}
+                                    disabled={isFormLocked}
+                                    onChange={() => setIsStock(!isStock)}
+                                />
+                                <div className="relative w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-1 after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                            </label>
+                        </div>
+                    </div>
                     {[
-                        {
-                            label: 'Orden de Trabajo',
-                            name: 'workOrder',
-                            disabled: isFormLocked,
-                        },
                         {
                             label: 'Número de Parte',
                             name: 'partNumber',
@@ -217,17 +242,6 @@ const ProductionPage = () => {
                             disabled: isFormLocked,
                         },
                         { label: 'Calibre', name: 'caliber', placeholder: machineData.caliber ?? '' },
-                        {
-                            label: 'Piezas Producidas',
-                            name: 'piecesOK',
-                            type: 'number',
-                        },
-                        { label: 'Piezas Re trabajo', name: 'piecesRework', placeholder: '0', type: 'number' },
-                        {
-                            label: 'Hora de inicio',
-                            name: 'start_time',
-                            type: 'datetime-local',
-                        },
                     ].map(({ label, name, type = 'text', disabled }, idx) => (
                         <div key={idx} className='space-y-2'>
                             <label htmlFor={`${name}Input`} className='block text-sm font-medium text-gray-700'>
@@ -245,20 +259,41 @@ const ProductionPage = () => {
                             />
                         </div>
                     ))}
-                </article>
-                {(isEndTime || relay) && (
                     <div className='space-y-2'>
-                        <label htmlFor='end_time' className='block text-sm font-medium text-gray-700'>
-                            Hora de finalización
+                        <label htmlFor='' className='block text-sm font-medium text-gray-700'>
+                            Piezas producidas
                         </label>
                         <input
-                            id='end_date'
+                            type='number'
+                            {...register('piecesOK')}
+                            className='w-full h-16 px-6 border-2 border-blue-500 bg-blue-50 rounded-lg focus:ring-4 focus:ring-blue-300 focus:border-blue-700 shadow-md text-xl font-bold text-blue-900'
+                            min={0}
+                        />
+                    </div>
+                    <div className='space-y-2'>
+                        <label htmlFor='start_time' className='block text-sm font-medium text-gray-700'>
+                            Hora de inicio
+                        </label>
+                        <input
                             type='datetime-local'
-                            {...register('end_time')}
+                            {...register('start_time')}
                             className='w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                         />
                     </div>
-                )}
+                    {(isEndTime || relay) && (
+                        <div className='space-y-2'>
+                            <label htmlFor='end_time' className='block text-sm font-medium text-gray-700'>
+                                Hora de finalización
+                            </label>
+                            <input
+                                id='end_date'
+                                type='datetime-local'
+                                {...register('end_time')}
+                                className='w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                            />
+                        </div>
+                    )}
+                </article>
 
                 {relay && (
                     <div className='space-y-2'>

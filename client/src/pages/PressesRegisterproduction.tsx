@@ -16,7 +16,7 @@ interface DataItem {
     part_number: string;
     work_order: string;
     caliber: number | null;
-    worked_hrs: number;
+    worked_hours: number;
     dead_time_cause_1: string;
     cavities: number;
     standard: number;
@@ -129,7 +129,7 @@ const PressesRegisterProduction: React.FC = () => {
             [field]: value,
         };
 
-        if (field === 'worked_hrs') {
+        if (field === 'worked_hours') {
             const workedHrs = Number(value);
             if (workedHrs > 0) {
                 const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
@@ -156,7 +156,7 @@ const PressesRegisterProduction: React.FC = () => {
                 part_number: item.part_number,
                 work_order: item.work_order,
                 caliber: item.caliber || '',
-                worked_hrs: item.worked_hrs,
+                worked_hrs: item.worked_hours,
                 dead_time_cause_1: item.dead_time_cause_1 || '',
                 cavities: item.cavities,
                 standard: item.standard,
@@ -203,7 +203,7 @@ const PressesRegisterProduction: React.FC = () => {
                         part_number: item.part_number,
                         work_order: item.work_order,
                         caliber: item.caliber || '',
-                        worked_hrs: item.worked_hrs,
+                        worked_hrs: item.worked_hours,
                         dead_time_cause_1: item.dead_time_cause_1 || '',
                         cavities: item.cavities,
                         standard: item.standard,
@@ -455,18 +455,18 @@ const PressesRegisterProduction: React.FC = () => {
                                         <span>{item.dead_time_cause_2}</span>
                                     )}
                                 </td>
-                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'worked_hrs')}>
-                                    {item.editableField === 'worked_hrs' ? (
+                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'worked_hours')}>
+                                    {item.editableField === 'worked_hours' ? (
                                         <input
                                             type='text'
-                                            value={item.worked_hrs || ''}
-                                            onChange={e => handleChange(index, 'worked_hrs', e.target.value)}
+                                            value={item.worked_hours || ''}
+                                            onChange={e => handleChange(index, 'worked_hours', e.target.value)}
                                             onBlur={() => handleBlur(index)}
                                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                             autoFocus
                                         />
                                     ) : (
-                                        <span>{item.worked_hrs}</span>
+                                        <span>{item.worked_hours}</span>
                                     )}
                                 </td>
                                 <td className='px-6 py-4'>{item.pieces_ok}</td>
