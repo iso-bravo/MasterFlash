@@ -34,12 +34,12 @@ def set_shift(current_time: time) -> str:
     else:
         return "Free"
 
+
 def sum_pieces(machine, shift, current_date):
     last_record = (
-        ProductionPress.objects
-        .filter(press=machine.name)
+        ProductionPress.objects.filter(press=machine.name)
         .order_by("-date_time")
-        .values("part_number", "work_order")  
+        .values("part_number", "work_order")
         .first()
     )
 
@@ -49,24 +49,29 @@ def sum_pieces(machine, shift, current_date):
     # Obtener el horario de turnos
     schedule = ShiftSchedule.objects.first()
     if not schedule:
-        schedule = ShiftSchedule.objects.create()  
+        schedule = ShiftSchedule.objects.create()
 
     # Definir los rangos de tiempo dinámicamente
     if shift == "First":
         shift_filter = Q(
-            date_time__time__range=(schedule.first_shift_start, schedule.first_shift_end)
+            date_time__time__range=(
+                schedule.first_shift_start,
+                schedule.first_shift_end,
+            )
         )
     elif shift == "Second":
         shift_filter = Q(
-            date_time__time__range=(schedule.second_shift_start, schedule.second_shift_end)
+            date_time__time__range=(
+                schedule.second_shift_start,
+                schedule.second_shift_end,
+            )
         ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
     else:
-        return 0 
+        return 0
 
     # Obtener la suma directamente desde la base de datos
     return (
-        ProductionPress.objects
-        .filter(
+        ProductionPress.objects.filter(
             press=machine.name,
             shift=shift,
             date_time__date=current_date,
@@ -182,7 +187,15 @@ def send_production_data():
         # Obtener la última producción para datos como part_number, molder_number, etc.
         latest_production = latest_prod_dict.get(machine.name)
 
-        partNumber = getattr(latest_production, "part_number", "--------")
+        if (
+            latest_production
+            and latest_production.worked_hours
+            and latest_production.worked_hours.end_time
+        ):
+            partNumber = "----"
+        else:
+            partNumber = getattr(latest_production, "part_number", "--------")
+
         employeeNumber = getattr(latest_production, "employee_number", "----")
         workOrder = getattr(latest_production, "work_order", "")
         molderNumber = getattr(latest_production, "molder_number", "----")
