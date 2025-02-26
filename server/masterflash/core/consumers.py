@@ -35,8 +35,9 @@ class ProductionConsumer(AsyncWebsocketConsumer):
                 )
             )
 
+    @staticmethod
     @sync_to_async
-    def get_production_data_async(self):
+    def get_production_data_async():
         return send_production_data()
 
     async def send_production_update(self):
