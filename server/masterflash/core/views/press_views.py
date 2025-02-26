@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
 import json
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from ..models import (
     LinePress,
@@ -10,12 +10,14 @@ from ..models import (
     StateBarwell,
     StatePress,
     StateTroquelado,
+    WorkedHours,
 )
 from ..utils import set_shift, sum_pieces
 from django.conf import settings
 import logging
 import redis
 from django.db.models import Q, Sum
+from django.db import transaction
 from django.views.decorators.http import require_http_methods, require_POST
 
 
@@ -345,6 +347,10 @@ def register_data_production(request):
     data = json.loads(request.body.decode("utf-8"))
     logger.error(f"Data received: {data}")
 
+    redis_client = redis.StrictRedis(
+        host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
+    )
+
     if all(
         value == ""
         for value in [
@@ -359,21 +365,75 @@ def register_data_production(request):
     if not Part_Number.objects.filter(part_number=data.get("part_number")).exists():
         return JsonResponse({"message": "Número de parte no existe"}, status=404)
 
-    # Asigna los valores directamente desde el request
-    employeeNumber = data.get("employee_number")
-    partNumber = data.get("part_number")
-    molderNumber = data.get("molder_number")
-    workOrder = data.get("work_order")
+    press_name = data.get("name")
+    worked_hours_id = data.get("worked_hours_id")
     previousMolderNumber = data.get("previous_molder_number")
     relay = data.get("is_relay")
+    start_time = data.get("start_time")
+    end_time = data.get("end_time")
+
+    if end_time and end_time < start_time:
+        return JsonResponse(
+            {"message": "La hora de finalización no puede ser anterior a la de inicio"},
+            status=400,
+        )
+
+    previous_worked_hours_id = redis_client.get(
+        f"previous_worked_hours_id_{press_name}"
+    )
 
     if relay and previousMolderNumber:
-        redis_client = redis.StrictRedis(
-            host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
-        )
         redis_client.set(
             f"previous_molder_number_{data.get('name')}", previousMolderNumber
         )
+
+    if relay:
+        try:
+            redis_client.set(f"previous_worked_hours_id_{press_name}", worked_hours_id)
+            worked_hours = WorkedHours.objects.create(
+                press=press_name,
+                start_time=start_time,
+                end_time=end_time,
+            )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    elif worked_hours_id:
+        try:
+            worked_hours = WorkedHours.objects.get(id=worked_hours_id, press=press_name)
+        except WorkedHours.DoesNotExist:
+            return JsonResponse(
+                {"error": "Horas trabajadas no encontradas"}, status=404
+            )
+
+    elif previous_worked_hours_id:
+        try:
+            worked_hours = WorkedHours.objects.get(
+                id=previous_worked_hours_id, press=press_name
+            )
+            redis_client.delete(f"previous_worked_hours_id_{press_name}")
+        except WorkedHours.DoesNotExist:
+            return JsonResponse(
+                {"error": "Horas trabajadas no encontradas"}, status=404
+            )
+    else:
+        worked_hours = WorkedHours.objects.create(
+            press=press_name,
+            start_time=start_time,
+            end_time=end_time,
+        )
+
+    if end_time and not relay:
+        worked_hours.end_time = end_time
+        worked_hours.save()
+        redis_client.delete(f"previous_molder_number_{data.get('name')}")
+
+    # Asigna los valores directamente desde el request
+    employeeNumber = data.get("employee_number")
+    partNumber = data.get("part_number")
+    caliber = data.get("caliber")
+    molderNumber = data.get("molder_number")
+    workOrder = data.get("work_order")
 
     piecesOk = data.get("pieces_ok") or 0
     piecesRework = data.get("pieces_rework") or 0
@@ -392,12 +452,16 @@ def register_data_production(request):
         pieces_scrap=0,
         pieces_rework=piecesRework,
         part_number=partNumber,
+        caliber=caliber,
         work_order=workOrder,
         molder_number=molderNumber,
         press=data.get("name"),
         shift=shift,
         relay=relay,
+        worked_hours=worked_hours,
     )
+
+    transaction.commit()
 
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
 
@@ -418,10 +482,12 @@ def get_production_press_by_date(request):
         "id",
         "press",
         "molder_number",
+        "caliber",
         "part_number",
         "work_order",
         "pieces_ok",
         "date_time",
+        "worked_hours",
         "relay",
     )
 
@@ -437,6 +503,15 @@ def get_production_press_by_date(request):
             .first()
         )
         print("Part_Number record found:", part_number_record)
+        if record["worked_hours"]:
+            worked_hours_obj = WorkedHours.objects.get(id=record["worked_hours"])
+            duration = worked_hours_obj.duration
+            if duration:
+                worked_hours_hours = round(duration.total_seconds() / 3600, 2)
+            else:
+                worked_hours_hours = None
+        else:
+            worked_hours_hours = None
         if part_number_record:
             combined_record = {
                 "id": record["id"],
@@ -444,11 +519,12 @@ def get_production_press_by_date(request):
                 "molder_number": record["molder_number"],
                 "part_number": record["part_number"],
                 "work_order": record["work_order"],
-                "caliber": part_number_record["caliber"],
+                "caliber": record["caliber"],
                 "cavities": part_number_record["cavities"],
                 "standard": part_number_record["standard"],
                 "pieces_ok": record["pieces_ok"],
                 "hour": record["date_time"].strftime("%H:%M:%S"),
+                "worked_hours": worked_hours_hours,
                 "relay": record["relay"],
             }
             result.append(combined_record)
@@ -526,6 +602,7 @@ def presses_general_failure(request):
                 last_record.save()
 
     return JsonResponse({"message": "General Failure Success."}, status=201)
+
 
 @csrf_exempt
 @require_http_methods(["POST", "PUT"])
@@ -619,6 +696,7 @@ def get_presses_production_percentage(request, year, month):
     except Presses_monthly_goals.DoesNotExist:
         return HttpResponse(status=404)
 
+
 @csrf_exempt
 @require_http_methods(["PATCH"])
 def update_pieces_ok(request, id):
@@ -638,3 +716,39 @@ def update_pieces_ok(request, id):
     except Exception as e:
         print("Error: ", e)
         return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+def get_todays_machine_production(request):
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    else:
+        machine = request.GET.get("mp")
+        if not machine:
+            return JsonResponse({"error": "Missing machine parameter"}, status=400)
+
+        try:
+            production_data = (
+                ProductionPress.objects.filter(
+                    press=machine, date_time__date=date.today()
+                )
+                .values("part_number")
+                .annotate(total_pieces_ok=Sum("pieces_ok"))
+            )
+            print(production_data)
+
+            return JsonResponse(list(production_data), safe=False)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def get_worked_hours_by_id(request, id):
+    try:
+        worked_hours = WorkedHours.objects.get(id=id)
+        if worked_hours.end_time:
+            return JsonResponse({"duration": worked_hours.duration()}, safe=False)
+        else:
+            return JsonResponse({"start_time": worked_hours.start_time}, safe=False)
+    except WorkedHours.DoesNotExist:
+        return HttpResponse(status=404)

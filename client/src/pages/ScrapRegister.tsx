@@ -23,14 +23,15 @@ interface InputFields {
         insert: string;
         gripper: string;
         metal: string;
-        insertWithoutRubber: string;
-        gripperWithoutRubber: string;
-        rubberWeight: string;
-        insertWithRubber: string;
-        gripperWithRubber: string;
-        recycledInserts: string;
-        totalInserts: string;
-        totalGrippers: string;
+        insertWithoutRubber: number | '';
+        chemlok: number;
+        gripperWithoutRubber: number;
+        rubberWeight: number | '';
+        insertWithRubber: number | '';
+        gripperWithRubber: number;
+        recycledInserts: number | '';
+        totalInserts: number | '';
+        totalGrippers: number;
     };
     codes: { [key: string]: string };
 }
@@ -49,13 +50,14 @@ const ScrapRegister: React.FC = () => {
             gripper: '0',
             metal: '',
             insertWithoutRubber: '',
-            gripperWithoutRubber: '0',
+            chemlok: 0,
+            gripperWithoutRubber: 0,
             rubberWeight: '',
             insertWithRubber: '',
-            gripperWithRubber: '0',
+            gripperWithRubber: 0,
             recycledInserts: '',
             totalInserts: '',
-            totalGrippers: '0',
+            totalGrippers: 0,
         },
         codes: {},
     });
@@ -65,20 +67,105 @@ const ScrapRegister: React.FC = () => {
     const [isMoldingChecked, setIsMoldingChecked] = useState(false);
     const [isPeroxidChecked, setIsPeroxidChecked] = useState(false);
 
+    const handleSearchPartNumber = async () => {
+        try {
+            const partNumber = formData.inputs.partNumber;
+
+            if (!partNumber) {
+                toast.error('Favor de introducir No. Parte');
+                return;
+            }
+
+            const response = await api.get(`/search_in_part_number/`, {
+                params: { part_number: partNumber },
+            });
+
+            console.log(response.data);
+            const {
+                Compuesto = '',
+                Inserto = '',
+                Metal = '',
+                Gripper = '',
+                'Inserto s/hule': ItoSHule = '',
+            } = response.data || {};
+
+            setFormData(prevState => ({
+                ...prevState,
+                inputs: {
+                    ...prevState.inputs,
+                    compound: Compuesto,
+                    insert: Inserto,
+                    gripper: Gripper,
+                    metal: Metal,
+                    insertWithoutRubber: ItoSHule ? ItoSHule : '0',
+                },
+            }));
+        } catch (error) {
+            console.error('Error fetching part number data:', error);
+            toast.error('No. Parte no existe');
+        }
+    };
+
+    const handleSearchMetal = async () => {
+        try {
+            const metal = formData.inputs.metal;
+            const inserto = formData.inputs.insert;
+            const gripper = formData.inputs.gripper;
+
+            if (!metal || !inserto) {
+                toast.error('Metal y/o Inserto faltantes');
+                return;
+            }
+
+            if (!gripper) {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto },
+                });
+                console.log(response.data);
+                const { 'Ito. s/hule': ItoSHule, Chemlok } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                        chemlok: Chemlok ? Chemlok : '0',
+                    },
+                }));
+            } else {
+                const response = await api.get(`/search_weight`, {
+                    params: { metal, inserto, gripper },
+                });
+                const { 'Ito. s/hule': ItoSHule, Gripper: GripsHule, Chemlok } = response.data;
+                setFormData(prevState => ({
+                    ...prevState,
+                    inputs: {
+                        ...prevState.inputs,
+                        insertWithoutRubber: ItoSHule,
+                        gripperWithoutRubber: GripsHule,
+                        chemlok: Chemlok ? Chemlok : '0',
+                    },
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching metal data:', error);
+            toast.error('Inserto s/hule no encontrado');
+        }
+    };
     const inputs = [
-        'No. Parte',
-        'Compuesto',
-        'Inserto',
-        'Gripper',
-        'Metal',
-        'Inserto s/hule',
-        'Gripper s/hule',
-        'Peso Hule',
-        'Inserto c/hule',
-        'Gripper c/hule',
-        'Incertos Reciclados',
-        'Total Insertos',
-        'Total grippers',
+        { key: 'partNumber', label: 'No. Parte', type: 'text', hasButton: true, onButtonClick: handleSearchPartNumber },
+        { key: 'compound', label: 'Compuesto', type: 'text', hasCheckboxes: true },
+        { key: 'insert', label: 'Inserto', type: 'text' },
+        { key: 'gripper', label: 'Gripper', type: 'text' },
+        { key: 'metal', label: 'Metal', type: 'text', hasButton: true, onButtonClick: handleSearchMetal },
+        { key: 'insertWithoutRubber', label: 'Inserto s/hule', type: 'number' },
+        { key: 'chemlok', label: 'Chemlok', type: 'number' },
+        { key: 'gripperWithoutRubber', label: 'Gripper s/hule', type: 'number' },
+        { key: 'rubberWeight', label: 'Peso Hule', type: 'number' },
+        { key: 'insertWithRubber', label: 'Inserto c/hule', type: 'number' },
+        { key: 'gripperWithRubber', label: 'Gripper c/hule', type: 'number' },
+        { key: 'recycledInserts', label: 'Incertos Reciclados', type: 'number' },
+        { key: 'totalInserts', label: 'Total Insertos', type: 'number' },
+        { key: 'totalGrippers', label: 'Total grippers', type: 'number' },
     ];
     const codes = [
         'B',
@@ -136,43 +223,8 @@ const ScrapRegister: React.FC = () => {
         fetchMachines();
     }, []);
 
-    const keyMaker = (input: string) => {
-        switch (input) {
-            case 'No. Parte':
-                return 'partNumber';
-            case 'Compuesto':
-                return 'compound';
-            case 'Inserto':
-                return 'insert';
-            case 'Gripper':
-                return 'gripper';
-            case 'Metal':
-                return 'metal';
-            case 'Inserto s/hule':
-                return 'insertWithoutRubber';
-            case 'Gripper s/hule':
-                return 'gripperWithoutRubber';
-            case 'Peso Hule':
-                return 'rubberWeight';
-            case 'Inserto c/hule':
-                return 'insertWithRubber';
-            case 'Gripper c/hule':
-                return 'gripperWithRubber';
-            case 'Incertos Reciclados':
-                return 'recycledInserts';
-            case 'Total Insertos':
-                return 'totalInserts';
-            case 'Total grippers':
-                return 'totalGrippers';
-            default:
-                return '';
-        }
-    };
-
-    const inputMap = Object.fromEntries(inputs.map(input => [inputs.indexOf(input), keyMaker(input)]));
-
     const handleOpenModal = () => {
-        const requiredFields: { [key: string]: string | undefined } = {
+        const requiredFields: { [key: string]: number | string | undefined } = {
             'No. Parte necesario': formData.inputs.partNumber,
             'Fecha necesaria': formData.date,
             'Prensa necesaria': formData.line,
@@ -301,13 +353,14 @@ const ScrapRegister: React.FC = () => {
                     gripper: '',
                     metal: '',
                     insertWithoutRubber: '',
-                    gripperWithoutRubber: '',
+                    chemlok: 0,
+                    gripperWithoutRubber: 0,
                     rubberWeight: '',
                     insertWithRubber: '',
-                    gripperWithRubber: '',
+                    gripperWithRubber: 0,
                     recycledInserts: '',
                     totalInserts: '',
-                    totalGrippers: '',
+                    totalGrippers: 0,
                 },
                 codes: {},
             });
@@ -316,87 +369,6 @@ const ScrapRegister: React.FC = () => {
         } catch (error) {
             console.error('Error:', error);
             toast.error('Error registering data');
-        }
-    };
-
-    const handleSearchPartNumber = async () => {
-        try {
-            const partNumber = formData.inputs.partNumber;
-
-            if (!partNumber) {
-                toast.error('Favor de introducir No. Parte');
-                return;
-            }
-
-            const response = await api.get(`/search_in_part_number/`, {
-                params: { part_number: partNumber },
-            });
-
-            const {
-                Compuesto = '',
-                Inserto = '',
-                Metal = '',
-                Gripper = '',
-                'Inserto s/hule': ItoSHule = '',
-            } = response.data || {};
-
-            setFormData(prevState => ({
-                ...prevState,
-                inputs: {
-                    ...prevState.inputs,
-                    compound: Compuesto,
-                    insert: Inserto,
-                    gripper: Gripper,
-                    metal: Metal,
-                    insertWithoutRubber: ItoSHule,
-                },
-            }));
-        } catch (error) {
-            console.error('Error fetching part number data:', error);
-            toast.error('No. Parte no existe');
-        }
-    };
-
-    const handleSearchMetal = async () => {
-        try {
-            const metal = formData.inputs.metal;
-            const inserto = formData.inputs.insert;
-            const gripper = formData.inputs.gripper;
-
-            if (!metal || !inserto) {
-                toast.error('Metal y/o Inserto faltantes');
-                return;
-            }
-
-            if (!gripper) {
-                const response = await api.get(`/search_weight`, {
-                    params: { metal, inserto },
-                });
-                const { 'Ito. s/hule': ItoSHule } = response.data;
-                setFormData(prevState => ({
-                    ...prevState,
-                    inputs: {
-                        ...prevState.inputs,
-                        insertWithoutRubber: ItoSHule,
-                    },
-                }));
-            } else {
-                const response = await api.get(`/search_weight`, {
-                    params: { metal, inserto, gripper },
-                });
-                const { 'Ito. s/hule': ItoSHule, Gripper: GripsHule } = response.data;
-                setFormData(prevState => ({
-                    ...prevState,
-                    inputs: {
-                        ...prevState.inputs,
-                        insertWithoutRubber: ItoSHule,
-                        gripperWithoutRubber: GripsHule,
-                    },
-                }));
-            }
-        } catch (error) {
-            console.error('Error fetching metal data:', error);
-            toast.error('Inserto s/hule no encontrado');
         }
     };
 
@@ -495,101 +467,70 @@ const ScrapRegister: React.FC = () => {
             <div className='flex lg:flex-row gap-5 mt-7 md:mt-10 flex-col'>
                 <div>
                     <div className='grid gap-y-5 md:grid-cols-2 gap-8 lg:grid-cols-1 grid-cols-1'>
-                        {inputs.map((input, index) => {
-                            const inputName = inputMap[index] as keyof typeof formData.inputs;
-
-                            return (
-                                <div
-                                    key={index}
-                                    className='flex flex-row items-center gap-2 lg:grid-cols-3 lg:grid xl:gap-10'
-                                >
-                                    <label className='block mb-2 w-full text-sm font-medium text-gray-900'>
-                                        {input}
-                                    </label>
-                                    {input === 'No. Parte' ? (
-                                        <>
-                                            <input
-                                                value={formData.inputs[inputName] || ''}
-                                                onChange={e => handleChange(e, 'input')}
-                                                name={inputMap[index]}
-                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
-                                            />
-                                            <button
-                                                onClick={handleSearchPartNumber}
-                                                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'
-                                            >
-                                                Buscar
-                                            </button>
-                                        </>
-                                    ) : input === 'Metal' ? (
-                                        <>
-                                            <input
-                                                value={formData.inputs[inputName] || ''}
-                                                onChange={e => handleChange(e, 'input')}
-                                                name={inputMap[index]}
-                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
-                                            />
-                                            <button
-                                                onClick={handleSearchMetal}
-                                                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'
-                                            >
-                                                Buscar
-                                            </button>
-                                        </>
-                                    ) : input === 'Compuesto' ? (
-                                        <div className='flex items-start gap-4'>
-                                            <input
-                                                value={formData.inputs[inputName] || ''}
-                                                onChange={e => handleChange(e, 'input')}
-                                                name={inputMap[index]}
-                                                className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
-                                            />
-                                            <div className='flex flex-col gap-2'>
-                                                <div className='flex items-center'>
-                                                    <input
-                                                        id={`checkbox-molding-${index}`}
-                                                        disabled ={isPeroxidChecked}
-                                                        type='checkbox'
-                                                        checked={isMoldingChecked}
-                                                        onChange={() => handleCheckboxChange('molding')}
-                                                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
-                                                    />
-                                                    <label
-                                                        htmlFor={`checkbox-molding-${index}`}
-                                                        className='ml-2 text-sm font-medium text-gray-900'
-                                                    >
-                                                        Molding
-                                                    </label>
-                                                </div>
-                                                <div className='flex items-center'>
-                                                    <input
-                                                        id={`checkbox-peroxid-${index}`}
-                                                        type='checkbox'
-                                                        disabled={isMoldingChecked}
-                                                        checked={isPeroxidChecked}
-                                                        onChange={() => handleCheckboxChange('peroxid')}
-                                                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
-                                                    />
-                                                    <label
-                                                        htmlFor={`checkbox-peroxid-${index}`}
-                                                        className='ml-2 text-sm font-medium text-gray-900'
-                                                    >
-                                                        Peroxid
-                                                    </label>
-                                                </div>
+                        {inputs.map((config, index) => (
+                            <div
+                                key={index}
+                                className='flex flex-row items-center  gap-2 lg:grid-cols-3 lg:grid xl:gap-10'
+                            >
+                                <label className='block mb-2 w-full text-sm font-medium text-gray-900'>
+                                    {config.label}
+                                </label>
+                                <>
+                                    <input
+                                        type={config.type}
+                                        value={formData.inputs[config.key as keyof InputFields['inputs']] || ''}
+                                        onChange={e => handleChange(e, 'input')}
+                                        min={0}
+                                        name={config.key}
+                                        className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
+                                    />
+                                    {config.hasButton && (
+                                        <button
+                                            onClick={config.onButtonClick}
+                                            className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5'
+                                        >
+                                            Buscar
+                                        </button>
+                                    )}
+                                    {config.hasCheckboxes && (
+                                        <div className='flex flex-col gap-2'>
+                                            <div className='flex items-center'>
+                                                <input
+                                                    id={`checkbox-molding-${index}`}
+                                                    disabled={isPeroxidChecked}
+                                                    type='checkbox'
+                                                    checked={isMoldingChecked}
+                                                    onChange={() => handleCheckboxChange('molding')}
+                                                    className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
+                                                />
+                                                <label
+                                                    htmlFor={`checkbox-molding-${index}`}
+                                                    className='ml-2 text-sm font-medium text-gray-900'
+                                                >
+                                                    Molding
+                                                </label>
+                                            </div>
+                                            <div className='flex items-center'>
+                                                <input
+                                                    id={`checkbox-peroxid-${index}`}
+                                                    disabled={isMoldingChecked}
+                                                    type='checkbox'
+                                                    checked={isPeroxidChecked}
+                                                    onChange={() => handleCheckboxChange('peroxid')}
+                                                    className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'
+                                                />
+                                                <label
+                                                    htmlFor={`checkbox-peroxid-${index}`}
+                                                    className='ml-2 text-sm font-medium text-gray-900'
+                                                >
+                                                    Peroxid
+                                                </label>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <input
-                                            value={formData.inputs[inputName] || ''}
-                                            onChange={e => handleChange(e, 'input')}
-                                            name={inputMap[index]}
-                                            className='block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500'
-                                        />
                                     )}
-                                </div>
-                            );
-                        })}
+                                </>
+                            </div>
+                        ))}
                     </div>
                     <div className='justify-center mt-5 items-center'>
                         <button

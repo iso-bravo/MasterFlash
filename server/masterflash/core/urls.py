@@ -1,6 +1,18 @@
 from django.urls import path
+
+from .views.dashboard_views import (
+    get_week_production,
+    mps_fails_and_pauses,
+    production_summary,
+    scrap_per_employee,
+    get_anual_production,
+)
 from .views.configs_views import get_shift_schedule, update_shift_schedule, email_config
-from .views.params_register_views import save_params,get_params_by_date,get_params_by_id
+from .views.params_register_views import (
+    save_params,
+    get_params_by_date,
+    get_params_by_id,
+)
 from .views.part_number_views import (
     get_mold_by_part_number,
     validate_part_number,
@@ -32,6 +44,7 @@ from .views.scrap_views import (
 from .views.press_views import (
     arduino_data,
     client_data,
+    get_todays_machine_production,
     load_machine_data,
     register_data_production,
     load_machine_data_production,
@@ -42,6 +55,13 @@ from .views.press_views import (
     get_presses_monthly_goal,
     get_presses_production_percentage,
     update_pieces_ok,
+)
+
+from .views.insert_views import (
+    get_all_inserts,
+    get_insert_by_id,
+    post_insert,
+    update_insert,
 )
 
 urlpatterns = [
@@ -58,6 +78,7 @@ urlpatterns = [
         register_data_production,
         name="register_data_production",
     ),
+    path("get_todays_machine_production/", get_todays_machine_production, name="get_todays_machine_production"),
     path(
         "presses_general_pause/",
         presses_general_pause,
@@ -155,7 +176,9 @@ urlpatterns = [
         name="get_production_record_by_id",
     ),
     path("save-params", save_params, name="save_params"),
-    path("get_params_by_date/<str:date>", get_params_by_date, name="get_params_by_date"),
+    path(
+        "get_params_by_date/<str:date>", get_params_by_date, name="get_params_by_date"
+    ),
     path("get_params_by_id/<int:id>", get_params_by_id, name="get_params_by_id"),
     path(
         "validate_part_number/<str:part_number>/",
@@ -169,4 +192,21 @@ urlpatterns = [
     ),
     path("email_config/", email_config, name="email_config"),
     path("part_numbers/<int:id>/", get_part_num_by_id, name="get_part_number_by_id"),
+    path("inserts/", get_all_inserts, name="get_all_inserts"),
+    path("inserts/<int:id>/", get_insert_by_id, name="get_insert_by_id"),
+    path("inserts/new/", post_insert, name="post_insert"),
+    path("inserts/<int:id>/update/", update_insert, name="update_insert"),
+    path("dashboard/production/", production_summary, name="production_summary"),
+    path(
+        "dashboard/mps-fails-and-pauses/",
+        mps_fails_and_pauses,
+        name="mps_fails_and_pauses",
+    ),
+    path(
+        "dashboard/scrap-per-employee/", scrap_per_employee, name="scrap_per_employee"
+    ),
+    path("dashboard/week-production/", get_week_production, name="get_week_production"),
+    path(
+        "dashboard/anual-production/", get_anual_production, name="get_anual_production"
+    ),
 ]

@@ -3,44 +3,28 @@ import React, { useEffect, useState } from 'react';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import '../App.css';
 import MachineProduction from '../components/machineProduction';
-import Popup from '../components/popUpProduction';
 import '../index.css';
 import '../output.css';
 import { useNavigate } from 'react-router-dom';
 import MonthlyGoalModal from '../components/MonthlyGoalModal';
-import { toast, ToastContainer } from 'react-toastify';
-import { getErrorMessage } from '../utils/utils';
-import { PartNumberFormValues } from '../types/PartNumsRegisterTypes';
-
-interface MachineData {
-    name: string;
-    state: string;
-    employee_number: string;
-    pieces_ok: string;
-    pieces_rework: string;
-    part_number: string;
-    work_order: string;
-    total_ok: string;
-    molder_number: string;
-    is_relay: boolean;
-    previous_molder_number: string | null;
-}
+import {  ToastContainer } from 'react-toastify';
+import { MachineData } from '../types/PressProductionTypes';
 
 const PressesProduction: React.FC = () => {
     const [machines, setMachines] = useState<MachineData[]>([]);
     const [totalPiecesProduced, setTotalPiecesProduced] = useState<number>(0);
-    const [popUpOpen, setPopUpOpen] = useState(false);
-    const [selectedMachine, setSelectedMachine] = useState<MachineData | null>(null);
     const [goalModalOpen, setGoalModalOpen] = useState(false);
     const [monthlyGoal, setMonthlyGoal] = useState<number | null>(null);
     const [productionTotal, setProductionTotal] = useState<number | null>(null);
     const navigate = useNavigate();
 
+    //TODO Check this function/socket,No caliber is being sent 
     useEffect(() => {
         const socket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_BASE_URL}/ws/load_machine_data_production/`);
 
         socket.onopen = () => {
             console.log('WebSocket Connection opened');
+            socket.send(JSON.stringify({type: "request_update"}));
         };
 
         socket.onmessage = event => {
@@ -49,7 +33,7 @@ const PressesProduction: React.FC = () => {
                 console.log('Data received:', data);
 
                 if (data.machines_data) {
-                    const updatedMachines = data.machines_data.map((machine:MachineData) => ({
+                    const updatedMachines = data.machines_data.map((machine: MachineData) => ({
                         ...machine,
                         molder_number:
                             machine.previous_molder_number !== '----'
@@ -75,7 +59,7 @@ const PressesProduction: React.FC = () => {
             } else {
                 console.error('WebSocket connection closed with error');
             }
-            console.log('WebSocket clsoed: ', event);
+            console.log('WebSocket closed: ', event);
         };
 
         return () => {
@@ -102,14 +86,9 @@ const PressesProduction: React.FC = () => {
     }, []);
 
     const handleMachineClick = (machineData: MachineData) => {
-        setPopUpOpen(true);
-        setSelectedMachine(machineData);
+        navigate(`/presses_production/machine/${machineData.name}`, { state: { machineData } });
     };
 
-    const handleClosePopup = () => {
-        setPopUpOpen(false);
-        setSelectedMachine(null);
-    };
 
     const handleSaveGoal = async (target_amount: number, month: number, year: number) => {
         try {
@@ -127,59 +106,6 @@ const PressesProduction: React.FC = () => {
         } catch (error) {
             console.error('Error saving monthly goal: ', error);
         }
-    };
-
-    const handleSave = async (
-        newEmployeeNumber: string,
-        newPiecesOK: string,
-        newPiecesRework: string,
-        newPartNumber: string,
-        newWork_order: string,
-        newMolderNumber: string,
-        relayNumber?: string,
-    ) => {
-        if (!selectedMachine) return;
-
-        const isRelay = !!relayNumber;
-        const previousMolderNumber = isRelay ? selectedMachine.molder_number : null;
-        const molderNumberToSave = relayNumber || newMolderNumber || selectedMachine.molder_number;
-
-        // Actualiza los campos si están vacíos con los valores anteriores
-        const updatedMachine: MachineData = {
-            ...selectedMachine,
-            employee_number: newEmployeeNumber || selectedMachine.employee_number,
-            pieces_ok: newPiecesOK === '' ? '0' : newPiecesOK || selectedMachine.pieces_ok,
-            pieces_rework: newPiecesRework === '' ? '0' : newPiecesRework || selectedMachine.pieces_rework,
-            part_number: newPartNumber || selectedMachine.part_number,
-            work_order: newWork_order || selectedMachine.work_order,
-            molder_number: molderNumberToSave,
-            is_relay: isRelay,
-            previous_molder_number: previousMolderNumber,
-        };
-
-        setMachines(prevMachines =>
-            prevMachines.map(machine => (machine.name === selectedMachine.name ? updatedMachine : machine)),
-        );
-
-        try {
-            console.log('Updated Machine Data:', updatedMachine);
-            await api.post('/register_data_production/', updatedMachine, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            console.log('Machine state updated successfully!');
-        } catch (error: any) {
-            const errorMessage = getErrorMessage(error);
-            console.error(errorMessage);
-            if (error.response && error.response.status === 404) {
-                toast.error('Número de parte no existe');
-            } else {
-                toast.error(errorMessage);
-            }
-        }
-
-        setPopUpOpen(false);
     };
 
     return (
@@ -227,14 +153,10 @@ const PressesProduction: React.FC = () => {
                             key={`${index}-${machine.name}`}
                             machineData={machine}
                             onClick={() => handleMachineClick(machine)}
-                            selectedState={selectedMachine ? selectedMachine.state : ''}
                         />
                     ))}
             </div>
 
-            {popUpOpen && selectedMachine && (
-                <Popup machineData={selectedMachine} onClose={handleClosePopup} onSave={handleSave} />
-            )}
             <MonthlyGoalModal isOpen={goalModalOpen} onClose={() => setGoalModalOpen(false)} onSave={handleSaveGoal} />
         </div>
     );

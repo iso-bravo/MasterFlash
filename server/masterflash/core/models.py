@@ -22,6 +22,12 @@ class StatePress(models.Model):
     employee_number = models.IntegerField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
 
+    class Meta:
+        indexes = [
+            # Índice para consultas por nombre y fecha
+            models.Index(fields=["name", "date"]),
+        ]
+
 
 class StateTroquelado(models.Model):
     name = models.CharField(max_length=50)
@@ -47,6 +53,28 @@ class StateBarwell(models.Model):
     comments = models.TextField(null=True, blank=True)
 
 
+class WorkedHours(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["press"],
+                condition=models.Q(end_time__isnull=True),
+                name="Unique_open_worked_hours_per_press",
+            )
+        ]
+
+    press = models.CharField(default=None, max_length=50)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def duration(self):
+        """Calcula la duración(horas trabajadas) si se tiene hora de inicio y fin"""
+        if self.start_time and self.end_time:
+            return self.end_time - self.start_time
+        return None
+
+
 class ProductionPress(models.Model):
     press = models.CharField(default=None, max_length=50)
     date_time = models.DateTimeField()
@@ -59,12 +87,41 @@ class ProductionPress(models.Model):
     shift = models.CharField(default="", max_length=50)
     molder_number = models.IntegerField(default=None, null=True, blank=True)
     relay = models.BooleanField(default=False)
+    caliber = models.FloatField(null=True, blank=True)
+
+    worked_hours = models.ForeignKey(
+        WorkedHours,
+        #! si se borra un workedHours, se borran TODAS las producciones asociadas
+        on_delete=models.CASCADE,
+        related_name="productions",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        indexes = [
+            # Índice para consultas por prensa y fecha
+            models.Index(fields=["press", "date_time"]),
+            # Índice para consultas por turno
+            models.Index(fields=["shift"]),
+            # Índice para consultas por número de parte
+            models.Index(fields=["part_number"]),
+        ]
 
 
 class Insert(models.Model):
     insert = models.CharField(max_length=50, blank=True, null=True)
+    chemlok = models.FloatField(null=True, blank=True)
     weight = models.FloatField(null=True, blank=True)
     caliber = models.FloatField(null=True, blank=True)
+
+    def to_dict(self):
+        return {
+            "insert": self.insert,
+            "caliber": self.caliber,
+            "weight": self.weight,
+            "chemlok": self.chemlok,
+        }
 
 
 def upload_path(filename):
@@ -169,6 +226,7 @@ class Qc_Scrap(models.Model):
     insert_weight_wout_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_wout_rubber = models.FloatField(null=True, blank=True)
     insert_weight_w_rubber = models.FloatField(null=True, blank=True)
+    chemlok_x_insert_w_rubber = models.FloatField(null=True, blank=True)
     gripper_weight_w_rubber = models.FloatField(null=True, blank=True)
     recycled_inserts = models.IntegerField(null=True, blank=True)
     total_bodies_weight = models.FloatField(null=True, blank=True)
@@ -246,6 +304,7 @@ class Insert_Query_history(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     insert = models.CharField(max_length=50, null=True)
+    total_chemlok = models.FloatField(default=0)
     total_insert = models.FloatField(default=0)
     total_rubber = models.FloatField(default=0)
     total_metal = models.FloatField(default=0)

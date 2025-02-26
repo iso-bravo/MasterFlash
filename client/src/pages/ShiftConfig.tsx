@@ -15,24 +15,23 @@ const ShiftConfig = () => {
     const { register, handleSubmit, setValue } = useForm<ShiftConfigFormValues>();
     const [shifts, setShifts] = useState<ShiftConfigFormValues>();
 
-    const fetchShifts = async () => {
-        try {
-            const response = await api.get('/get_shift_schedule/');
-            setShifts(response.data);
-
-            // Establecer valores iniciales en el formulario
-            setValue('firstShiftStart', response.data.first_shift_start);
-            setValue('firstShiftEnd', response.data.first_shift_end);
-            setValue('secondShiftStart', response.data.second_shift_start);
-            setValue('secondShiftEnd', response.data.second_shift_end);
-        } catch (error) {
-            console.error('Error fetching shift schedule:', error);
-        }
-    };
-
     useEffect(() => {
+        const fetchShifts = async () => {
+            try {
+                const response = await api.get('/get_shift_schedule/');
+                setShifts(response.data);
+
+                // Establecer valores iniciales en el formulario
+                setValue('firstShiftStart', response.data.first_shift_start);
+                setValue('firstShiftEnd', response.data.first_shift_end);
+                setValue('secondShiftStart', response.data.second_shift_start);
+                setValue('secondShiftEnd', response.data.second_shift_end);
+            } catch (error) {
+                console.error('Error fetching shift schedule:', error);
+            }
+        };
         fetchShifts();
-    }, []);
+    }, [setValue]);
 
     const onSubmit: SubmitHandler<ShiftConfigFormValues> = async data => {
         try {
@@ -42,8 +41,8 @@ const ShiftConfig = () => {
                 second_shift_start: data.secondShiftStart,
                 second_shift_end: data.secondShiftEnd,
             });
-            toast.success("Cambio en turno guardado");
-            setShifts(data); 
+            toast.success('Cambio en turno guardado');
+            setShifts(data);
         } catch (error) {
             console.error('Error updating shift schedule:', error);
             toast.error('Error updating shift schedule');

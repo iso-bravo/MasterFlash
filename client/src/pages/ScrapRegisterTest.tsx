@@ -17,17 +17,19 @@ interface InputFields {
         insert: string;
         gripper: string;
         metal: string;
-        insertWithoutRubber: string;
-        gripperWithoutRubber: string;
-        rubberWeight: string;
-        insertWithRubber: string;
-        gripperWithRubber: string;
-        recycledInserts: string;
-        totalInserts: string;
-        totalGrippers: string;
+        insertWithoutRubber: number | '';
+        chemlok: number;
+        gripperWithoutRubber: number;
+        rubberWeight: number | '';
+        insertWithRubber: number | '';
+        gripperWithRubber: number;
+        recycledInserts: number | '';
+        totalInserts: number | '';
+        totalGrippers: number;
     };
     codes: { [key: string]: string };
 }
+
 
 const ScrapRegisterTest = () => {
     const {
@@ -44,13 +46,14 @@ const ScrapRegisterTest = () => {
                 gripper: ' ',
                 metal: '',
                 insertWithoutRubber: '',
-                gripperWithoutRubber: '0',
+                chemlok: 0,
+                gripperWithoutRubber: 0,
                 rubberWeight: '',
                 insertWithRubber: '',
-                gripperWithRubber: '0',
+                gripperWithRubber: 0,
                 recycledInserts: '',
                 totalInserts: '',
-                totalGrippers: '0',
+                totalGrippers: 0,
             },
             codes: {},
         },
@@ -66,6 +69,7 @@ const ScrapRegisterTest = () => {
         'Gripper',
         'Metal',
         'Inserto s/hule',
+        'Chemlok',
         'Gripper s/hule',
         'Peso Hule',
         'Inserto c/hule',

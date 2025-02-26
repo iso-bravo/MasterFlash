@@ -16,7 +16,7 @@ interface DataItem {
     part_number: string;
     work_order: string;
     caliber: number | null;
-    worked_hrs: number;
+    worked_hours: number;
     dead_time_cause_1: string;
     cavities: number;
     standard: number;
@@ -27,7 +27,7 @@ interface DataItem {
     proposed_efficiency: number;
     date_time: string;
     shift: string;
-    relay:boolean
+    relay: boolean;
     editableField?: keyof DataItem;
 }
 
@@ -78,7 +78,11 @@ const PressesRegisterProduction: React.FC = () => {
             const groupedData = groupDataItems(responseData);
 
             groupedData.forEach(item => {
-                item.efficiency = 0;
+                if (item.worked_hours > 0 && item.standard > 0) {
+                    item.efficiency = (100 * item.pieces_ok) / (item.standard * item.worked_hours);
+                } else {
+                    item.efficiency = 0;
+                }
                 item.proposed_efficiency = 0;
             });
 
@@ -129,14 +133,25 @@ const PressesRegisterProduction: React.FC = () => {
             [field]: value,
         };
 
-        if (field === 'worked_hrs') {
+        // Calcular proposed_efficiency cuando se modifica proposed_standard
+        if (field === 'proposed_standard') {
+            const proposedStandard = parseFloat(value.toString());
+            if (proposedStandard > 0 && newData[index].worked_hours > 0) {
+                const proposedDecimal =
+                    (100 * newData[index].pieces_ok) / (proposedStandard * newData[index].worked_hours);
+                newData[index].proposed_efficiency = parseFloat(proposedDecimal.toFixed(2));
+            } else {
+                newData[index].proposed_efficiency = 0;
+            }
+        }
+
+        // Calcular eficiencia (efficiency) cuando se modifica worked_hours
+        if (field === 'worked_hours') {
             const workedHrs = Number(value);
-            if (workedHrs > 0) {
-                const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
-                const proposed_decimal =
-                    100 * (newData[index].pieces_ok / (parseFloat(newData[index].proposed_standard) * workedHrs));
-                newData[index].efficiency = Number(decimal.toFixed(2));
-                newData[index].proposed_efficiency = Number(proposed_decimal.toFixed(2));
+            if (workedHrs > 0 && newData[index].standard > 0) {
+                const proposedDecimal =
+                    (100 * newData[index].pieces_ok) / (parseFloat(newData[index].proposed_standard) * workedHrs);
+                newData[index].proposed_efficiency = Number(proposedDecimal.toFixed(2));
             } else {
                 newData[index].efficiency = 0;
                 newData[index].proposed_efficiency = 0;
@@ -156,7 +171,7 @@ const PressesRegisterProduction: React.FC = () => {
                 part_number: item.part_number,
                 work_order: item.work_order,
                 caliber: item.caliber || '',
-                worked_hrs: item.worked_hrs,
+                worked_hrs: item.worked_hours,
                 dead_time_cause_1: item.dead_time_cause_1 || '',
                 cavities: item.cavities,
                 standard: item.standard,
@@ -203,7 +218,7 @@ const PressesRegisterProduction: React.FC = () => {
                         part_number: item.part_number,
                         work_order: item.work_order,
                         caliber: item.caliber || '',
-                        worked_hrs: item.worked_hrs,
+                        worked_hrs: item.worked_hours,
                         dead_time_cause_1: item.dead_time_cause_1 || '',
                         cavities: item.cavities,
                         standard: item.standard,
@@ -455,23 +470,23 @@ const PressesRegisterProduction: React.FC = () => {
                                         <span>{item.dead_time_cause_2}</span>
                                     )}
                                 </td>
-                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'worked_hrs')}>
-                                    {item.editableField === 'worked_hrs' ? (
+                                <td className='px-6 py-4' onClick={() => handleDoubleClick(index, 'worked_hours')}>
+                                    {item.editableField === 'worked_hours' ? (
                                         <input
                                             type='text'
-                                            value={item.worked_hrs || ''}
-                                            onChange={e => handleChange(index, 'worked_hrs', e.target.value)}
+                                            value={item.worked_hours || ''}
+                                            onChange={e => handleChange(index, 'worked_hours', e.target.value)}
                                             onBlur={() => handleBlur(index)}
                                             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
                                             autoFocus
                                         />
                                     ) : (
-                                        <span>{item.worked_hrs}</span>
+                                        <span>{item.worked_hours}</span>
                                     )}
                                 </td>
                                 <td className='px-6 py-4'>{item.pieces_ok}</td>
-                                <td className='px-6 py-4'>{`${item.efficiency}%`}</td>
-                                <td className='px-6 py-4'>{`${item.proposed_efficiency}%`}</td>
+                                <td className='px-6 py-4'>{`${item.efficiency.toFixed(2)}%`}</td>
+                                <td className='px-6 py-4'>{`${item.proposed_efficiency.toFixed(2)}%`}</td>
                             </tr>
                         ))}
                     </tbody>

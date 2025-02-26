@@ -42,6 +42,7 @@ def generate_inserts_report(request):
             "compound",
             "total_rubber_weight_in_insert_lbs",
             "total_rubber_weight_in_insert",
+            "chemlok_x_insert_w_rubber",
             "total_rubber_weight_lbs",
             "total_inserts_weight_lbs",
             "inserts_total",
@@ -58,6 +59,7 @@ def generate_inserts_report(request):
                 "compound",
                 "total_rubber_weight_in_insert_lbs",
                 "total_rubber_weight_in_insert",
+                "chemlok_x_insert_w_rubber",
                 "total_rubber_weight_lbs",
                 "total_inserts_weight_lbs",
                 "inserts_total",
@@ -73,6 +75,7 @@ def generate_inserts_report(request):
             "compound",
             "total_rubber_weight_in_insert_lbs",
             "total_rubber_weight_in_insert",
+            "chemlok_x_insert_w_rubber",
             "total_rubber_weight_lbs",
             "total_inserts_weight_lbs",
             "inserts_total",
@@ -88,6 +91,13 @@ def generate_inserts_report(request):
 
         inserts_total_sum = sum(
             item["inserts_total"] if item["inserts_total"] is not None else 0
+            for item in data
+        )
+
+        chemlok_sum = sum(
+            item["chemlok_x_insert_w_rubber"]
+            if item["chemlok_x_insert_w_rubber"] is not None
+            else 0
             for item in data
         )
 
@@ -117,6 +127,7 @@ def generate_inserts_report(request):
             end_date=end_date,
             insert=report,
             total_insert=inserts_total_sum,
+            total_chemlok=chemlok_sum,
             total_rubber=total_rubber_weight_in_insert_lbs_sum,
             total_metal=total_inserts_weight_lbs,
             total_sum=total_sum,
@@ -171,8 +182,9 @@ def generate_inserts_report(request):
 
         # Añadir los totales
         totals = [
-            f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
             f"Total de insertos: {inserts_total_sum:.2f}",
+            f"Total Chemlok: {chemlok_sum:.2f}",
+            f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
             f"Metal lbs: {total_inserts_weight_lbs:.2f}",
             f"Suma Total: {total_sum:.2f}",
         ]
