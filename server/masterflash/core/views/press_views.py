@@ -446,7 +446,7 @@ def register_data_production(request):
 
     # Crea un nuevo registro de producción
     ProductionPress.objects.create(
-        date_time=datetime.now(),
+        date_time=start_time,
         employee_number=employeeNumber,
         pieces_ok=piecesOk,
         pieces_scrap=0,
