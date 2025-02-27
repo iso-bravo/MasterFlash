@@ -149,9 +149,8 @@ const PressesRegisterProduction: React.FC = () => {
         if (field === 'worked_hours') {
             const workedHrs = Number(value);
             if (workedHrs > 0 && newData[index].standard > 0) {
-                const proposedDecimal =
-                    (100 * newData[index].pieces_ok) / (parseFloat(newData[index].proposed_standard) * workedHrs);
-                newData[index].proposed_efficiency = Number(proposedDecimal.toFixed(2));
+                const efficiencyDecimal = (100 * newData[index].pieces_ok) / (newData[index].standard * workedHrs);
+                newData[index].efficiency = Number(efficiencyDecimal.toFixed(2));
             } else {
                 newData[index].efficiency = 0;
                 newData[index].proposed_efficiency = 0;
