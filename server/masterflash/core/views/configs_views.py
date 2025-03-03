@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -24,6 +25,43 @@ def get_shift_schedule(request):
                 "second_shift_end": schedule.second_shift_end,
             }
         )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def get_actual_shift(request):
+    try:
+        time_str = request.GET.get("time")
+        if not time_str:
+            return JsonResponse({"error": "Time parameter is missing"}, status=400)
+        try:
+            print("time_str", time_str)
+            if len(time_str) == 5:  # HH:MM
+                current_time = datetime.strptime(time_str, "%H:%M").time()
+            elif len(time_str) == 8:  # HH:MM:SS
+                current_time = datetime.strptime(time_str, "%H:%M:%S").time()
+            else:
+                return JsonResponse(
+                    {"error": "Invalid time format. Use HH:MM or HH:MM:SS"}, status=400
+                )
+        except ValueError:
+            return JsonResponse(
+                {"error": "Invalid time format. Use HH:MM or HH:MM:SS"}, status=400
+            )
+
+        schedule = ShiftSchedule.objects.first()
+        if not schedule:
+            return JsonResponse({"error": "Shift schedule not found"}, status=404)
+
+        if schedule.first_shift_start <= current_time <= schedule.first_shift_end:
+            shift = "First"
+        elif schedule.second_shift_start <= current_time <= schedule.second_shift_end:
+            shift = "Second"
+        else:
+            shift = "Free"
+
+        return JsonResponse({"shift": shift})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 

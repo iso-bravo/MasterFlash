@@ -712,13 +712,14 @@ def get_todays_machine_production(request):
         return HttpResponseNotAllowed(["GET"])
     else:
         machine = request.GET.get("mp")
+        shift = request.GET.get("shift")
         if not machine:
             return JsonResponse({"error": "Missing machine parameter"}, status=400)
 
         try:
             production_data = (
                 ProductionPress.objects.filter(
-                    press=machine, date_time__date=date.today()
+                    press=machine, date_time__date=date.today(), shift=shift
                 )
                 .values("part_number")
                 .annotate(total_pieces_ok=Sum("pieces_ok"))
