@@ -12,7 +12,7 @@ from masterflash.core.models import (
 )
 
 
-def set_shift(current_time: time) -> str:
+def get_shift(current_time: time) -> str:
     # Obtiene el registro de horarios de la base de datos
     try:
         schedule = ShiftSchedule.objects.get(
@@ -88,7 +88,7 @@ def send_production_data():
     print("Sending production data...")
     current_date = datetime.now().date()
     current_time = datetime.now().time()
-    shift = set_shift(current_time)
+    shift = get_shift(current_time)
 
     machines = LinePress.objects.filter(status="Available")
 

@@ -12,7 +12,7 @@ from ..models import (
     StateTroquelado,
     WorkedHours,
 )
-from ..utils import set_shift, sum_pieces
+from ..utils import get_shift, sum_pieces
 from django.conf import settings
 import logging
 import redis
@@ -121,7 +121,7 @@ def client_data(request):
             return JsonResponse({"message": "Registro invalido."}, status=201)
 
         current_time = datetime.now().time()
-        shift = set_shift(current_time)
+        shift = get_shift(current_time)
 
         if last_record:
             if data.get("employeeNumber") == "":
@@ -237,7 +237,7 @@ def load_machine_data_production(request):
 
     current_date = datetime.now().date()
     current_time = datetime.now().time()
-    shift = set_shift(current_time)
+    shift = get_shift(current_time)
 
     for machine in machines:
         if machine.status != "Available":
@@ -440,7 +440,7 @@ def register_data_production(request):
 
     # Obtén el turno actual
     current_time = datetime.now().time()
-    shift = set_shift(current_time)
+    shift = get_shift(current_time)
 
     logger.error(f"shift: {shift}")
 
@@ -526,7 +526,7 @@ def presses_general_pause(request):
     machines = LinePress.objects.all()
 
     current_time = datetime.now().time()
-    shift = set_shift(current_time)
+    shift = get_shift(current_time)
 
     for machine in machines:
         last_record = (
@@ -561,7 +561,7 @@ def presses_general_failure(request):
     machines = LinePress.objects.all()
 
     current_time = datetime.now().time()
-    shift = set_shift(current_time)
+    shift = get_shift(current_time)
 
     for machine in machines:
         last_record = (
