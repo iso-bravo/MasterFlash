@@ -40,6 +40,29 @@ const ProductionPage = () => {
     const [isStock, setIsStock] = useState(false);
 
     useEffect(() => {
+        const fetchShifts = async () => {
+            try {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                const currentTime = `${hours}:${minutes}`;
+
+                const shiftResponse = await api.get(`/get_actual_shift/?time=${currentTime}`);
+                const shift = shiftResponse.data.shift;
+
+                const response = await api.get(
+                    `/get_todays_machine_production/?mp=${machineData?.name}&shift=${shift}`,
+                );
+                console.log(response.data);
+                setProduction_per_day(response.data);
+            } catch (error) {
+                console.error('Error fetching shift schedule:', error);
+            }
+        };
+        fetchShifts();
+    }, [machineData?.name]);
+
+    useEffect(() => {
         // Reiniciar el  formulario completamente si no hay worked_hours_id
         console.log('machineData', machineData);
         if (!machineData?.worked_hours_id) {
@@ -72,18 +95,6 @@ const ProductionPage = () => {
         setIsFormLocked(!!machineData?.worked_hours_id);
     }, [machineData, reset]);
 
-    useEffect(() => {
-        const fetch_production_per_day = async () => {
-            try {
-                const response = await api.get(`/get_todays_machine_production/?mp=${machineData?.name}`);
-                console.log(response.data);
-                setProduction_per_day(response.data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-        fetch_production_per_day();
-    }, [machineData?.name]);
 
     useEffect(() => {
         if (relay) {

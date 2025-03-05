@@ -3,17 +3,11 @@ import Header from '../components/Header';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import api from '../config/axiosConfig';
-
-type ShiftConfigFormValues = {
-    firstShiftStart: string;
-    firstShiftEnd: string;
-    secondShiftStart: string;
-    secondShiftEnd: string;
-};
+import { ShiftsTypes } from '../types/ShiftsTypes';
 
 const ShiftConfig = () => {
-    const { register, handleSubmit, setValue } = useForm<ShiftConfigFormValues>();
-    const [shifts, setShifts] = useState<ShiftConfigFormValues>();
+    const { register, handleSubmit, setValue } = useForm<ShiftsTypes>();
+    const [shifts, setShifts] = useState<ShiftsTypes>();
 
     useEffect(() => {
         const fetchShifts = async () => {
@@ -33,7 +27,7 @@ const ShiftConfig = () => {
         fetchShifts();
     }, [setValue]);
 
-    const onSubmit: SubmitHandler<ShiftConfigFormValues> = async data => {
+    const onSubmit: SubmitHandler<ShiftsTypes> = async data => {
         try {
             await api.post('/update_shift_schedule/', {
                 first_shift_start: data.firstShiftStart,
