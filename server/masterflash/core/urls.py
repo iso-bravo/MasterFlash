@@ -7,7 +7,7 @@ from .views.dashboard_views import (
     scrap_per_employee,
     get_anual_production,
 )
-from .views.configs_views import get_shift_schedule, update_shift_schedule, email_config
+from .views.configs_views import get_actual_shift, get_shift_schedule, update_shift_schedule, email_config
 from .views.params_register_views import (
     save_params,
     get_params_by_date,
@@ -160,6 +160,7 @@ urlpatterns = [
     ),
     path("new/part-number/", post_part_number, name="post_new_part_number"),
     path("get_shift_schedule/", get_shift_schedule, name="get_shift_schedule"),
+    path("get_actual_shift/", get_actual_shift, name="get_actual_shift"),
     path(
         "update_shift_schedule/",
         update_shift_schedule,
