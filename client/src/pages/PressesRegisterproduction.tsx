@@ -1,5 +1,6 @@
 import api from '../config/axiosConfig';
-import React, { useEffect, useState, useCallback } from 'react';
+import type React from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
@@ -134,7 +135,7 @@ const PressesRegisterProduction: React.FC = () => {
             if (workedHrs > 0) {
                 const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
                 const proposed_decimal =
-                    100 * (newData[index].pieces_ok / (parseFloat(newData[index].proposed_standard) * workedHrs));
+                    100 * (newData[index].pieces_ok / (Number.parseFloat(newData[index].proposed_standard) * workedHrs));
                 newData[index].efficiency = Number(decimal.toFixed(2));
                 newData[index].proposed_efficiency = Number(proposed_decimal.toFixed(2));
             } else {

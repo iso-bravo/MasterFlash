@@ -371,6 +371,7 @@ def register_data_production(request):
     relay = data.get("is_relay")
     start_time = data.get("start_time")
     end_time = data.get("end_time")
+    pieces_order = data.get("pieces_order",0)
 
     if end_time and end_time < start_time:
         return JsonResponse(
@@ -451,6 +452,7 @@ def register_data_production(request):
         pieces_ok=piecesOk,
         pieces_scrap=0,
         pieces_rework=piecesRework,
+        pieces_order=pieces_order,
         part_number=partNumber,
         caliber=caliber,
         work_order=workOrder,

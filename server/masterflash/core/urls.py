@@ -103,7 +103,7 @@ urlpatterns = [
         get_production_press_by_date,
         name="get_all_production_press",
     ),
-    path("monthly-goal/", post_or_put_monthly_goal, name="post_montly_goal"),
+    path("monthly-goal/", post_or_put_monthly_goal, name="post_monthly_goal"),
     path(
         "monthly-goal/<int:year>/<int:month>/",
         get_presses_monthly_goal,

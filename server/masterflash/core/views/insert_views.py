@@ -51,6 +51,7 @@ def post_insert(request):
     try:
         data = json.loads(request.body.decode("utf-8"))
         print(data)
+
         insert = Insert(
             insert=data.get("insert"),
             caliber=data.get("caliber"),
@@ -58,8 +59,9 @@ def post_insert(request):
             chemlok=data.get("chemlok"),
         )
         insert.save()
-        insertQuery = Insert.objects.get(insert=insert.insert, caliber=insert.caliber, weight=insert.weight, chemlok=insert.chemlok)
-        return JsonResponse(insertQuery.to_dict(), status=201)
+
+        # insertQuery = Insert.objects.get(insert=insert.insert, caliber=insert.caliber, weight=insert.weight, chemlok=insert.chemlok)
+        return JsonResponse(insert.to_dict(), status=201)
     except Exception as e:
         print(e)
         return JsonResponse({"error": str(e)}, status=400)
