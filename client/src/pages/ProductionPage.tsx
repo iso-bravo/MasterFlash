@@ -140,6 +140,11 @@ const ProductionPage = () => {
 			}
 		}
 
+		if (!data.partNumber && machineData?.part_number === "----") {
+			toast.error("Debe ingresar un numero de parte");
+			return;
+		}
+
 		const updatedMachine: MachineData = {
 			...machineData,
 			employee_number: data.employeeNumber || machineData.employee_number,
@@ -186,7 +191,10 @@ const ProductionPage = () => {
 	};
 
 	const handleSave = async (data: FormMachineData) => {
-		if (machineData?.pieces_ok && machineData?.worked_hours_id !== null)
+		if (
+			(machineData?.pieces_ok || machineData?.pieces_ok === 0) &&
+			machineData?.worked_hours_id !== null
+		)
 			if (Number(data.piecesOK) + machineData?.pieces_ok > data.piecesOrder) {
 				setPendingData(data);
 				setIsModalOpen(true);
@@ -319,6 +327,7 @@ const ProductionPage = () => {
 							<label className="inline-flex items-center cursor-pointer">
 								<input
 									type="checkbox"
+									tabIndex={-1}
 									className="sr-only peer"
 									checked={isStock}
 									disabled={isFormLocked}
