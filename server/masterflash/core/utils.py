@@ -200,6 +200,7 @@ def send_production_data():
         workOrder = getattr(latest_production, "work_order", "")
         molderNumber = getattr(latest_production, "molder_number", "----")
         caliber = getattr(latest_production, "caliber", "----")
+        pieces_order = getattr(latest_production, "pieces_order", 0)
 
         # Obtener horas trabajadas desde el diccionario
         worked_hours_entry = worked_hours_dict.get(machine.name)
@@ -224,6 +225,7 @@ def send_production_data():
             "pieces_rework": total_rework,
             "part_number": partNumber,
             "work_order": workOrder,
+            "pieces_order": pieces_order,
             "total_ok": total_ok,
             "molder_number": previous_molder_number
             if previous_molder_number != "----"

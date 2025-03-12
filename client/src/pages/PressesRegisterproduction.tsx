@@ -1,5 +1,6 @@
 import api from '../config/axiosConfig';
-import React, { useEffect, useState, useCallback } from 'react';
+import type React from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
@@ -148,9 +149,14 @@ const PressesRegisterProduction: React.FC = () => {
         // Calcular eficiencia (efficiency) cuando se modifica worked_hours
         if (field === 'worked_hours') {
             const workedHrs = Number(value);
-            if (workedHrs > 0 && newData[index].standard > 0) {
-                const efficiencyDecimal = (100 * newData[index].pieces_ok) / (newData[index].standard * workedHrs);
-                newData[index].efficiency = Number(efficiencyDecimal.toFixed(2));
+
+            if (workedHrs > 0) {
+                const decimal = 100 * (newData[index].pieces_ok / (newData[index].standard * workedHrs));
+                const proposed_decimal =
+                    100 * (newData[index].pieces_ok / (Number.parseFloat(newData[index].proposed_standard) * workedHrs));
+                newData[index].efficiency = Number(decimal.toFixed(2));
+                newData[index].proposed_efficiency = Number(proposed_decimal.toFixed(2));
+
             } else {
                 newData[index].efficiency = 0;
                 newData[index].proposed_efficiency = 0;
