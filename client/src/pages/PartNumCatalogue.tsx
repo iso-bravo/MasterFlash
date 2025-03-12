@@ -68,7 +68,7 @@ interface FullPartNum {
     image_box_label_3?: File | null;
 }
 
-const PartNumCataloge = () => {
+const PartNumCatalogue = () => {
     const navigate = useNavigate();
     const [partNums, setPartNums] = useState<PartNum[]>([]);
     const [filteredPartNums, setFilteredPartNums] = useState<PartNum[]>([]);
@@ -243,4 +243,4 @@ const PartNumCataloge = () => {
     );
 };
 
-export default PartNumCataloge;
+export default PartNumCatalogue;

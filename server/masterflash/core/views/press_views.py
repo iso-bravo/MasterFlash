@@ -484,10 +484,12 @@ def get_production_press_by_date(request):
         "id",
         "press",
         "molder_number",
+        "caliber",
         "part_number",
         "work_order",
         "pieces_ok",
         "date_time",
+        "worked_hours",
         "relay",
     )
 
@@ -503,6 +505,15 @@ def get_production_press_by_date(request):
             .first()
         )
         print("Part_Number record found:", part_number_record)
+        if record["worked_hours"]:
+            worked_hours_obj = WorkedHours.objects.get(id=record["worked_hours"])
+            duration = worked_hours_obj.duration
+            if duration:
+                worked_hours_hours = round(duration.total_seconds() / 3600, 2)
+            else:
+                worked_hours_hours = None
+        else:
+            worked_hours_hours = None
         if part_number_record:
             combined_record = {
                 "id": record["id"],
@@ -510,11 +521,12 @@ def get_production_press_by_date(request):
                 "molder_number": record["molder_number"],
                 "part_number": record["part_number"],
                 "work_order": record["work_order"],
-                "caliber": part_number_record["caliber"],
+                "caliber": record["caliber"],
                 "cavities": part_number_record["cavities"],
                 "standard": part_number_record["standard"],
                 "pieces_ok": record["pieces_ok"],
                 "hour": record["date_time"].strftime("%H:%M:%S"),
+                "worked_hours": worked_hours_hours,
                 "relay": record["relay"],
             }
             result.append(combined_record)

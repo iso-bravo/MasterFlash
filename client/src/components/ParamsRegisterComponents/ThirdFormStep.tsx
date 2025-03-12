@@ -22,7 +22,7 @@ const ThirdFormStep = () => {
             ts2: !initParams.icc ? thirdParams.ts2 : undefined,
             cavities_arr: thirdParams.cavities_arr.length
                 ? thirdParams.cavities_arr
-                : Array.from({ length: secondParams.cavities }, () => [0, 0, 0, 0, 0]),
+                : Array.from({ length: secondParams.cavities }, () => [NaN, NaN, NaN, NaN, NaN]),
         },
     });
 

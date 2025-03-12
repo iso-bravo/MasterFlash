@@ -165,6 +165,7 @@ const SecondPartFormStep = () => {
                                                 <input
                                                     type='number'
                                                     step='0.01'
+                                                    min={0}
                                                     {...restRegister}
                                                     ref={e => {
                                                         registerRef(e);
