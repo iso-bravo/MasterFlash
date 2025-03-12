@@ -84,6 +84,7 @@ class ProductionPress(models.Model):
     pieces_rework = models.IntegerField(null=True, blank=True)
     part_number = models.CharField(max_length=50, blank=True)
     work_order = models.CharField(max_length=50, blank=True)
+    pieces_order = models.IntegerField(null=True, blank=True)
     shift = models.CharField(default="", max_length=50)
     molder_number = models.IntegerField(default=None, null=True, blank=True)
     relay = models.BooleanField(default=False)
@@ -117,6 +118,7 @@ class Insert(models.Model):
 
     def to_dict(self):
         return {
+            "id": self.id,
             "insert": self.insert,
             "caliber": self.caliber,
             "weight": self.weight,

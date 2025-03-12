@@ -9,7 +9,7 @@ import DashboardCard from '../components/DashboardCard';
 import { useDebounce } from '../utils/useDebounce';
 import DynamicTable from '../components/DynamicTable';
 import WeekProductionChart from '../components/WeekProductionChart';
-import { AnualProduction, TotalScrapData, WeekProduction } from '../types/DashBoardTypes';
+import type { AnualProduction, TotalScrapData, WeekProduction } from '../types/DashBoardTypes';
 import { formatDate } from '../utils/formatDate';
 import AnualProductionChart from '../components/AnualProductionChart';
 
@@ -47,7 +47,7 @@ const DashBoard = () => {
         try {
             const response = await api.get(`/dashboard/production/?month=${month}&year=${year}`);
             const productionData: string =
-                response.data['pieces_ok_total'] + '/' + response.data['target_amount'] + ' piezas';
+                `${response.data.pieces_ok_total}/${response.data.target_amount} piezas`;
             setProductionSummary(productionData);
         } catch (error) {
             console.error('Error fetching production summary:', error);
@@ -67,8 +67,8 @@ const DashBoard = () => {
     const fetchFailsAndPauses = useCallback(async () => {
         try {
             const response = await api.get(`/dashboard/mps-fails-and-pauses/?month=${month}&year=${year}`);
-            setPauses(response.data['pause_count']);
-            setFails(response.data['failure_count']);
+            setPauses(response.data.pause_count);
+            setFails(response.data.failure_count);
         } catch (error) {
             console.error('Error fetching fails and pauses:', error);
         }

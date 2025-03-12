@@ -1,4 +1,17 @@
 {
-    "python.analysis.typeCheckingMode": "off",
-    "cSpell.words": ["masterflash"]
+	"python.analysis.typeCheckingMode": "off",
+	"cSpell.words": [
+		"arduino",
+		"Barwell",
+		"chemlok",
+		"fernet",
+		"julian",
+		"masterflash",
+		"mexico",
+		"MVFP",
+		"partnum",
+		"Registerproduction",
+		"Toastify",
+		"wout"
+	]
 }
