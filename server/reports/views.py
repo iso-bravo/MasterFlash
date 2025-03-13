@@ -22,6 +22,157 @@ import datetime
 # Create your views here.
 
 
+def generate_grippers_report(filters: dict[str, list],start_date:str,end_date:str):
+    qs = Qc_Scrap.objects.filter(**filters).values(
+        "gripper",
+        "total_rubber_weight_in_insert_lbs",
+        "total_rubber_weight_in_insert",
+        "chemlok_x_insert_w_rubber",
+        "total_rubber_weight_lbs",
+        "total_inserts_weight_lbs",
+        "inserts_total",
+    )
+
+    # Sí no se encontraron datos
+    if not qs:
+        return JsonResponse({"error": "No data found"}, status=404)
+
+    # Agrupar datos por gripper
+    grouped_data = {}
+    total_rubber_weight_in_insert_lbs_sum = 0
+    inserts_total_sum = 0
+    chemlok_sum = 0
+    total_inserts_weight_lbs_sum = 0
+
+    for item in qs:
+        gripper = item["gripper"]
+        if gripper not in grouped_data:
+            grouped_data[gripper] = {
+                "total_rubber_weight_in_insert": 0,
+                "total_rubber_weight_in_insert_lbs": 0,
+                "chemlok_x_insert_w_rubber": 0,
+                "total_rubber_weight_lbs": 0,
+                "total_inserts_weight_lbs": 0,
+                "inserts_total": 0,
+            }
+
+        grouped_data[gripper]["total_rubber_weight_in_insert"] += (
+            item.get("total_rubber_weight_in_insert") or 0
+        )
+        grouped_data[gripper]["total_rubber_weight_in_insert_lbs"] += (
+            item.get("total_rubber_weight_in_insert_lbs") or 0
+        )
+        grouped_data[gripper]["chemlok_x_insert_w_rubber"] += (
+            item.get("chemlok_x_insert_w_rubber") or 0
+        )
+        grouped_data[gripper]["total_rubber_weight_lbs"] += (
+            item.get("total_rubber_weight_lbs") or 0
+        )
+        grouped_data[gripper]["total_inserts_weight_lbs"] += (
+            item.get("total_inserts_weight_lbs") or 0
+        )
+        grouped_data[gripper]["inserts_total"] += item.get("inserts_total") or 0
+
+        # Calcular totales
+        total_rubber_weight_in_insert_lbs_sum += (
+            item.get("total_rubber_weight_in_insert_lbs") or 0
+        )
+        inserts_total_sum += item.get("inserts_total") or 0
+        chemlok_sum += item.get("chemlok_x_insert_w_rubber") or 0
+        total_inserts_weight_lbs_sum += item.get("total_inserts_weight_lbs") or 0
+
+    total_sum = total_rubber_weight_in_insert_lbs_sum + total_inserts_weight_lbs_sum
+
+    # Guardar en historial de consultas
+    # ? Revisar si no genera duplicados
+    Insert_Query_history.objects.create(
+        query_date=datetime.datetime.now(),
+        start_date=start_date,
+        end_date=end_date,
+        insert="grippers",
+        total_insert=inserts_total_sum,
+        total_chemlok=chemlok_sum,
+        total_rubber=total_rubber_weight_in_insert_lbs_sum,
+        total_metal=total_inserts_weight_lbs_sum,
+        total_sum=total_sum,
+    )
+
+    # Crear el PDF para Grippers
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
+    title_style = styles["Heading1"]
+    normal_style = styles["Normal"]
+
+    # Título del reporte
+    title = Paragraph(
+        f"Reporte Grippers desde: {start_date} hasta: {end_date}",
+        title_style,
+    )
+    elements.append(title)
+    elements.append(Paragraph(" ", normal_style))
+
+    # Construir la tabla con los datos agrupados por gripper
+    data_table = [
+        [
+            "Gripper",
+            "Hule/Sil (Total)",
+            "Hule/Sil (Lbs)",
+            "Chemlok",
+            "Metal (Lbs)",
+            "Insertos Totales",
+        ]
+    ]
+    for gripper, values in grouped_data.items():
+        data_table.append(
+            [
+                gripper,
+                f"{values['total_rubber_weight_in_insert']:.2f}",
+                f"{values['total_rubber_weight_in_insert_lbs']:.2f}",
+                f"{values['chemlok_x_insert_w_rubber']:.2f}",
+                f"{values['total_inserts_weight_lbs']:.2f}",
+                f"{values['inserts_total']:.2f}",
+            ]
+        )
+
+    table = Table(data_table)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+        )
+    )
+    elements.append(table)
+    elements.append(Paragraph(" ", normal_style))
+
+    # Agregar sección de totales generales
+    totals = [
+        f"Total de insertos: {inserts_total_sum:.2f}",
+        f"Total Chemlok: {chemlok_sum:.2f}",
+        f"Hule/Sil lbs: {total_rubber_weight_in_insert_lbs_sum:.2f}",
+        f"Metal lbs: {total_inserts_weight_lbs_sum:.2f}",
+        f"Suma Total: {total_sum:.2f}",
+    ]
+    for total in totals:
+        elements.append(Paragraph(total, normal_style))
+
+    doc.build(elements)
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f"inline; filename=reporte_grippers_{start_date}_a_{end_date}.pdf"
+    )
+    return response
+
+
 @csrf_exempt
 @require_POST
 def generate_inserts_report(request):
@@ -47,6 +198,9 @@ def generate_inserts_report(request):
             "total_inserts_weight_lbs",
             "inserts_total",
         )
+    elif report == "Grippers":
+        filters["gripper__isnull"] = False
+        return generate_grippers_report(filters,start_date,end_date)
 
     elif report == "0.025":
         filters["caliber"] = report
