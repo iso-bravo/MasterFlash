@@ -755,3 +755,9 @@ def get_worked_hours_by_id(request, id):
             return JsonResponse({"start_time": worked_hours.start_time}, safe=False)
     except WorkedHours.DoesNotExist:
         return HttpResponse(status=404)
+
+
+@csrf_exempt
+def close_all_open_worked_hours(request):
+    WorkedHours.objects.filter(end_time=None).update(end_time=datetime.now().time())
+    return JsonResponse({"message": "Horas trabajadas cerradas correctamente"}, status=201)

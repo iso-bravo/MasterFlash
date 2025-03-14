@@ -13,64 +13,63 @@ from masterflash.core.models import (
 
 
 def get_shift(current_time: time) -> str:
-    # Obtiene el registro de horarios de la base de datos
+    """
+    Determina el turno basado en la hora actual utilizando el horario definido en la base de datos.
+    Si no se encuentra el horario, retorna "Free".
+    """
     try:
-        schedule = ShiftSchedule.objects.get(
-            id=1
-        )  # Ajusta si usas otro ID o condiciones
+        # Se asume que el horario ha sido configurado previamente y se encuentra en el id=1.
+        schedule = ShiftSchedule.objects.get(id=1)
     except ShiftSchedule.DoesNotExist:
-        return "Free"  # En caso de no existir el registro, retornar 'Free'
+        return "Free"
 
-    first_shift_start = schedule.first_shift_start
-    first_shift_end = schedule.first_shift_end
-    second_shift_start = schedule.second_shift_start
-    second_shift_end = schedule.second_shift_end
+    # Extraer los rangos de turno
+    first_start, first_end = schedule.first_shift_start, schedule.first_shift_end
+    second_start, second_end = schedule.second_shift_start, schedule.second_shift_end
 
-    # Comprobación de turno usando los valores de base de datos
-    if first_shift_start <= current_time <= first_shift_end:
+    # Evaluación del turno:
+    # Primer turno: dentro del rango definido.
+    if first_start <= current_time <= first_end:
         return "First"
-    elif second_shift_start <= current_time or current_time <= second_shift_end:
+    # Segundo turno: se asume que puede abarcar desde una hora hasta pasada la medianoche.
+    elif current_time >= second_start or current_time <= second_end:
         return "Second"
     else:
         return "Free"
 
 
-def sum_pieces(machine, shift, current_date):
+def sum_pieces(machine:LinePress, shift:str, current_date) -> int:
+    """
+    Suma las piezas producidas para una máquina, turno y fecha dados,
+    tomando como referencia el último registro de producción para determinar
+    el part_number y work_order. Si no hay registros o el turno no es válido, retorna 0.
+    """
+    # Obtener el último registro de producción para la máquina.
     last_record = (
         ProductionPress.objects.filter(press=machine.name)
         .order_by("-date_time")
         .values("part_number", "work_order")
         .first()
     )
-
     if not last_record:
         return 0
 
-    # Obtener el horario de turnos
-    schedule = ShiftSchedule.objects.first()
-    if not schedule:
-        schedule = ShiftSchedule.objects.create()
+    # Obtener (o crear) el horario de turnos.
+    schedule = ShiftSchedule.objects.first() or ShiftSchedule.objects.create()
 
-    # Definir los rangos de tiempo dinámicamente
+    # Definir el filtro de tiempo en función del turno.
     if shift == "First":
-        shift_filter = Q(
-            date_time__time__range=(
-                schedule.first_shift_start,
-                schedule.first_shift_end,
-            )
-        )
+        shift_filter = Q(date_time__time__range=(schedule.first_shift_start, schedule.first_shift_end))
     elif shift == "Second":
-        shift_filter = Q(
-            date_time__time__range=(
-                schedule.second_shift_start,
-                schedule.second_shift_end,
-            )
-        ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
+        shift_filter = (
+            Q(date_time__time__range=(schedule.second_shift_start, schedule.second_shift_end))
+            | Q(date_time__time__range=(time.min, schedule.second_shift_end))
+        )
     else:
         return 0
 
-    # Obtener la suma directamente desde la base de datos
-    return (
+    # Filtrar y agregar la suma de piezas OK
+    result = (
         ProductionPress.objects.filter(
             press=machine.name,
             shift=shift,
@@ -79,24 +78,28 @@ def sum_pieces(machine, shift, current_date):
             work_order=last_record["work_order"],
         )
         .filter(shift_filter)
-        .aggregate(total_pieces=Sum("pieces_ok"))["total_pieces"]
-        or 0
+        .aggregate(total_pieces=Sum("pieces_ok"))
     )
+
+    return result["total_pieces"] or 0
 
 
 def send_production_data():
     print("Sending production data...")
-    current_date = datetime.now().date()
-    current_time = datetime.now().time()
+    now = datetime.now()
+    current_date = now.date()
+    current_time = now.time()
     shift = get_shift(current_time)
 
-    machines = LinePress.objects.filter(status="Available")
+    machines = list(LinePress.objects.filter(status="Available"))
+    machine_names = [machine.name for machine in machines]
 
-    states = StatePress.objects.all().values("name", "state")
-    states_dict = {s["name"]: s["state"] for s in states}
+    states_dict = {
+        s["name"]: s["state"] for s in StatePress.objects.all().values("name", "state")
+    }
 
     latest_dates = (
-        ProductionPress.objects.filter(press__in=[m.name for m in machines])
+        ProductionPress.objects.filter(press__in=machine_names)
         .values("press")
         .annotate(max_date=Max("date_time"))
     )
@@ -111,10 +114,10 @@ def send_production_data():
 
     latest_hours = (
         WorkedHours.objects.filter(
-            press__in=[m.name for m in machines],
+            press__in=machine_names,
             end_time__isnull=True,
             start_time__date=current_date,
-            start_time__lte=datetime.now(),
+            start_time__lte=now,
         )
         .values("press")
         .annotate(max_start_time=Max("start_time"))
@@ -176,6 +179,7 @@ def send_production_data():
 
     machines_data = []
     total_piecesProduced = 0
+
     total_pieces = (
         ProductionPress.objects.filter(
             date_time__year=current_date.year, date_time__month=current_date.month
@@ -192,13 +196,13 @@ def send_production_data():
             and latest_production.worked_hours
             and latest_production.worked_hours.end_time
         ):
-            partNumber = "----"
+            part_number = "----"
         else:
-            partNumber = getattr(latest_production, "part_number", "--------")
+            part_number = getattr(latest_production, "part_number", "--------")
 
         employeeNumber = getattr(latest_production, "employee_number", "----")
         workOrder = getattr(latest_production, "work_order", "")
-        molderNumber = getattr(latest_production, "molder_number", "----")
+        molder_number = getattr(latest_production, "molder_number", "----")
         caliber = getattr(latest_production, "caliber", "----")
         pieces_order = getattr(latest_production, "pieces_order", 0)
 
@@ -217,19 +221,24 @@ def send_production_data():
 
         previous_molder_number = molder_dict.get(machine.name, "----")
 
+        # Se prioriza el número de molde anterior si está disponible
+        final_molder_number = (
+            previous_molder_number
+            if previous_molder_number != "----"
+            else molder_number
+        )
+
         machine_data = {
             "name": machine.name,
             "state": machine_state,
             "employee_number": employeeNumber,
             "pieces_ok": actual_ok,
             "pieces_rework": total_rework,
-            "part_number": partNumber,
+            "part_number": part_number,
             "work_order": workOrder,
             "pieces_order": pieces_order,
             "total_ok": total_ok,
-            "molder_number": previous_molder_number
-            if previous_molder_number != "----"
-            else molderNumber,
+            "molder_number": final_molder_number,
             "previous_molder_number": previous_molder_number,
             "caliber": caliber,
             "start_time": start_time.isoformat() if start_time else None,
