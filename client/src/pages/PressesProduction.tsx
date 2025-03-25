@@ -1,5 +1,5 @@
 import api from '../config/axiosConfig';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import '../App.css';
 import MachineProduction from '../components/machineProduction';
@@ -8,7 +8,7 @@ import '../output.css';
 import { useNavigate } from 'react-router-dom';
 import MonthlyGoalModal from '../components/MonthlyGoalModal';
 import {  ToastContainer } from 'react-toastify';
-import { MachineData } from '../types/PressProductionTypes';
+import type { MachineData } from '../types/PressProductionTypes';
 
 const PressesProduction: React.FC = () => {
     const [machines, setMachines] = useState<MachineData[]>([]);
@@ -18,7 +18,6 @@ const PressesProduction: React.FC = () => {
     const [productionTotal, setProductionTotal] = useState<number | null>(null);
     const navigate = useNavigate();
 
-    //TODO Check this function/socket,No caliber is being sent 
     useEffect(() => {
         const socket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_BASE_URL}/ws/load_machine_data_production/`);
 

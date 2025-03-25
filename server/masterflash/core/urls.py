@@ -54,6 +54,7 @@ from .views.press_views import (
     post_or_put_monthly_goal,
     get_presses_monthly_goal,
     get_presses_production_percentage,
+    report_issue,
     update_pieces_ok,
 )
 
@@ -210,4 +211,5 @@ urlpatterns = [
     path(
         "dashboard/anual-production/", get_anual_production, name="get_anual_production"
     ),
+    path("report-issue/", report_issue, name="report_issue"),
 ]

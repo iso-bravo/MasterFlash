@@ -3,6 +3,7 @@ import json
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from ..models import (
+    EmailConfig,
     LinePress,
     Part_Number,
     Presses_monthly_goals,
@@ -19,6 +20,7 @@ import redis
 from django.db.models import Q, Sum
 from django.db import transaction
 from django.views.decorators.http import require_http_methods, require_POST
+from django.core.mail import send_mail, get_connection
 
 
 @csrf_exempt
@@ -371,7 +373,7 @@ def register_data_production(request):
     relay = data.get("is_relay")
     start_time = data.get("start_time")
     end_time = data.get("end_time")
-    pieces_order = data.get("pieces_order",0)
+    pieces_order = data.get("pieces_order", 0)
 
     if end_time and end_time < start_time:
         return JsonResponse(
@@ -755,3 +757,51 @@ def get_worked_hours_by_id(request, id):
             return JsonResponse({"start_time": worked_hours.start_time}, safe=False)
     except WorkedHours.DoesNotExist:
         return HttpResponse(status=404)
+
+
+@csrf_exempt
+def report_issue(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        MP_name = data.get("MP_name")
+        if not MP_name:
+            return JsonResponse(
+                {"error": "El número de máquina es obligatorio"}, status=400
+            )
+
+        email_config = EmailConfig.objects.first()
+        if not email_config:
+            return JsonResponse(
+                {"error": "Configuración de correo no encontrada"}, status=500
+            )
+
+        connection = get_connection(
+            host=email_config.smtp_host,
+            port=email_config.smtp_port,
+            username=email_config.sender_username,
+            password=email_config.get_password(),
+            use_tls=email_config.use_tls,
+            use_ssl=False if email_config.use_tls else True,
+        )
+
+        email_subject = f"⚠️ Alerta de error en máquina {MP_name}"
+        email_body = f"Hubo un error en la máquina: {MP_name}"
+        recipients = email_config.get_recipients_list()
+
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=email_config.sender_email,
+            recipient_list=recipients,
+            connection=connection,
+        )
+
+        return JsonResponse({"message": "Correo enviado correctamente"})
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Formato JSON inválido"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

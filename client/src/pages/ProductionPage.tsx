@@ -12,6 +12,7 @@ import api from "../config/axiosConfig";
 import { toast, ToastContainer } from "react-toastify";
 import ProductionPerDayTable from "../components/ProductionPerDayTable";
 import axios from "axios";
+import { MdBugReport } from "react-icons/md";
 
 const ProductionPage = () => {
 	const navigate = useNavigate();
@@ -217,6 +218,22 @@ const ProductionPage = () => {
 		return null;
 	}
 
+	const handleReportIssue = async () => {
+		try {
+			if (!machineData) return;
+			const response = await api.post("/report-issue/", {
+				MP_name: machineData?.name,
+			});
+			console.log(response);
+			if (response.data.message) {
+				toast.success("Correo enviado correctamente");
+			}
+		} catch (error) {
+			console.error(error);
+			toast.error("Error al enviar correo");
+		}
+	};
+
 	return (
 		<div className="flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden">
 			<ToastContainer position="top-center" theme="colored" />
@@ -226,13 +243,30 @@ const ProductionPage = () => {
 					goto="/presses_production"
 				/>
 				<h1 className="text-3xl font-bold text-gray-800">{machineData.name}</h1>
-				<div className="bg-blue-50 p-4 rounded-lg">
-					<p className="text-lg font-semibold text-blue-800">
-						Piezas producidas
-					</p>
-					<p className="text-2xl font-bold text-blue-600">
-						{machineData.pieces_ok}
-					</p>
+				<div className="flex flex-row items-center gap-6">
+					<div className="flex items-center justify-center bg-red-50 p-4 rounded-lg group relative">
+						<button
+							type="button"
+							className="flex items-center justify-center"
+							onClick={() => handleReportIssue()}
+						>
+							<MdBugReport size={24} color="red" />
+						</button>
+						<div
+							className="absolute top-full mt-2 px-2 py-1 text-sm text-white bg-gray-800 rounded-md opacity-0
+						transition-opacity duration-200 group-hover:opacity-100 pointer-events-none transform -translate-x-1/2 left-1/2"
+						>
+							Reportar un error
+						</div>
+					</div>
+					<div className="bg-blue-50 p-4 rounded-lg">
+						<p className="text-lg font-semibold text-blue-800">
+							Piezas producidas
+						</p>
+						<p className="text-2xl font-bold text-blue-600">
+							{machineData.pieces_ok}
+						</p>
+					</div>
 				</div>
 			</section>
 			<form
