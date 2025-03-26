@@ -384,11 +384,11 @@ const ProductionPage = () => {
 							type="text"
 							{...register("partNumber" as keyof FormMachineData)}
 							className={`w-full h-12 px-4 border rounded-lg ${
-								isFormLocked
-									? "bg-gray-100 cursor-not-allowed"
-									: "focus:ring-2 focus:ring-blue-500"
+								// isFormLocked
+								// ? "bg-gray-100 cursor-not-allowed"
+								/* : */ "focus:ring-2 focus:ring-blue-500"
 							}`}
-							disabled={isFormLocked}
+							// disabled={isFormLocked}
 						/>
 					</div>
 

@@ -760,6 +760,7 @@ def get_worked_hours_by_id(request, id):
 
 
 @csrf_exempt
+
 def report_issue(request):
     if request.method != "POST":
         return JsonResponse({"error": "Método no permitido"}, status=405)
@@ -805,3 +806,8 @@ def report_issue(request):
         return JsonResponse({"error": "Formato JSON inválido"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+def close_all_open_worked_hours(request):
+    WorkedHours.objects.filter(end_time=None).update(end_time=datetime.now())
+    return JsonResponse({"message": "Horas trabajadas cerradas correctamente"}, status=201)
+

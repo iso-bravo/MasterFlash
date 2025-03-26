@@ -7,7 +7,12 @@ from .views.dashboard_views import (
     scrap_per_employee,
     get_anual_production,
 )
-from .views.configs_views import get_actual_shift, get_shift_schedule, update_shift_schedule, email_config
+from .views.configs_views import (
+    get_actual_shift,
+    get_shift_schedule,
+    update_shift_schedule,
+    email_config,
+)
 from .views.params_register_views import (
     save_params,
     get_params_by_date,
@@ -44,6 +49,7 @@ from .views.scrap_views import (
 from .views.press_views import (
     arduino_data,
     client_data,
+    close_all_open_worked_hours,
     get_todays_machine_production,
     load_machine_data,
     register_data_production,
@@ -79,7 +85,11 @@ urlpatterns = [
         register_data_production,
         name="register_data_production",
     ),
-    path("get_todays_machine_production/", get_todays_machine_production, name="get_todays_machine_production"),
+    path(
+        "get_todays_machine_production/",
+        get_todays_machine_production,
+        name="get_todays_machine_production",
+    ),
     path(
         "presses_general_pause/",
         presses_general_pause,
@@ -110,6 +120,7 @@ urlpatterns = [
         get_presses_monthly_goal,
         name="get_monthly_goal",
     ),
+    path("close_worked_hours/", close_all_open_worked_hours, name="close_worked_hours"),
     path(
         "production-percentage/<int:year>/<int:month>/",
         get_presses_production_percentage,

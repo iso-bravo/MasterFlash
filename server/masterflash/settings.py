@@ -29,11 +29,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "*",
-    "192.168.10.7",
+    "192.168.10.76",
     "smimx.net",
     "192.168.0.236",
-    "http://192.168.10.7:5174",
-    "192.168.10.7:5174",
+    "http://192.168.1.76:5174",
+    "192.168.10.76:5174",
+    "http://localhost:5174",
 ]
 
 
@@ -169,4 +170,3 @@ EMAIL_USE_TLS = True
 SECRET_KEY_EMAIL_ENCRYPTION = config("SECRET_KEY_EMAIL_ENCRYPTION")
 EMAIL_HOST_USER = None
 EMAIL_HOST_PASSWORD = None
-
