@@ -473,7 +473,7 @@ def register_data_production(request):
 
     # Crea un nuevo registro en ProductionPress
     ProductionPress.objects.create(
-        date_time=start_time,
+        date_time=datetime.now(),
         employee_number=employeeNumber,
         pieces_ok=piecesOk,
         pieces_scrap=0,
