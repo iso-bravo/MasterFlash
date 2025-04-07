@@ -1,13 +1,13 @@
 import api from "../config/axiosConfig";
 import { useEffect, useState } from "react";
-import { IoIosArrowRoundBack, IoMdAdd, IoMdCloseCircle } from "react-icons/io";
+import { IoIosArrowRoundBack, IoMdAdd } from "react-icons/io";
 import "../App.css";
 import MachineProduction from "../components/machineProduction";
 import "../index.css";
 import "../output.css";
 import { useNavigate } from "react-router-dom";
 import MonthlyGoalModal from "../components/MonthlyGoalModal";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import type { MachineData } from "../types/PressProductionTypes";
 
 const PressesProduction: React.FC = () => {
@@ -101,16 +101,6 @@ const PressesProduction: React.FC = () => {
 			state: { machineData },
 		});
 	};
-	const handleCloseAllWorkedHours = async () => {
-		try {
-			const response = await api.get("/close_worked_hours/");
-			console.log(response.data);
-			toast.success("Horas trabajadas cerradas correctamente");
-		} catch (error) {
-			console.error("Error cerrando horas trabajadas:", error);
-			toast.error("Error cerrando horas trabajadas");
-		}
-	};
 
 	const handleSaveGoal = async (
 		target_amount: number,
@@ -175,14 +165,6 @@ const PressesProduction: React.FC = () => {
 							>
 								<IoMdAdd size={20} />
 								Agregar meta
-							</button>
-							<button
-								type="button"
-								className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center gap-2"
-								onClick={handleCloseAllWorkedHours}
-							>
-								<IoMdCloseCircle size={20} />
-								Cerrar todas las horas
 							</button>
 						</div>
 					</div>
