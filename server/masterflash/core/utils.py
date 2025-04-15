@@ -165,23 +165,32 @@ def send_production_data():
                 schedule.first_shift_end,
             )
         )
-    elif shift == "Second" and schedule.second_shift_end < schedule.second_shift_start:
-    # El turno comenzó el día anterior y termina en el día actual
-        start_date = current_date - timedelta(days=1)
-        end_date = current_date
-        date_filter = Q(date_time__date=start_date) | Q(date_time__date=end_date)
+        date_filter = Q(date_time__date=current_date)
+    elif shift == "Second":
+        shift_filter = Q(
+            date_time__time__range=(
+                schedule.second_shift_start,
+                schedule.second_shift_end,
+            )
+        )
+        if schedule.second_shift_end < schedule.second_shift_start:
+            # El turno comenzó el día anterior y termina en el día actual
+            start_date = current_date - timedelta(days=1)
+            end_date = current_date
+            date_filter = Q(date_time__date=start_date) | Q(date_time__date=end_date)
+        else:
+            date_filter = Q(date_time__date=current_date)
     else:
         date_filter = Q(date_time__date=current_date)
 
-
     # Obtener la producción total del turno actual
     shift_productions = (
-    ProductionPress.objects.filter(shift=shift)
-    .filter(date_filter)
-    .filter(shift_filter)
-    .values("press")
-    .annotate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
-)
+        ProductionPress.objects.filter(shift=shift)
+        .filter(date_filter)
+        .filter(shift_filter)
+        .values("press")
+        .annotate(total_ok=Sum("pieces_ok"), total_rework=Sum("pieces_rework"))
+    )
 
     shift_data = {item["press"]: item for item in shift_productions}
 
