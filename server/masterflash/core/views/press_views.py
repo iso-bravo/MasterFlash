@@ -344,8 +344,23 @@ def load_machine_data_production(request):
 @csrf_exempt
 @require_POST
 def register_data_production(request):
+    """
+    Registra los datos de producción recibidos en una solicitud POST.
+
+    1. Valida los datos recibidos.
+    2. Maneja la creación o actualización de WorkedHours.
+    3. Guarda un nuevo registro en la base de datos para ProductionPress.
+    4. Utiliza Redis para almacenar valores temporales.
+
+    Args:
+        request (HttpRequest): Solicitud HTTP con datos en formato JSON.
+
+    Returns:
+        JsonResponse: Respuesta JSON con un mensaje y un código de estado.
+    """
     logger = logging.getLogger(__name__)
 
+    # Decodifica la solicitud JSON
     data = json.loads(request.body.decode("utf-8"))
     logger.error(f"Data received: {data}")
 
@@ -353,6 +368,7 @@ def register_data_production(request):
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
     )
 
+    # Validación inicial de datos
     if all(
         value == ""
         for value in [
@@ -364,9 +380,11 @@ def register_data_production(request):
         logger.error("Registro invalido")
         return JsonResponse({"message": "Registro invalido."}, status=201)
 
+    # Verifica si el número de parte existe en la base de datos
     if not Part_Number.objects.filter(part_number=data.get("part_number")).exists():
         return JsonResponse({"message": "Número de parte no existe"}, status=404)
 
+    # Extrae los valores del request
     press_name = data.get("name")
     worked_hours_id = data.get("worked_hours_id")
     previousMolderNumber = data.get("previous_molder_number")
@@ -375,21 +393,25 @@ def register_data_production(request):
     end_time = data.get("end_time")
     pieces_order = data.get("pieces_order", 0)
 
+    # Validación de tiempos
     if end_time and end_time < start_time:
         return JsonResponse(
             {"message": "La hora de finalización no puede ser anterior a la de inicio"},
             status=400,
         )
 
+    # Obtiene el último ID de horas trabajadas almacenado en Redis
     previous_worked_hours_id = redis_client.get(
         f"previous_worked_hours_id_{press_name}"
     )
 
+    # Si es un relevo, almacena el número de molde anterior en Redis
     if relay and previousMolderNumber:
         redis_client.set(
             f"previous_molder_number_{data.get('name')}", previousMolderNumber
         )
 
+    # Manejo de WorkedHours
     if relay:
         try:
             redis_client.set(f"previous_worked_hours_id_{press_name}", worked_hours_id)
@@ -426,30 +448,32 @@ def register_data_production(request):
             end_time=end_time,
         )
 
-    if end_time and not relay:
-        worked_hours.end_time = end_time
-        worked_hours.save()
-        redis_client.delete(f"previous_molder_number_{data.get('name')}")
+    # Si se proporciona una hora de finalización y no es un relevo, se actualiza
 
-    # Asigna los valores directamente desde el request
+    if end_time:
+        if not relay:
+            worked_hours.end_time = end_time
+            worked_hours.save()
+            redis_client.delete(f"previous_molder_number_{data.get('name')}")
+
+
+    # Asignación de valores desde el request
     employeeNumber = data.get("employee_number")
     partNumber = data.get("part_number")
     caliber = data.get("caliber")
     molderNumber = data.get("molder_number")
     workOrder = data.get("work_order")
-
     piecesOk = data.get("pieces_ok") or 0
     piecesRework = data.get("pieces_rework") or 0
 
-    # Obtén el turno actual
+    # Obtiene el turno actual
     current_time = datetime.now().time()
     shift = get_shift(current_time)
-
     logger.error(f"shift: {shift}")
 
-    # Crea un nuevo registro de producción
+    # Crea un nuevo registro en ProductionPress
     ProductionPress.objects.create(
-        date_time=start_time,
+        date_time=datetime.now(),
         employee_number=employeeNumber,
         pieces_ok=piecesOk,
         pieces_scrap=0,
@@ -465,6 +489,7 @@ def register_data_production(request):
         worked_hours=worked_hours,
     )
 
+    # Confirma la transacción
     transaction.commit()
 
     return JsonResponse({"message": "Datos guardados correctamente."}, status=201)
@@ -760,7 +785,6 @@ def get_worked_hours_by_id(request, id):
 
 
 @csrf_exempt
-
 def report_issue(request):
     if request.method != "POST":
         return JsonResponse({"error": "Método no permitido"}, status=405)
@@ -807,7 +831,9 @@ def report_issue(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+
 def close_all_open_worked_hours(request):
     WorkedHours.objects.filter(end_time=None).update(end_time=datetime.now())
-    return JsonResponse({"message": "Horas trabajadas cerradas correctamente"}, status=201)
-
+    return JsonResponse(
+        {"message": "Horas trabajadas cerradas correctamente"}, status=201
+    )

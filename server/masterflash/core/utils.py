@@ -38,7 +38,7 @@ def get_shift(current_time: time) -> str:
         return "Free"
 
 
-def sum_pieces(machine:LinePress, shift:str, current_date) -> int:
+def sum_pieces(machine: LinePress, shift: str, current_date) -> int:
     """
     Suma las piezas producidas para una máquina, turno y fecha dados,
     tomando como referencia el último registro de producción para determinar
@@ -59,12 +59,19 @@ def sum_pieces(machine:LinePress, shift:str, current_date) -> int:
 
     # Definir el filtro de tiempo en función del turno.
     if shift == "First":
-        shift_filter = Q(date_time__time__range=(schedule.first_shift_start, schedule.first_shift_end))
-    elif shift == "Second":
-        shift_filter = (
-            Q(date_time__time__range=(schedule.second_shift_start, schedule.second_shift_end))
-            | Q(date_time__time__range=(time.min, schedule.second_shift_end))
+        shift_filter = Q(
+            date_time__time__range=(
+                schedule.first_shift_start,
+                schedule.first_shift_end,
+            )
         )
+    elif shift == "Second":
+        shift_filter = Q(
+            date_time__time__range=(
+                schedule.second_shift_start,
+                schedule.second_shift_end,
+            )
+        ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
     else:
         return 0
 
@@ -85,25 +92,35 @@ def sum_pieces(machine:LinePress, shift:str, current_date) -> int:
 
 
 def send_production_data():
+    """
+    Recopila y envía datos de producción de las máquinas disponibles en la planta.
+
+    Retorna:
+        dict: Datos de producción de las máquinas y estadísticas generales.
+    """
     print("Sending production data...")
     now = datetime.now()
     current_date = now.date()
     current_time = now.time()
     shift = get_shift(current_time)
 
+    # Obtener todas las máquinas disponibles
     machines = list(LinePress.objects.filter(status="Available"))
     machine_names = [machine.name for machine in machines]
 
+    # Obtener los estados de las máquinas
     states_dict = {
         s["name"]: s["state"] for s in StatePress.objects.all().values("name", "state")
     }
 
+    # Obtener la última fecha de producción de cada máquina
     latest_dates = (
         ProductionPress.objects.filter(press__in=machine_names)
         .values("press")
         .annotate(max_date=Max("date_time"))
     )
 
+    # Diccionario con la última producción de cada máquina
     latest_prod_dict = {}
     for item in latest_dates:
         prod = ProductionPress.objects.filter(
@@ -112,6 +129,7 @@ def send_production_data():
         if prod:
             latest_prod_dict[item["press"]] = prod
 
+    # Obtener las últimas horas trabajadas para cada máquina
     latest_hours = (
         WorkedHours.objects.filter(
             press__in=machine_names,
@@ -137,10 +155,9 @@ def send_production_data():
         if not schedule:
             raise Exception("No Shift Schedule defined")
     except ShiftSchedule.DoesNotExist:
-        # Crear valores por defecto si no existen
         schedule = ShiftSchedule.objects.create()
 
-    # Definir los rangos de tiempo dinámicamente
+    # Definir el filtro de turno según el horario
     if shift == "First":
         shift_filter = Q(
             date_time__time__range=(
@@ -156,6 +173,7 @@ def send_production_data():
             )
         ) | Q(date_time__time__range=(time.min, schedule.second_shift_end))
 
+    # Obtener la producción total del turno actual
     shift_productions = (
         ProductionPress.objects.filter(shift=shift, date_time__date=current_date)
         .filter(shift_filter)
@@ -165,10 +183,10 @@ def send_production_data():
 
     shift_data = {item["press"]: item for item in shift_productions}
 
+    # Conexión a Redis para obtener los números de molde previos
     redis_client = redis.StrictRedis(
         host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0
     )
-
     molder_keys = [f"previous_molder_number_{machine.name}" for machine in machines]
     previous_molders = redis_client.mget(molder_keys)
 
@@ -180,6 +198,7 @@ def send_production_data():
     machines_data = []
     total_piecesProduced = 0
 
+    # Obtener el total de piezas producidas en el mes actual
     total_pieces = (
         ProductionPress.objects.filter(
             date_time__year=current_date.year, date_time__month=current_date.month
@@ -188,13 +207,14 @@ def send_production_data():
     )
 
     for machine in machines:
-        # Obtener la última producción para datos como part_number, molder_number, etc.
         latest_production = latest_prod_dict.get(machine.name)
 
+        # Determinar si hay un número de parte registrado
         if (
             latest_production
             and latest_production.worked_hours
             and latest_production.worked_hours.end_time
+            and not latest_production.relay
         ):
             part_number = "----"
         else:
@@ -206,22 +226,20 @@ def send_production_data():
         caliber = getattr(latest_production, "caliber", "----")
         pieces_order = getattr(latest_production, "pieces_order", 0)
 
-        # Obtener horas trabajadas desde el diccionario
+        # Obtener las horas trabajadas
         worked_hours_entry = worked_hours_dict.get(machine.name)
         start_time = worked_hours_entry.start_time if worked_hours_entry else None
 
-        # Obtener datos del turno desde el diccionario
+        # Obtener datos de producción del turno actual
         shift_info = shift_data.get(machine.name, {})
         total_ok = shift_info.get("total_ok", 0)
         total_rework = shift_info.get("total_rework", 0)
         actual_ok = sum_pieces(machine, shift, current_date) if shift else 0
 
-        # Obtener el estado desde el diccionario de estados
+        # Obtener el estado de la máquina
         machine_state = states_dict.get(machine.name, "Inactive")
 
         previous_molder_number = molder_dict.get(machine.name, "----")
-
-        # Se prioriza el número de molde anterior si está disponible
         final_molder_number = (
             previous_molder_number
             if previous_molder_number != "----"
