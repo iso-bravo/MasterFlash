@@ -26,11 +26,7 @@ const PressesProduction: React.FC = () => {
 		socket.onopen = () => {
 			console.log("WebSocket Connection opened");
 			socket.send(JSON.stringify({ type: "request_update" }));
-		};
-
-		socket.onmessage = (event) => {
-			try {
-				const data = JSON.parse(event.data);
+		}; socket.onmessage = (event) => { try { const data = JSON.parse(event.data);
 				console.log("Data received:", data);
 
 				if (data.machines_data) {
@@ -128,15 +124,12 @@ const PressesProduction: React.FC = () => {
 		<div className="lg:p-2">
 			<ToastContainer />
 			<header className="flex flex-wrap items-center justify-between mt-3 mb-10 bg-orange-500 text-white p-4 w-full ">
-				<section>
-					<IoIosArrowRoundBack
-						size={65}
-						className="cursor-pointer text-black"
+				<section> <IoIosArrowRoundBack size={65} className="cursor-pointer text-black"
 						onClick={() => navigate("/")}
 					/>
 					<div className="flex flex-col md:flex-row md:items-center gap-3">
 						<h1 className="font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl">
-							Producido hoy:
+							Producido en turno:
 						</h1>
 						<h1 className="font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl">
 							{totalPiecesProduced}
