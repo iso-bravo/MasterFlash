@@ -119,7 +119,7 @@ const PressesProduction: React.FC = () => {
                         onClick={() => navigate('/')}
                     />
                     <div className='flex flex-col md:flex-row md:items-center gap-3'>
-                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Producido hoy:</h1>
+                        <h1 className='font-semibold text-2xl md:text-3xl lg:text-3xl xl:text-4xl'>Producido en turno:</h1>
                         <h1 className='font-semibold text-3xl md:text-4xl lg:text-4xl xl:text-4xl'>
                             {totalPiecesProduced}
                         </h1>
@@ -147,8 +147,7 @@ const PressesProduction: React.FC = () => {
             </header>
 
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-x-2 gap-y-4 justify-items-center'>
-                {machines &&
-                    machines.map((machine, index) => (
+                {machines?.map((machine, index) => (
                         <MachineProduction
                             key={`${index}-${machine.name}`}
                             machineData={machine}
