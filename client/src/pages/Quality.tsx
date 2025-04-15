@@ -42,7 +42,8 @@ const Quality: React.FC = () => {
 			<div className="flex flex-col items-center px-10 pt-7">
 				<h1 className="w-3/4 text-xl text-start m-3">Producción</h1>
 				<div className="w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center">
-					<div
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/presses_production")}
 					>
@@ -50,8 +51,9 @@ const Quality: React.FC = () => {
 							<VscGitPullRequestCreate color="white" size={40} className="" />
 						</div>
 						<h2 className=" text-center">Prod. Prensas</h2>
-					</div>
-					<div
+					</button>
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => setShowConfirmModal(true)}
 					>
@@ -59,8 +61,9 @@ const Quality: React.FC = () => {
 							<TbClockPause color="white" size={40} className="" />
 						</div>
 						<h2 className=" text-center">Cerrar horas </h2>
-					</div>
-					<div
+					</button>
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/presses_states")}
 					>
@@ -68,8 +71,9 @@ const Quality: React.FC = () => {
 							<MdBolt color="white" size={40} />
 						</div>
 						<h2 className=" text-center">Estados Prensas</h2>
-					</div>
-					<div
+					</button>
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/production_records")}
 					>
@@ -77,16 +81,16 @@ const Quality: React.FC = () => {
 							<FaFileAlt color="white" size={35} />
 						</div>
 						<h2 className=" text-center ">Registros Producción</h2>
-					</div>
+					</button>
 					<div className="flex flex-col items-center cursor-pointer">
 						<div className=" bg-[#6A3A90] p-2 rounded-sm">
-							<img src={Barwell} className=" w-10"></img>
+							<img src={Barwell} className=" w-10" alt="Barwell" />
 						</div>
 						<h2 className=" text-center">Barwell</h2>
 					</div>
 					<div className="flex flex-col items-center cursor-pointer">
 						<div className=" bg-[#8F2C2C] p-2 rounded-sm">
-							<img src={Troquelado} className=" w-10"></img>
+							<img src={Troquelado} className=" w-10" alt="Troquelado" />
 						</div>
 						<h2 className=" text-center">Troquelado</h2>
 					</div>
@@ -96,7 +100,8 @@ const Quality: React.FC = () => {
 			<div className="flex flex-col items-center py-5 px-10">
 				<h1 className="w-3/4 text-xl m-3">Calidad</h1>
 				<div className="w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center">
-					<div
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/params")}
 					>
@@ -108,23 +113,25 @@ const Quality: React.FC = () => {
 							/>
 						</div>
 						<h2 className=" text-center">Reg. Params.</h2>
-					</div>
-					<div
+					</button>
+					<button
+						type="button"
 						className="flex flex-col items-center cursor-pointer"
 						onClick={() => navigate("/scrap_summary")}
 					>
 						<div className=" bg-[#6A3A90] p-2 rounded-sm">
-							<img src={Scrap} className=" w-10"></img>
+							<img src={Scrap} className=" w-10" alt="Scrap" />
 						</div>
 						<h2 className=" text-center">Reg. Scrap</h2>
-					</div>
+					</button>
 					<div className="flex flex-col w-14 items-center cursor-pointer">
 						<div className="p-3 rounded-sm bg-[#2459A9]">
 							<GiNuclearWaste color="white" size={35} />
 						</div>
 						<h2 className="text-center"> Reg. Waste</h2>
 					</div>
-					<div
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/reports_menu")}
 					>
@@ -132,10 +139,10 @@ const Quality: React.FC = () => {
 							<FaFileAlt color="white" size={35} />
 						</div>
 						<h2 className=" text-center">Reportes</h2>
-					</div>
+					</button>
 					<div className="flex flex-col items-center 300:invisible cursor-pointer">
 						<div className=" bg-[#8F2C2C] p-2 rounded-sm">
-							<img src={Troquelado} className=" w-10"></img>
+							<img src={Troquelado} className=" w-10" alt="Troquelado" />
 						</div>
 						<h2 className=" text-center">Troquelado</h2>
 					</div>
@@ -145,7 +152,8 @@ const Quality: React.FC = () => {
 			<div className="flex flex-col items-center px-10">
 				<h1 className="w-3/4 text-xl m-3">Planeación</h1>
 				<div className="w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center">
-					<div
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/dashboard")}
 					>
@@ -153,7 +161,7 @@ const Quality: React.FC = () => {
 							<BiSolidDashboard color="white" size={40} className="" />
 						</div>
 						<h2 className=" text-center">Dash.</h2>
-					</div>
+					</button>
 					<div className="flex flex-col w-14 items-center cursor-pointer">
 						<div className=" bg-[#538D4A] p-3 rounded-sm">
 							<FaFileInvoice color="white" size={35} />
@@ -171,7 +179,8 @@ const Quality: React.FC = () => {
 			<div className="flex flex-col items-center px-10">
 				<h1 className="w-3/4 text-xl m-3">Configuración</h1>
 				<div className="w-3/4 grid grid-cols-1 280:grid-cols-2 400:grid-cols-3 sm:grid-cols-5 gap-x-2 gap-y-4 justify-items-center">
-					<div
+					<button
+						type="button"
 						className="flex flex-col w-14 items-center cursor-pointer"
 						onClick={() => navigate("/config")}
 					>
@@ -179,8 +188,9 @@ const Quality: React.FC = () => {
 							<IoSettingsSharp color="white" size={40} />
 						</div>
 						<h2 className=" text-center">Config.</h2>
-					</div>
-					<div
+					</button>
+					<button
+						type="button"
 						className="flex flex-col items-center cursor-pointer"
 						onClick={() => navigate("/part_num")}
 					>
@@ -188,8 +198,9 @@ const Quality: React.FC = () => {
 							<MdNumbers color="white" size={35} />
 						</div>
 						<h2 className=" text-center">No. Parte</h2>
-					</div>
-					<div
+					</button>
+					<button
+						type="button"
 						className="flex flex-col items-center cursor-pointer"
 						onClick={() => navigate("/inserts")}
 					>
@@ -197,12 +208,12 @@ const Quality: React.FC = () => {
 							<GiFactoryArm color="white" size={35} />
 						</div>
 						<h2 className=" text-center">Insertos</h2>
-					</div>
+					</button>
 				</div>
 				{showConfirmModal && (
 					<ConfirmModal
 						title="Cerrar horas trabajadas"
-                        message = "¿Estás seguro de que quieres cerrar todas las horas trabajadas?"
+						message="¿Estás seguro de que quieres cerrar todas las horas trabajadas?"
 						onConfirm={handleCloseAllWorkedHours}
 						onClose={() => setShowConfirmModal(false)}
 					/>
