@@ -71,6 +71,13 @@ from .views.insert_views import (
     update_insert,
 )
 
+from .views.scrap_dashboard_views import (
+    get_scrap_by_date_range,
+    top_defects_by_part_number,
+    top_defects_by_molder_number,
+    top_defects_by_mp,
+)
+
 urlpatterns = [
     path("client_data/", client_data, name="client_data"),
     path("load_machine_data/", load_machine_data, name="load_machine_data"),
@@ -222,5 +229,17 @@ urlpatterns = [
     path(
         "dashboard/anual-production/", get_anual_production, name="get_anual_production"
     ),
+    path("scrap-dashboard/", get_scrap_by_date_range, name="get_scrap_by_date_range"),
+    path(
+        "scrap-dashboard/top-def-by-part-num/",
+        top_defects_by_part_number,
+        name="top_defects_by_part_number",
+    ),
+    path(
+        "scrap-dashboard/top-def-by-mold-num/",
+        top_defects_by_molder_number,
+        name="top_defects_by_part_number",
+    ),
+    path("scrap-dashboard/top-def-by-mp/", top_defects_by_mp, name="top_defects_by_mp"),
     path("report-issue/", report_issue, name="report_issue"),
 ]
