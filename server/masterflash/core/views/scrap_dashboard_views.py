@@ -1,11 +1,14 @@
+import json
 from datetime import datetime
-from django.views.decorators.csrf import csrf_exempt
+from collections import OrderedDict
+
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.db.models import Sum, F, Value, IntegerField
-from django.db.models.functions import Coalesce
-import json
+
 from masterflash.core.models import Qc_Scrap
 
 DEFECT_CODES = [
@@ -92,13 +95,15 @@ def get_scrap_by_date_range(request):
 
 
 def get_defect_ranking(group_by_field: str, start_date: datetime, end_date: datetime):
+    # Anotar cada código individual
     annotations = {code: Coalesce(Sum(code), Value(0)) for code in DEFECT_CODES}
 
-    # Defects total sum as sum of each field
+    # Total de defectos como suma de todos
     annotations["total_defects"] = Coalesce(
         sum([Coalesce(Sum(code), Value(0)) for code in DEFECT_CODES]), Value(0)
     )
 
+    # Consulta con anotaciones
     query_set = (
         Qc_Scrap.objects.filter(date_time__range=(start_date, end_date))
         .values(group_by_field)
@@ -106,7 +111,20 @@ def get_defect_ranking(group_by_field: str, start_date: datetime, end_date: date
         .order_by("-total_defects")
     )
 
-    return list(query_set)
+    # Post-procesar para eliminar códigos con valor 0
+    result = []
+    for item in query_set:
+        filtered_item = OrderedDict()  # mantiene el orden
+        filtered_item[group_by_field] = item[group_by_field]
+        filtered_item["total_defects"] = item["total_defects"]
+
+        for code in DEFECT_CODES:
+            if item[code] > 0:
+                filtered_item[code] = item[code]
+
+        result.append(filtered_item)
+
+    return result
 
 
 @csrf_exempt
