@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from collections import OrderedDict
 
-from django.db.models import Sum, Value
+from django.db.models import Sum, Value, F, IntegerField, ExpressionWrapper
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
@@ -96,12 +96,17 @@ def get_scrap_by_date_range(request):
 
 def get_defect_ranking(group_by_field: str, start_date: datetime, end_date: datetime):
     # Anotar cada código individual
-    annotations = {code: Coalesce(Sum(code), Value(0)) for code in DEFECT_CODES}
+    annotations = {
+        code: Coalesce(Sum(code, output_field=IntegerField()), Value(0))
+        for code in DEFECT_CODES
+    }
+
+    total_defects_expr = ExpressionWrapper(
+        sum(F(code) for code in DEFECT_CODES), output_field=IntegerField()
+    )
 
     # Total de defectos como suma de todos
-    annotations["total_defects"] = Coalesce(
-        sum([Coalesce(Sum(code), Value(0)) for code in DEFECT_CODES]), Value(0)
-    )
+    annotations["total_defects"] = Coalesce(total_defects_expr, Value(0))
 
     # Consulta con anotaciones
     query_set = (

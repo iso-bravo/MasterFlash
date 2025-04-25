@@ -238,7 +238,7 @@ urlpatterns = [
     path(
         "scrap-dashboard/top-def-by-mold-num/",
         top_defects_by_molder_number,
-        name="top_defects_by_part_number",
+        name="top_defects_by_molder_number",
     ),
     path("scrap-dashboard/top-def-by-mp/", top_defects_by_mp, name="top_defects_by_mp"),
     path("report-issue/", report_issue, name="report_issue"),

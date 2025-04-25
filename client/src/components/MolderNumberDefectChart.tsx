@@ -9,10 +9,10 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { TopDefectsByMPResponse } from "../types/ScrapDashboardTypes";
+import { TopDefectsByMolderNumberResponse } from "../types/ScrapDashboardTypes";
 
 interface MachineDefectsChartProps {
-	data: TopDefectsByMPResponse;
+	data: TopDefectsByMolderNumberResponse;
 }
 
 const MachineDefectsChart: React.FC<MachineDefectsChartProps> = ({ data }) => {
@@ -30,7 +30,7 @@ const MachineDefectsChart: React.FC<MachineDefectsChartProps> = ({ data }) => {
 				}}
 			>
 				<CartesianGrid strokeDasharray="3 3" />
-				<XAxis dataKey={"line"} />
+				<XAxis dataKey={"molder_number"} />
 				<YAxis />
 				<Tooltip />
 				<Legend />
