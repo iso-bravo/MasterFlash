@@ -51,10 +51,12 @@ const ScrapDashboardTable: React.FC<ScrapDashboardTableProps> = ({
 		"SR",
 	];
 
+	const totalEntry = data.find((entry) => entry.date_time === "TOTAL");
+	const normalData = data.filter((entry) => entry.date_time !== "TOTAL");
+
 	return (
 		<div
-			className={`relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg ${className}`}
-			style={{ minWidth: "1500px" }}
+			className={`relative overflow-x-auto overflow-y-auto max-h-[70vh] shadow-md sm:rounded-lg  ${className}`}
 		>
 			<table className="w-full text-sm text-left text-gray-500 min-w-full">
 				<thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-10">
@@ -99,7 +101,7 @@ const ScrapDashboardTable: React.FC<ScrapDashboardTableProps> = ({
 							</td>
 						</tr>
 					) : (
-						data.map((entry, index) => (
+						normalData.map((entry, index) => (
 							<tr
 								key={index}
 								className="border-b border-gray-200 odd:bg-white even:bg-gray-50"
@@ -121,6 +123,23 @@ const ScrapDashboardTable: React.FC<ScrapDashboardTableProps> = ({
 						))
 					)}
 				</tbody>
+				{totalEntry && (
+					<tfoot className="text-xs text-gray-700 uppercase bg-gray-50 sticky bottom-0 z-10">
+						<tr className="border-b border-gray-200 odd:bg-white even:bg-gray-50 font-bold">
+							<td className="px-6 py-3">TOTAL</td>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3"></td>
+							<td className="px-6 py-3">{totalEntry.total_pieces}</td>
+							{defectCodes.map((code) => (
+								<td key={code} className="px-6 py-3">
+									{totalEntry.defects[code] ?? "-"}
+								</td>
+							))}
+						</tr>
+					</tfoot>
+				)}
 			</table>
 		</div>
 	);
