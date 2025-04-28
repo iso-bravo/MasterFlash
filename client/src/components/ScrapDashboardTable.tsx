@@ -53,10 +53,11 @@ const ScrapDashboardTable: React.FC<ScrapDashboardTableProps> = ({
 
 	return (
 		<div
-			className={`relative overflow-x-auto shadow-md sm:rounded-lg ${className}`}
+			className={`relative overflow-x-auto overflow-y-auto shadow-md sm:rounded-lg ${className}`}
+			style={{ minWidth: "1500px" }}
 		>
-			<table className="w-full text-sm text-left text-gray-500">
-				<thead className="text-xs text-gray-700 uppercase bg-gray-50">
+			<table className="w-full text-sm text-left text-gray-500 min-w-full">
+				<thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-10">
 					<tr>
 						<th scope="col" className="px-6 py-3">
 							Fecha/Hora
@@ -88,14 +89,12 @@ const ScrapDashboardTable: React.FC<ScrapDashboardTableProps> = ({
 						<tr>
 							<td colSpan={defectCodes.length + 6} className="px-6 py-4">
 								<div className="animate-pulse flex space-x-4">
-									<div className="flex-1 space-y-3 py-1">
-										{[...Array(6 + defectCodes.length)].map((_, i) => (
-											<div
-												key={i}
-												className="h-4 bg-gray-200 rounded w-full"
-											></div>
-										))}
-									</div>
+									{[...Array(5)].map((_, i) => (
+										<div
+											key={i}
+											className="h-4 bg-gray-200 rounded w-full"
+										></div>
+									))}
 								</div>
 							</td>
 						</tr>

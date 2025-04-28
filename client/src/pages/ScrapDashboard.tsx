@@ -138,8 +138,7 @@ const ScrapDashboard = () => {
 				theme="colored"
 			/>
 			<Header title="Scrap Analysis" goto="/reports_menu" />
-			<h2 className="">Selecciona un rango de fechas</h2>
-			<section className="bg-white p-6 rounded-lg shadow-sm mb-6">
+			<section className="bg-white p-6 rounded-lg shadow-sm mb-10 mt-4">
 				<h2 className="text-lg font-semibold text-gray-700 mb-4">
 					Selecciona un rango de fechas
 				</h2>
@@ -205,7 +204,7 @@ const ScrapDashboard = () => {
 					</button>
 				</div>
 			</section>
-			<section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+			<section className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-4">
 				{chartsLoading ? (
 					Array(3)
 						.fill(0)
@@ -235,7 +234,7 @@ const ScrapDashboard = () => {
 					</>
 				)}
 			</section>
-			<section className="bg-white rounded-lg shadow-sm overflow-hidden">
+			<section className="bg-white rounded-lg shadow-sm flex-1 flex-col min-h-[500px]">
 				<ScrapDashboardTable
 					data={tableData}
 					isLoading={loading}
