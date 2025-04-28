@@ -32,8 +32,22 @@ const MachineDefectsChart: React.FC<MachineDefectsChartProps> = ({ data }) => {
 				<CartesianGrid strokeDasharray="3 3" />
 				<XAxis dataKey={"line"} />
 				<YAxis />
-				<Tooltip />
-				<Legend />
+				<Tooltip
+					formatter={(value, name: string) => {
+						if (name === "total_defects") {
+							return [value, "Total de Defectos"];
+						}
+						return [value, name];
+					}}
+				/>
+				<Legend
+					formatter={(value: string) => {
+						if (value === "total_defects") {
+							return "Total de Defectos";
+						}
+						return value;
+					}}
+				/>
 				<Bar
 					dataKey={"total_defects"}
 					fill="#82ca9d"
