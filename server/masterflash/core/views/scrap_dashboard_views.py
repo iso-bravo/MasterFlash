@@ -71,11 +71,20 @@ def get_scrap_by_date_range(request):
 
         response_data = []
 
+        # accumlators
+        total_defects_accumulator = {code: 0 for code in DEFECT_CODES}
+        total_pieces_accumulator = 0
+
         for scrap in scrap_queryset:
             defect_data = {code: getattr(scrap, code, None) for code in DEFECT_CODES}
 
+            for code, value in defect_data.items():
+                total_defects_accumulator[code] += 0 if value is None else value
+
+            total_pieces_accumulator += scrap.total_pieces or 0
+
             entry = {
-                "date_time": scrap.date_time.isoformat(),
+                "date_time": scrap.date_time.strftime("%Y-%m-%d"),
                 "line": scrap.line,
                 "molder_number": scrap.molder_number,
                 "part_number": scrap.part_number,
@@ -86,6 +95,20 @@ def get_scrap_by_date_range(request):
 
             response_data.append(entry)
 
+        # Total line
+
+        total_entry = {
+            "date_time": "TOTAL",
+            "line": "",
+            "molder_number": "",
+            "part_number": "",
+            "caliber": "",
+            "total_pieces": total_pieces_accumulator,
+            "defects": total_defects_accumulator,
+        }
+
+        response_data.append(total_entry)
+
         return JsonResponse(response_data, safe=False)
 
     except json.JSONDecodeError:
@@ -94,7 +117,9 @@ def get_scrap_by_date_range(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-def get_defect_ranking(group_by_field: str, start_date: datetime, end_date: datetime):
+def get_defect_ranking(
+    group_by_field: str, start_date: datetime, end_date: datetime, top_n: int
+):
     # Anotar cada código individual
     annotations = {
         code: Coalesce(Sum(code, output_field=IntegerField()), Value(0))
@@ -105,21 +130,18 @@ def get_defect_ranking(group_by_field: str, start_date: datetime, end_date: date
         sum(F(code) for code in DEFECT_CODES), output_field=IntegerField()
     )
 
-    # Total de defectos como suma de todos
     annotations["total_defects"] = Coalesce(total_defects_expr, Value(0))
 
-    # Consulta con anotaciones
     query_set = (
         Qc_Scrap.objects.filter(date_time__range=(start_date, end_date))
         .values(group_by_field)
         .annotate(**annotations)
-        .order_by("-total_defects")
+        .order_by("-total_defects")[:top_n]  # << cortamos aquí
     )
 
-    # Post-procesar para eliminar códigos con valor 0
     result = []
     for item in query_set:
-        filtered_item = OrderedDict()  # mantiene el orden
+        filtered_item = OrderedDict()
         filtered_item[group_by_field] = item[group_by_field]
         filtered_item["total_defects"] = item["total_defects"]
 
@@ -145,8 +167,7 @@ def top_defects_by_mp(request):
                 {"error": "start_date and end_date are required"}, status=400
             )
 
-        # Get the top defects by molder number
-        top_defects = get_defect_ranking("line", start_date, end_date)
+        top_defects = get_defect_ranking("line", start_date, end_date, top_n=15)
 
         return JsonResponse(top_defects, safe=False)
 
@@ -169,8 +190,7 @@ def top_defects_by_part_number(request):
                 {"error": "start_date and end_date are required"}, status=400
             )
 
-        # Get the top defects by part number
-        top_defects = get_defect_ranking("part_number", start_date, end_date)
+        top_defects = get_defect_ranking("part_number", start_date, end_date, top_n=10)
 
         return JsonResponse(top_defects, safe=False)
 
@@ -193,8 +213,9 @@ def top_defects_by_molder_number(request):
                 {"error": "start_date and end_date are required"}, status=400
             )
 
-        # Get the top defects by molder number
-        top_defects = get_defect_ranking("molder_number", start_date, end_date)
+        top_defects = get_defect_ranking(
+            "molder_number", start_date, end_date, top_n=20
+        )
 
         return JsonResponse(top_defects, safe=False)
 

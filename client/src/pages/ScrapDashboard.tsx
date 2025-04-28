@@ -126,7 +126,7 @@ const ScrapDashboard = () => {
 	};
 
 	return (
-		<div className="flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-hidden">
+		<div className="flex flex-col px-7 py-4 md:px-10 md:py-6 bg-[#d7d7d7] h-screen overflow-y-auto overflow-x-auto">
 			<ToastContainer
 				position="top-center"
 				autoClose={false}
@@ -204,7 +204,7 @@ const ScrapDashboard = () => {
 					</button>
 				</div>
 			</section>
-			<section className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-4">
+			<section className="flex flex-col space-y-6 mb-4">
 				{chartsLoading ? (
 					Array(3)
 						.fill(0)
@@ -218,7 +218,7 @@ const ScrapDashboard = () => {
 							</div>
 						))
 				) : (
-					<>
+					<div className="flex flex-col space-y-10 mb-6">
 						<DashboardCard title="Defectos por MP" color="bg-orange-500">
 							<MachineDefectsChart data={scrapByMpData} />
 						</DashboardCard>
@@ -231,15 +231,17 @@ const ScrapDashboard = () => {
 						>
 							<MolderNumberDefectChart data={scrapByMolderNumber} />
 						</DashboardCard>
-					</>
+					</div>
 				)}
 			</section>
 			<section className="bg-white rounded-lg shadow-sm flex-1 flex-col min-h-[500px]">
-				<ScrapDashboardTable
-					data={tableData}
-					isLoading={loading}
-					className="rounded-lg"
-				/>
+				<DashboardCard title="Tabla Scrap" color="bg-green-500">
+					<ScrapDashboardTable
+						data={tableData}
+						isLoading={loading}
+						className="rounded-lg"
+					/>
+				</DashboardCard>
 			</section>
 		</div>
 	);
